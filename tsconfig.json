@@ -1,0 +1,32 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"target": "ES2022",
+		"outDir": "out",
+		"lib": [
+			"ES2022"
+		],
+		"sourceMap": true,
+		"rootDir": "src",
+		"strict": true,
+		"skipLibCheck": true,
+		"types": [
+			"node"
+		]
+	},
+	"include": [
+		"src/extension.ts",
+		"src/common/**/*.ts",
+		"src/filesystem/**/*.ts",
+		"src/tree/**/*.ts",
+		"src/vscode/**/*.ts"
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test",
+		"extensions",
+		"logs"
+	]
+}
