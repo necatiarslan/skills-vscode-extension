@@ -3,9 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SkillsPanel = void 0;
 const vscode = require("vscode");
 const UI_1 = require("../common/UI");
-const SkillsApiService_1 = require("../services/SkillsApiService");
-const SkillsStorageService_1 = require("../services/SkillsStorageService");
 const services_1 = require("../services");
+const SkillsStorageService_1 = require("../services/SkillsStorageService");
+const services_2 = require("../services");
+const SkillDetailPanel_1 = require("./SkillDetailPanel");
 /**
  * SkillsPanel - Manages the marketplace webview panel
  */
@@ -76,14 +77,14 @@ class SkillsPanel {
             case 'search':
                 await this.handleSearch(message.query);
                 break;
+            case 'openSkillDetails':
+                await this.handleOpenSkillDetails(message.skill);
+                break;
             case 'install':
                 await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
                 break;
             case 'uninstall':
                 await this.handleUninstall(message.skillId);
-                break;
-            case 'getHostInfo':
-                await this.handleGetHostInfo();
                 break;
             case 'getInstalledSkills':
                 await this.handleGetInstalledSkills();
@@ -106,7 +107,7 @@ class SkillsPanel {
                 return;
             }
             (0, UI_1.logToOutput)(`[Webview] Searching for: ${query}`);
-            const skills = await SkillsApiService_1.skillsApiService.search(query);
+            const skills = await services_1.skillsApiService.search(query);
             this.postMessage({
                 type: 'searchResults',
                 results: skills,
@@ -124,12 +125,37 @@ class SkillsPanel {
         }
     }
     /**
+     * Load detail data for a selected skill.
+     */
+    async handleOpenSkillDetails(skill) {
+        try {
+            if (!skill?.githubUrl) {
+                throw new Error('This skill does not expose a GitHub URL.');
+            }
+            await SkillDetailPanel_1.SkillDetailPanel.createOrShow(this.extensionUri, skill, this.currentToolName, this.currentToolDisplayName);
+            this.postMessage({
+                type: 'openSkillDetailsResult',
+                success: true,
+                error: null
+            });
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[Webview] Details error: ${errorMsg}`);
+            this.postMessage({
+                type: 'openSkillDetailsResult',
+                success: false,
+                error: errorMsg
+            });
+        }
+    }
+    /**
      * Handle skill installation
      */
     async handleInstall(skillId, skillName, githubUrl) {
         try {
             (0, UI_1.logToOutput)(`[Webview] Installing ${skillName} to ${this.currentToolName}`);
-            const installPath = await services_1.toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
+            const installPath = await services_2.toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
             // Update storage
             const storage = (0, SkillsStorageService_1.getStorageService)();
             await storage.addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installPath);
@@ -169,7 +195,7 @@ class SkillsPanel {
             if (!installed) {
                 throw new Error('Skill not found in storage');
             }
-            await services_1.toolInstallService.uninstallSkill(this.currentToolName, skillId, installed.localPath);
+            await services_2.toolInstallService.uninstallSkill(this.currentToolName, skillId, installed.localPath);
             await storage.removeInstalled(this.currentToolName, skillId);
             this.postMessage({
                 type: 'uninstallResult',
@@ -193,37 +219,6 @@ class SkillsPanel {
                 success: false,
                 message: null,
                 error: errorMsg
-            });
-        }
-    }
-    /**
-     * Get current host info for this extension session
-     */
-    async handleGetHostInfo() {
-        try {
-            services_1.toolInstallService.detectTools();
-            const tool = services_1.toolInstallService.getTool(this.currentToolName);
-            const installed = !!tool?.installed;
-            this.postMessage({
-                type: 'hostInfo',
-                host: {
-                    name: this.currentToolName,
-                    displayName: this.currentToolDisplayName,
-                    installed
-                }
-            });
-            (0, UI_1.logToOutput)(`[Webview] Host resolved: ${this.currentToolDisplayName} (${installed ? 'supported' : 'unsupported'})`);
-        }
-        catch (error) {
-            const errorMsg = error instanceof Error ? error.message : String(error);
-            (0, UI_1.logToOutput)(`[Webview] Error resolving host info: ${errorMsg}`);
-            this.postMessage({
-                type: 'hostInfo',
-                host: {
-                    name: this.currentToolName,
-                    displayName: this.currentToolDisplayName,
-                    installed: false
-                }
             });
         }
     }

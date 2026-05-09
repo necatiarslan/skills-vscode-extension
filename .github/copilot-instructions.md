@@ -10,7 +10,7 @@ Current feature set:
 - bash scripts
 - bash file shortcuts
 - VS Code command shortcuts
-- AI Skills Marketplace (search and install skills from skillsmp.com)
+- AI Skills Marketplace (search, inspect, and install skills from skillsmp.com)
 
 The extension no longer contains AWS service integrations. Any guidance that assumes AWS resources, credentials, SDK clients, or service-specific node trees is stale and should not be reintroduced unless explicitly requested.
 
@@ -71,6 +71,12 @@ The Skills Marketplace provides a secondary feature set for discovering and inst
   - Methods: `search(query, page, limit)`, `fetchDetail(skillId)`, `clearCache()`
   - Implements 5-minute result caching via `Map<string, CachedSkill>`
   - Handles all API errors and logs via `logToOutput()`
+
+- **GitHubContentService** — GitHub repository metadata and content browser backend
+  - Methods: `parseGitHubUrl()`, `getRepoMetadata()`, `listDirectory()`, `getFilePreview()`
+  - Supports repo-root and tree/blob GitHub URLs
+  - Provides short-lived caching for repository metadata, directory listings, and previews
+  - Returns friendly failures for missing paths, rate limits, oversized files, and binary previews
   
 - **SkillsStorageService** — Persistence of installed skills to `globalState`
   - Methods: `addInstalled()`, `removeInstalled()`, `getInstalledByTool()`, `isInstalled()`, `getAllInstalled()`
@@ -84,9 +90,9 @@ The Skills Marketplace provides a secondary feature set for discovering and inst
 
 **Webview Controller** (in `src/webview/`):
 - **SkillsPanel** — Manages marketplace webview panel lifecycle and messaging
-  - Methods: `createOrShow()`, `handleWebviewMessage()`, handlers for search, install, uninstall, tool detection
-  - Message types: search, install, uninstall, getDetectedTools, getInstalledSkills
-  - Posts back: searchResults, installResult, uninstallResult, detectedTools, installedSkills
+  - Methods: `createOrShow()`, `handleWebviewMessage()`, handlers for search, details, install, uninstall, GitHub repo browsing
+  - Message types: search, openSkillDetails, loadRepoPath, openRepoFile, install, uninstall, getInstalledSkills
+  - Posts back: searchResults, skillDetails, repoDirectory, filePreview, installResult, uninstallResult, installedSkills
   
 - **MarketplaceCommands** — Registers `Skills.OpenMarketplace` command
 
@@ -94,11 +100,12 @@ The Skills Marketplace provides a secondary feature set for discovering and inst
 - `Skill` — API response model (id, name, author, description, githubUrl, skillUrl, stars, updatedAt)
 - `ToolConfig` — Tool configuration (name, displayName, globalDir, installed)
 - `InstalledSkill` — Persistence model (skillId, name, author, version, installedAt, localPath)
+- `GitHubRepoContext`, `GitHubDirectoryResult`, `GitHubFilePreview`, `SkillDetailPayload` — detail-webview and repository browser models
 
 **UI** (in `media/marketplace/`):
 - `marketplace.html` — Embedded in SkillsPanel webview
-- `marketplace.css` — VS Code theme-aware styling (grid layout, cards, buttons, badges)
-- `marketplace.js` — Client-side event handling, debounced search, install/uninstall flows, cache display
+- `marketplace.css` — VS Code theme-aware styling for marketplace cards and extension-style details page
+- `marketplace.js` — Client-side event handling, debounced search, card-click details flow, GitHub repo navigation, and file previews
 
 **Integration Points**:
 - Extension activation initializes `SkillsStorageService` with `context.globalState`

@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import { logToOutput } from '../common/UI';
-import { skillsApiService } from '../services/SkillsApiService';
+import { skillsApiService } from '../services';
 import { getStorageService } from '../services/SkillsStorageService';
-import { toolInstallService, ToolConfig } from '../services';
+import { toolInstallService } from '../services';
 import { Skill } from '../services/types';
+import { SkillDetailPanel } from './SkillDetailPanel';
 
 /**
  * SkillsPanel - Manages the marketplace webview panel
@@ -98,14 +99,14 @@ export class SkillsPanel {
       case 'search':
         await this.handleSearch(message.query);
         break;
+      case 'openSkillDetails':
+        await this.handleOpenSkillDetails(message.skill);
+        break;
       case 'install':
         await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
         break;
       case 'uninstall':
         await this.handleUninstall(message.skillId);
-        break;
-      case 'getHostInfo':
-        await this.handleGetHostInfo();
         break;
       case 'getInstalledSkills':
         await this.handleGetInstalledSkills();
@@ -144,6 +145,38 @@ export class SkillsPanel {
       this.postMessage({
         type: 'searchResults',
         results: [],
+        error: errorMsg
+      });
+    }
+  }
+
+  /**
+   * Load detail data for a selected skill.
+   */
+  private async handleOpenSkillDetails(skill: Skill) {
+    try {
+      if (!skill?.githubUrl) {
+        throw new Error('This skill does not expose a GitHub URL.');
+      }
+
+      await SkillDetailPanel.createOrShow(
+        this.extensionUri,
+        skill,
+        this.currentToolName,
+        this.currentToolDisplayName
+      );
+
+      this.postMessage({
+        type: 'openSkillDetailsResult',
+        success: true,
+        error: null
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[Webview] Details error: ${errorMsg}`);
+      this.postMessage({
+        type: 'openSkillDetailsResult',
+        success: false,
         error: errorMsg
       });
     }
@@ -229,40 +262,6 @@ export class SkillsPanel {
         success: false,
         message: null,
         error: errorMsg
-      });
-    }
-  }
-
-  /**
-   * Get current host info for this extension session
-   */
-  private async handleGetHostInfo() {
-    try {
-      toolInstallService.detectTools();
-      const tool = toolInstallService.getTool(this.currentToolName);
-      const installed = !!tool?.installed;
-
-      this.postMessage({
-        type: 'hostInfo',
-        host: {
-          name: this.currentToolName,
-          displayName: this.currentToolDisplayName,
-          installed
-        }
-      });
-
-      logToOutput(`[Webview] Host resolved: ${this.currentToolDisplayName} (${installed ? 'supported' : 'unsupported'})`);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      logToOutput(`[Webview] Error resolving host info: ${errorMsg}`);
-
-      this.postMessage({
-        type: 'hostInfo',
-        host: {
-          name: this.currentToolName,
-          displayName: this.currentToolDisplayName,
-          installed: false
-        }
       });
     }
   }

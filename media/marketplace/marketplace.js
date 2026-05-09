@@ -1,75 +1,47 @@
-/**
- * Skills Marketplace Webview Script
- * Handles UI interactions and communication with extension host
- */
-
 const vscode = acquireVsCodeApi();
 
-// State
 let searchDebounceTimer;
+let searchQuery = '';
 let installedSkills = [];
 let currentResults = [];
 
-// DOM Elements
 const searchInput = document.getElementById('searchInput');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const skillsList = document.getElementById('skillsList');
 const errorMessage = document.getElementById('errorMessage');
 const emptyState = document.getElementById('emptyState');
 
-/**
- * Initialize the webview
- */
 function initialize() {
-  // Fetch installed skills
   vscode.postMessage({ type: 'getInstalledSkills' });
-
-  // Set up event listeners
-  searchInput.addEventListener('input', (e) => handleSearchInput(e.target.value));
-
-  // Listen for messages from extension
-  window.addEventListener('message', (event) => {
-    const message = event.data;
-    handleExtensionMessage(message);
-  });
+  searchInput.addEventListener('input', (event) => handleSearchInput(event.target.value));
+  window.addEventListener('message', (event) => handleExtensionMessage(event.data));
 }
 
-/**
- * Handle search input with debounce
- */
 function handleSearchInput(query) {
+  searchQuery = query;
   clearTimeout(searchDebounceTimer);
 
   if (!query.trim()) {
-    skillsList.innerHTML = '';
-    emptyState.style.display = 'flex';
-    loadingIndicator.classList.add('hidden');
-    errorMessage.classList.add('hidden');
+    currentResults = [];
+    renderListState();
     return;
   }
 
-  loadingIndicator.classList.remove('hidden');
-  emptyState.style.display = 'none';
-  errorMessage.classList.add('hidden');
-
+  setLoading(true);
+  hideMessage();
   searchDebounceTimer = setTimeout(() => {
-    vscode.postMessage({
-      type: 'search',
-      query: query.trim()
-    });
-  }, 300); // 300ms debounce
+    vscode.postMessage({ type: 'search', query: query.trim() });
+  }, 300);
 }
 
-/**
- * Handle messages from extension
- */
 function handleExtensionMessage(message) {
   switch (message.type) {
     case 'searchResults':
       handleSearchResults(message);
       break;
     case 'installedSkills':
-      handleInstalledSkillsUpdate(message);
+      installedSkills = message.installed || [];
+      renderListState();
       break;
     case 'installResult':
       handleInstallResult(message);
@@ -77,27 +49,71 @@ function handleExtensionMessage(message) {
     case 'uninstallResult':
       handleUninstallResult(message);
       break;
+    case 'openSkillDetailsResult':
+      setLoading(false);
+      if (!message.success) {
+        showError(`Failed to open skill details: ${message.error}`);
+      }
+      break;
     default:
       console.log('Unknown message type:', message.type);
   }
 }
 
-/**
- * Handle search results
- */
 function handleSearchResults(message) {
-  loadingIndicator.classList.add('hidden');
+  setLoading(false);
 
   if (message.error) {
+    currentResults = [];
     showError(`Search failed: ${message.error}`);
-    skillsList.innerHTML = '';
-    emptyState.style.display = 'none';
+    renderListState();
     return;
   }
 
-  errorMessage.classList.add('hidden');
+  currentResults = message.results || [];
+  renderListState();
+}
 
-  if (message.results.length === 0) {
+function handleInstallResult(message) {
+  if (message.success) {
+    vscode.postMessage({ type: 'getInstalledSkills' });
+    showSuccess(`${message.skillId} installed`);
+  } else {
+    showError(`Installation failed: ${message.error}`);
+  }
+
+  rerunSearchIfNeeded();
+}
+
+function handleUninstallResult(message) {
+  if (message.success) {
+    vscode.postMessage({ type: 'getInstalledSkills' });
+    showSuccess(`${message.skillId} uninstalled`);
+  } else {
+    showError(`Uninstallation failed: ${message.error}`);
+  }
+
+  rerunSearchIfNeeded();
+}
+
+function rerunSearchIfNeeded() {
+  if (searchQuery.trim()) {
+    vscode.postMessage({ type: 'search', query: searchQuery.trim() });
+  }
+}
+
+function renderListState() {
+  skillsList.className = 'skills-list';
+  searchInput.value = searchQuery;
+
+  if (!searchQuery.trim()) {
+    skillsList.innerHTML = '';
+    emptyState.innerHTML = '<p>Search for skills to get started</p>';
+    emptyState.style.display = 'flex';
+    return;
+  }
+
+  if (currentResults.length === 0) {
     skillsList.innerHTML = '';
     emptyState.innerHTML = '<p>No skills found. Try a different search.</p>';
     emptyState.style.display = 'flex';
@@ -105,167 +121,200 @@ function handleSearchResults(message) {
   }
 
   emptyState.style.display = 'none';
-  renderSkills(message.results);
+  skillsList.innerHTML = currentResults.map((skill) => renderSkillCard(skill)).join('');
 }
 
-/**
- * Render skills as cards
- */
-function renderSkills(skills) {
-  currentResults = skills;
-  skillsList.innerHTML = skills.map((skill) => {
-    const isInstalled = isSkillInstalled(skill.id);
+function renderSkillCard(skill) {
+  const isInstalled = isSkillInstalled(skill.id);
 
-    return `
-      <div class="skill-card" data-skill-id="${skill.id}">
-        <div class="skill-header">
+  return `
+    <article class="skill-card" onclick='openSkillDetailsById(${JSON.stringify(skill.id)})'>
+      <div class="skill-header">
+        <div class="skill-title-wrap">
           <div class="skill-title">${escapeHtml(skill.name)}</div>
-          <div class="skill-stars">
-            ⭐ ${skill.stars || 0}
-          </div>
+          <div class="skill-author">${escapeHtml(skill.author)}</div>
         </div>
-        <div class="skill-author">by ${escapeHtml(skill.author)}</div>
-        <div class="skill-description">${escapeHtml(skill.description)}</div>
-        <div class="skill-footer">
-          <div class="skill-badges">
-            ${isInstalled ? '<span class="status-badge">Installed</span>' : ''}
-          </div>
-          <div class="skill-actions">
-            ${isInstalled
-              ? `<button class="btn-primary" onclick="requestUninstall('${skill.id}')">Uninstall</button>`
-              : `<button class="btn-primary" onclick="requestInstall('${skill.id}', '${escapeHtml(skill.name)}', '${escapeAttr(skill.githubUrl)}')">Install</button>`
-            }
-            ${skill.githubUrl ? `<a href="${skill.githubUrl}" class="btn-icon" title="Open on GitHub">⧉</a>` : ''}
-          </div>
+        <div class="skill-stars">★ ${formatCompactNumber(skill.stars || 0)}</div>
+      </div>
+      <div class="skill-description">${escapeHtml(skill.description || 'No description available.')}</div>
+      <div class="skill-footer">
+        <div class="skill-badges">
+          ${isInstalled ? '<span class="status-badge">Installed</span>' : ''}
+        </div>
+        <div class="skill-actions">
+          ${isInstalled
+            ? `<button class="btn-primary" type="button" onclick='event.stopPropagation(); requestUninstall(${JSON.stringify(skill.id)})'>Uninstall</button>`
+            : `<button class="btn-primary" type="button" onclick='event.stopPropagation(); requestInstall(${JSON.stringify(skill.id)}, ${JSON.stringify(skill.name)}, ${JSON.stringify(skill.githubUrl)})'>Install</button>`}
+          ${skill.githubUrl ? `<a class="btn-icon" href="${escapeAttr(skill.githubUrl)}" onclick="event.stopPropagation()" title="Open on GitHub">↗</a>` : ''}
         </div>
       </div>
-    `;
-  }).join('');
+    </article>
+  `;
 }
 
-/**
- * Request skill installation
- */
+function openSkillDetailsById(skillId) {
+  const skill = currentResults.find((entry) => entry.id === skillId);
+  if (!skill) {
+    showError('Unable to locate the selected skill.');
+    return;
+  }
+
+  setLoading(true);
+  hideMessage();
+  vscode.postMessage({ type: 'openSkillDetails', skill });
+}
+
 function requestInstall(skillId, skillName, githubUrl) {
-  vscode.postMessage({
-    type: 'install',
-    skillId: skillId,
-    skillName: skillName,
-    githubUrl: githubUrl
-  });
+  vscode.postMessage({ type: 'install', skillId, skillName, githubUrl });
 }
 
-/**
- * Request skill uninstallation
- */
 function requestUninstall(skillId) {
-  vscode.postMessage({
-    type: 'uninstall',
-    skillId: skillId
-  });
+  vscode.postMessage({ type: 'uninstall', skillId });
 }
 
-/**
- * Handle installed skills update
- */
-function handleInstalledSkillsUpdate(message) {
-  installedSkills = message.installed;
-
-  if (currentResults.length > 0) {
-    renderSkills(currentResults);
-  }
-}
-
-/**
- * Handle install result
- */
-function handleInstallResult(message) {
-  if (message.success) {
-    // Refresh installed skills list
-    vscode.postMessage({ type: 'getInstalledSkills' });
-    showSuccess(`${message.skillId} installed in ${message.toolDisplayName || message.toolName}`);
-  } else {
-    showError(`Installation failed: ${message.error}`);
-  }
-
-  // Re-render skills if visible
-  if (searchInput.value) {
-    vscode.postMessage({
-      type: 'search',
-      query: searchInput.value
-    });
-  }
-}
-
-/**
- * Handle uninstall result
- */
-function handleUninstallResult(message) {
-  if (message.success) {
-    // Refresh installed skills list
-    vscode.postMessage({ type: 'getInstalledSkills' });
-    showSuccess(`${message.skillId} uninstalled from ${message.toolDisplayName || message.toolName}`);
-  } else {
-    showError(`Uninstallation failed: ${message.error}`);
-  }
-
-  // Re-render skills if visible
-  if (searchInput.value) {
-    vscode.postMessage({
-      type: 'search',
-      query: searchInput.value
-    });
-  }
-}
-
-/**
- * Check if a skill is installed on any tool
- */
 function isSkillInstalled(skillId) {
-  return installedSkills.some((s) => s.skillId === skillId);
+  return installedSkills.some((skill) => skill.skillId === skillId);
 }
 
-/**
- * Show error message
- */
+function setLoading(isLoading) {
+  loadingIndicator.classList.toggle('hidden', !isLoading);
+}
+
 function showError(message) {
   errorMessage.textContent = message;
   errorMessage.classList.remove('hidden');
 }
 
-/**
- * Show success message
- */
 function showSuccess(message) {
-  errorMessage.textContent = '✓ ' + message;
+  errorMessage.textContent = `✓ ${message}`;
   errorMessage.classList.remove('hidden');
   setTimeout(() => {
     errorMessage.classList.add('hidden');
   }, 3000);
 }
 
-/**
- * Escape HTML to prevent XSS
- */
+function hideMessage() {
+  errorMessage.classList.add('hidden');
+}
+
+function formatCompactNumber(value) {
+  return new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(value || 0);
+}
+
 function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.replace(/[&<>"']/g, (m) => map[m]);
+  return String(text ?? '').replace(/[&<>"']/g, (char) => {
+    switch (char) {
+      case '&':
+        return '&amp;';
+      case '<':
+        return '&lt;';
+      case '>':
+        return '&gt;';
+      case '"':
+        return '&quot;';
+      case "'":
+        return '&#039;';
+      default:
+        return char;
+    }
+  });
 }
 
-/**
- * Escape attribute values
- */
 function escapeAttr(text) {
-  return text.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  return escapeHtml(text);
 }
 
-// Initialize on load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initialize);
+} else {
+  initialize();
+}
+
+function showSuccess(message) {
+  errorMessage.textContent = `✓ ${message}`;
+  errorMessage.classList.remove('hidden');
+  setTimeout(() => {
+    errorMessage.classList.add('hidden');
+  }, 3000);
+}
+
+function hideMessage() {
+  errorMessage.classList.add('hidden');
+}
+
+function formatCompactNumber(value) {
+  return new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(value || 0);
+}
+
+function formatFileSize(bytes) {
+  if (!bytes || bytes <= 0) {
+    return 'File';
+  }
+
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let size = bytes;
+  let unitIndex = 0;
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${size.toFixed(size >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function relativeTime(value) {
+  if (!value) {
+    return 'Unknown';
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  const diff = Date.now() - date.getTime();
+  const intervals = [
+    ['year', 365 * 24 * 60 * 60 * 1000],
+    ['month', 30 * 24 * 60 * 60 * 1000],
+    ['day', 24 * 60 * 60 * 1000],
+    ['hour', 60 * 60 * 1000],
+    ['minute', 60 * 1000]
+  ];
+
+  for (const [label, size] of intervals) {
+    const amount = Math.floor(diff / size);
+    if (amount >= 1) {
+      return `${amount} ${label}${amount === 1 ? '' : 's'} ago`;
+    }
+  }
+
+  return 'Just now';
+}
+
+function escapeHtml(text) {
+  return String(text ?? '').replace(/[&<>"']/g, (char) => {
+    switch (char) {
+      case '&':
+        return '&amp;';
+      case '<':
+        return '&lt;';
+      case '>':
+        return '&gt;';
+      case '"':
+        return '&quot;';
+      case "'":
+        return '&#039;';
+      default:
+        return char;
+    }
+  });
+}
+
+function escapeAttr(text) {
+  return escapeHtml(text);
+}
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initialize);
 } else {

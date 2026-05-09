@@ -67,23 +67,23 @@ Discover and install reusable AI skills directly from the **Skills Marketplace**
 - Use the search box to find skills by name or keyword
 - Results are fetched from [skillsmp.com](https://skillsmp.com) in real-time
 - Results are cached for 5 minutes to improve performance
+- Click any skill card to open a full details view inspired by the VS Code extension page
 
 ### Installing Skills
 - Click the **Install** button on a skill card
-- Select the target tool (VS Code, Cursor, Windsurf, Antigravity)
-- Skills are installed to your user's global extensions directory
+- Skills are installed automatically for the current host editor running the extension
 - Installed skills are tracked and can be uninstalled at any time
 
-### Supported Tools
-- **Visual Studio Code** — `~/.vscode/extensions/`
-- **Cursor** — `~/.cursor/extensions/`
-- **Windsurf** — `~/.windsurf/extensions/`
-- **Antigravity** — `~/.antigravity/skills/`
+### Skill Details and GitHub Files
+- Open a selected skill's details page directly from the search results
+- Browse the skill repository from GitHub with folder navigation starting at the repository root
+- Preview supported text files inline before opening them on GitHub
+- Use the built-in **Files** tab to inspect repository contents without leaving VS Code
 
 ### Managing Installed Skills
 - Installed skills are marked with a checkmark on their cards
-- Click the **GitHub** icon to visit the skill's repository
-- Click **Uninstall** to remove a skill from a tool
+- Click the **GitHub** action to visit the skill's repository
+- Click **Uninstall** to remove a skill from the current host editor
 
 ---
 
