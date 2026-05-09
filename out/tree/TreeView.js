@@ -17,105 +17,105 @@ class TreeView {
         TreeView.Current = this;
         this.context = context;
         this.treeDataProvider = new TreeProvider_1.TreeProvider();
-        this.view = vscode.window.createTreeView('DevDockView', { treeDataProvider: this.treeDataProvider, showCollapseAll: true });
+        this.view = vscode.window.createTreeView('SkillsView', { treeDataProvider: this.treeDataProvider, showCollapseAll: true });
         context.subscriptions.push(this.view);
         this.RegisterCommands();
     }
     RegisterCommands() {
-        vscode.commands.registerCommand('DevDock.Refresh', () => {
+        vscode.commands.registerCommand('Skills.Refresh', () => {
             this.Refresh();
         });
-        vscode.commands.registerCommand('DevDock.Filter', () => {
+        vscode.commands.registerCommand('Skills.Filter', () => {
             this.Filter();
         });
-        vscode.commands.registerCommand('DevDock.ShowOnlyFavorite', () => {
+        vscode.commands.registerCommand('Skills.ShowOnlyFavorite', () => {
             this.ShowOnlyFavorite();
         });
-        vscode.commands.registerCommand('DevDock.ShowHidden', () => {
+        vscode.commands.registerCommand('Skills.ShowHidden', () => {
             this.ShowHidden();
         });
-        vscode.commands.registerCommand('DevDock.Hide', (node) => {
+        vscode.commands.registerCommand('Skills.Hide', (node) => {
             this.Hide(node);
         });
-        vscode.commands.registerCommand('DevDock.UnHide', (node) => {
+        vscode.commands.registerCommand('Skills.UnHide', (node) => {
             this.UnHide(node);
         });
-        vscode.commands.registerCommand('DevDock.AddFav', (node) => {
+        vscode.commands.registerCommand('Skills.AddFav', (node) => {
             this.AddFav(node);
         });
-        vscode.commands.registerCommand('DevDock.RemoveFav', (node) => {
+        vscode.commands.registerCommand('Skills.RemoveFav', (node) => {
             this.RemoveFav(node);
         });
-        vscode.commands.registerCommand('DevDock.ShowOnlyInThisWorkspace', (node) => {
+        vscode.commands.registerCommand('Skills.ShowOnlyInThisWorkspace', (node) => {
             this.ShowOnlyInThisWorkspace(node);
         });
-        vscode.commands.registerCommand('DevDock.ShowInAnyWorkspace', (node) => {
+        vscode.commands.registerCommand('Skills.ShowInAnyWorkspace', (node) => {
             this.ShowInAnyWorkspace(node);
         });
-        vscode.commands.registerCommand('DevDock.NodeAdd', (node) => {
+        vscode.commands.registerCommand('Skills.NodeAdd', (node) => {
             this.NodeAdd(node);
         });
-        vscode.commands.registerCommand('DevDock.NodeRemove', (node) => {
+        vscode.commands.registerCommand('Skills.NodeRemove', (node) => {
             this.NodeRemove(node);
         });
-        vscode.commands.registerCommand('DevDock.NodeRefresh', (node) => {
+        vscode.commands.registerCommand('Skills.NodeRefresh', (node) => {
             this.NodeRefresh(node);
         });
-        vscode.commands.registerCommand('DevDock.NodeView', (node) => {
+        vscode.commands.registerCommand('Skills.NodeView', (node) => {
             this.NodeView(node);
         });
-        vscode.commands.registerCommand('DevDock.NodeEdit', (node) => {
+        vscode.commands.registerCommand('Skills.NodeEdit', (node) => {
             this.NodeEdit(node);
         });
-        vscode.commands.registerCommand('DevDock.NodeRun', (node) => {
+        vscode.commands.registerCommand('Skills.NodeRun', (node) => {
             this.NodeRun(node);
         });
-        vscode.commands.registerCommand('DevDock.NodeStop', (node) => {
+        vscode.commands.registerCommand('Skills.NodeStop', (node) => {
             this.NodeStop(node);
         });
-        vscode.commands.registerCommand('DevDock.NodeOpen', (node) => {
+        vscode.commands.registerCommand('Skills.NodeOpen', (node) => {
             this.NodeOpen(node);
         });
-        vscode.commands.registerCommand('DevDock.NodeInfo', (node) => {
+        vscode.commands.registerCommand('Skills.NodeInfo', (node) => {
             this.NodeInfo(node);
         });
-        vscode.commands.registerCommand('DevDock.NodeCopy', (node) => {
+        vscode.commands.registerCommand('Skills.NodeCopy', (node) => {
             this.NodeCopy(node);
         });
-        vscode.commands.registerCommand('DevDock.NodeAlias', (node) => {
+        vscode.commands.registerCommand('Skills.NodeAlias', (node) => {
             this.NodeAlias(node);
         });
-        vscode.commands.registerCommand('DevDock.SetTooltip', (node) => {
+        vscode.commands.registerCommand('Skills.SetTooltip', (node) => {
             this.SetTooltip(node);
         });
-        vscode.commands.registerCommand('DevDock.SetColor', (node) => {
+        vscode.commands.registerCommand('Skills.SetColor', (node) => {
             this.SetColor(node);
         });
-        vscode.commands.registerCommand('DevDock.MoveUp', (node) => {
+        vscode.commands.registerCommand('Skills.MoveUp', (node) => {
             this.MoveUp(node);
         });
-        vscode.commands.registerCommand('DevDock.MoveDown', (node) => {
+        vscode.commands.registerCommand('Skills.MoveDown', (node) => {
             this.MoveDown(node);
         });
-        vscode.commands.registerCommand('DevDock.MoveToFolder', (node) => {
+        vscode.commands.registerCommand('Skills.MoveToFolder', (node) => {
             this.MoveToFolder(node);
         });
-        vscode.commands.registerCommand('DevDock.BugAndNewFeatureRequest', () => {
+        vscode.commands.registerCommand('Skills.BugAndNewFeatureRequest', () => {
             this.BugAndNewFeatureRequest();
         });
-        vscode.commands.registerCommand('DevDock.Donate', () => {
+        vscode.commands.registerCommand('Skills.Donate', () => {
             this.Donate();
         });
-        vscode.commands.registerCommand('DevDock.ExportConfig', () => {
+        vscode.commands.registerCommand('Skills.ExportConfig', () => {
             this.ExportConfig();
         });
-        vscode.commands.registerCommand('DevDock.ImportConfig', () => {
+        vscode.commands.registerCommand('Skills.ImportConfig', () => {
             this.ImportConfig();
         });
-        vscode.commands.registerCommand('DevDock.Add', (node) => {
+        vscode.commands.registerCommand('Skills.Add', (node) => {
             this.Add(undefined);
         });
-        vscode.commands.registerCommand('DevDock.Remove', (node) => {
+        vscode.commands.registerCommand('Skills.Remove', (node) => {
             this.Remove(node);
         });
     }
@@ -325,14 +325,14 @@ class TreeView {
         }
     }
     BugAndNewFeatureRequest() {
-        vscode.env.openExternal(vscode.Uri.parse('https://github.com/necatiarslan/devdock/issues/new'));
+        vscode.env.openExternal(vscode.Uri.parse('https://github.com/necatiarslan/skills-vscode-extension/issues/new'));
     }
     Donate() {
         vscode.env.openExternal(vscode.Uri.parse('https://github.com/sponsors/necatiarslan'));
     }
     async ExportConfig() {
         const filePath = await vscode.window.showSaveDialog({
-            defaultUri: vscode.Uri.file('devdock.json'),
+            defaultUri: vscode.Uri.file('skills.json'),
             saveLabel: 'Save',
             filters: { 'JSON': ['json'] },
         });
@@ -346,7 +346,7 @@ class TreeView {
             canSelectMany: false,
             canSelectFiles: true,
             canSelectFolders: false,
-            defaultUri: vscode.Uri.file('devdock.json'),
+            defaultUri: vscode.Uri.file('skills.json'),
             filters: { 'JSON': ['json'] },
         });
         if (!filePath) {

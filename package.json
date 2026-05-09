@@ -1,6 +1,6 @@
 {
-  "name": "dev-dock",
-  "displayName": "Dev-Dock",
+  "name": "skills",
+  "displayName": "Skills",
   "description": "A customizable developer dock for files, notes, scripts, and VS Code commands",
   "version": "1.0.0",
   "publisher": "NecatiARSLAN",
@@ -28,158 +28,158 @@
   "contributes": {
     "commands": [
       {
-        "command": "DevDock.Add",
+        "command": "Skills.Add",
         "title": "Add",
         "icon": "$(add)"
       },
       {
-        "command": "DevDock.Remove",
+        "command": "Skills.Remove",
         "title": "Remove",
         "icon": "$(trash)"
       },
       {
-        "command": "DevDock.Refresh",
+        "command": "Skills.Refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "DevDock.Filter",
+        "command": "Skills.Filter",
         "title": "Filter",
         "icon": "$(filter)"
       },
       {
-        "command": "DevDock.ShowOnlyFavorite",
+        "command": "Skills.ShowOnlyFavorite",
         "title": "Show Only Favorite",
         "icon": "$(bookmark)"
       },
       {
-        "command": "DevDock.ShowHidden",
+        "command": "Skills.ShowHidden",
         "title": "Show Hidden",
         "icon": "$(eye-closed)"
       },
       {
-        "command": "DevDock.Hide",
+        "command": "Skills.Hide",
         "title": "Hide"
       },
       {
-        "command": "DevDock.UnHide",
+        "command": "Skills.UnHide",
         "title": "UnHide"
       },
       {
-        "command": "DevDock.AddFav",
+        "command": "Skills.AddFav",
         "title": "Fav",
         "icon": "$(star)"
       },
       {
-        "command": "DevDock.RemoveFav",
+        "command": "Skills.RemoveFav",
         "title": "UnFav",
         "icon": "$(star-empty)"
       },
       {
-        "command": "DevDock.ShowOnlyInThisWorkspace",
+        "command": "Skills.ShowOnlyInThisWorkspace",
         "title": "Show Only In This Workspace"
       },
       {
-        "command": "DevDock.ShowInAnyWorkspace",
+        "command": "Skills.ShowInAnyWorkspace",
         "title": "Show In Any Workspace"
       },
       {
-        "command": "DevDock.NodeAdd",
+        "command": "Skills.NodeAdd",
         "title": "Add",
         "icon": "$(add)"
       },
       {
-        "command": "DevDock.NodeRemove",
+        "command": "Skills.NodeRemove",
         "title": "Remove",
         "icon": "$(trash)"
       },
       {
-        "command": "DevDock.NodeRefresh",
+        "command": "Skills.NodeRefresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "DevDock.NodeView",
+        "command": "Skills.NodeView",
         "title": "View",
         "icon": "$(eye)"
       },
       {
-        "command": "DevDock.NodeEdit",
+        "command": "Skills.NodeEdit",
         "title": "Edit",
         "icon": "$(pencil)"
       },
       {
-        "command": "DevDock.NodeRun",
+        "command": "Skills.NodeRun",
         "title": "Run",
         "icon": "$(play)"
       },
       {
-        "command": "DevDock.NodeStop",
+        "command": "Skills.NodeStop",
         "title": "Stop",
         "icon": "$(stop)"
       },
       {
-        "command": "DevDock.NodeOpen",
+        "command": "Skills.NodeOpen",
         "title": "Open",
         "icon": "$(go-to-file)"
       },
       {
-        "command": "DevDock.NodeInfo",
+        "command": "Skills.NodeInfo",
         "title": "Info",
         "icon": "$(info)"
       },
       {
-        "command": "DevDock.NodeCopy",
+        "command": "Skills.NodeCopy",
         "title": "Copy",
         "icon": "$(copy)"
       },
       {
-        "command": "DevDock.NodeAlias",
+        "command": "Skills.NodeAlias",
         "title": "Alias",
         "icon": "$(case-sensitive)"
       },
       {
-        "command": "DevDock.SetTooltip",
+        "command": "Skills.SetTooltip",
         "title": "Set Tooltip",
         "icon": "$(comment)"
       },
       {
-        "command": "DevDock.SetColor",
+        "command": "Skills.SetColor",
         "title": "Set Color",
         "icon": "$(symbol-color)"
       },
       {
-        "command": "DevDock.MoveUp",
+        "command": "Skills.MoveUp",
         "title": "Move Up",
         "icon": "$(arrow-up)"
       },
       {
-        "command": "DevDock.MoveDown",
+        "command": "Skills.MoveDown",
         "title": "Move Down",
         "icon": "$(arrow-down)"
       },
       {
-        "command": "DevDock.MoveToFolder",
+        "command": "Skills.MoveToFolder",
         "title": "Move to Folder",
         "icon": "$(folder)"
       },
       {
-        "command": "DevDock.Donate",
+        "command": "Skills.Donate",
         "title": "Donate",
         "icon": "$(heart)"
       },
       {
-        "command": "DevDock.BugAndNewFeatureRequest",
+        "command": "Skills.BugAndNewFeatureRequest",
         "title": "Bug and New Feature Request",
         "icon": "$(bug)"
       },
       {
-        "command": "DevDock.ExportConfig",
+        "command": "Skills.ExportConfig",
         "title": "Export Config",
         "icon": "$(arrow-down)"
       },
       {
-        "command": "DevDock.ImportConfig",
+        "command": "Skills.ImportConfig",
         "title": "Import Config",
         "icon": "$(arrow-up)"
       }
@@ -187,160 +187,160 @@
     "menus": {
       "view/title": [
         {
-          "command": "DevDock.Add",
-          "when": "view == DevDockView",
+          "command": "Skills.Add",
+          "when": "view == SkillsView",
           "group": "navigation"
         },
         {
-          "command": "DevDock.Filter",
-          "when": "view == DevDockView",
+          "command": "Skills.Filter",
+          "when": "view == SkillsView",
           "group": "navigation"
         },
         {
-          "command": "DevDock.ShowOnlyFavorite",
-          "when": "view == DevDockView",
+          "command": "Skills.ShowOnlyFavorite",
+          "when": "view == SkillsView",
           "group": "navigation"
         },
         {
-          "command": "DevDock.ShowHidden",
-          "when": "view == DevDockView",
+          "command": "Skills.ShowHidden",
+          "when": "view == SkillsView",
           "group": "navigation"
         },
         {
-          "command": "DevDock.Refresh",
-          "when": "view == DevDockView",
+          "command": "Skills.Refresh",
+          "when": "view == SkillsView",
           "group": "navigation"
         },
         {
-          "command": "DevDock.Donate",
-          "when": "view == DevDockView",
+          "command": "Skills.Donate",
+          "when": "view == SkillsView",
           "group": "other_2"
         },
         {
-          "command": "DevDock.BugAndNewFeatureRequest",
-          "when": "view == DevDockView",
+          "command": "Skills.BugAndNewFeatureRequest",
+          "when": "view == SkillsView",
           "group": "other_2"
         },
         {
-          "command": "DevDock.ExportConfig",
-          "when": "view == DevDockView",
+          "command": "Skills.ExportConfig",
+          "when": "view == SkillsView",
           "group": "other_3"
         },
         {
-          "command": "DevDock.ImportConfig",
-          "when": "view == DevDockView",
+          "command": "Skills.ImportConfig",
+          "when": "view == SkillsView",
           "group": "other_3"
         }
       ],
       "view/item/context": [
         {
-          "command": "DevDock.AddFav",
-          "when": "view == DevDockView && viewItem =~ /#AddFav#/",
+          "command": "Skills.AddFav",
+          "when": "view == SkillsView && viewItem =~ /#AddFav#/",
           "group": "Filter"
         },
         {
-          "command": "DevDock.RemoveFav",
-          "when": "view == DevDockView && viewItem =~ /#RemoveFav#/",
+          "command": "Skills.RemoveFav",
+          "when": "view == SkillsView && viewItem =~ /#RemoveFav#/",
           "group": "Filter"
         },
         {
-          "command": "DevDock.Hide",
-          "when": "view == DevDockView && viewItem =~ /#Hide#/",
+          "command": "Skills.Hide",
+          "when": "view == SkillsView && viewItem =~ /#Hide#/",
           "group": "Filter"
         },
         {
-          "command": "DevDock.UnHide",
-          "when": "view == DevDockView && viewItem =~ /#UnHide#/",
+          "command": "Skills.UnHide",
+          "when": "view == SkillsView && viewItem =~ /#UnHide#/",
           "group": "Filter"
         },
         {
-          "command": "DevDock.ShowOnlyInThisWorkspace",
-          "when": "view == DevDockView && viewItem =~ /#ShowOnlyInThisWorkspace#/",
+          "command": "Skills.ShowOnlyInThisWorkspace",
+          "when": "view == SkillsView && viewItem =~ /#ShowOnlyInThisWorkspace#/",
           "group": "Filter"
         },
         {
-          "command": "DevDock.ShowInAnyWorkspace",
-          "when": "view == DevDockView && viewItem =~ /#ShowInAnyWorkspace#/",
+          "command": "Skills.ShowInAnyWorkspace",
+          "when": "view == SkillsView && viewItem =~ /#ShowInAnyWorkspace#/",
           "group": "Filter"
         },
         {
-          "command": "DevDock.NodeAlias",
-          "when": "view == DevDockView && viewItem =~ /#NodeAlias#/",
+          "command": "Skills.NodeAlias",
+          "when": "view == SkillsView && viewItem =~ /#NodeAlias#/",
           "group": "Filter"
         },
         {
-          "command": "DevDock.SetTooltip",
-          "when": "view == DevDockView && viewItem =~ /#SetTooltip#/",
+          "command": "Skills.SetTooltip",
+          "when": "view == SkillsView && viewItem =~ /#SetTooltip#/",
           "group": "Customize"
         },
         {
-          "command": "DevDock.SetColor",
-          "when": "view == DevDockView && viewItem =~ /#SetColor#/",
+          "command": "Skills.SetColor",
+          "when": "view == SkillsView && viewItem =~ /#SetColor#/",
           "group": "Customize"
         },
         {
-          "command": "DevDock.MoveUp",
-          "when": "view == DevDockView && viewItem =~ /#MoveUp#/",
+          "command": "Skills.MoveUp",
+          "when": "view == SkillsView && viewItem =~ /#MoveUp#/",
           "group": "Order"
         },
         {
-          "command": "DevDock.MoveDown",
-          "when": "view == DevDockView && viewItem =~ /#MoveDown#/",
+          "command": "Skills.MoveDown",
+          "when": "view == SkillsView && viewItem =~ /#MoveDown#/",
           "group": "Order"
         },
         {
-          "command": "DevDock.MoveToFolder",
-          "when": "view == DevDockView && viewItem =~ /#NodeMove#/",
+          "command": "Skills.MoveToFolder",
+          "when": "view == SkillsView && viewItem =~ /#NodeMove#/",
           "group": "Order"
         },
         {
-          "command": "DevDock.NodeAdd",
-          "when": "view == DevDockView && viewItem =~ /#NodeAdd#/",
+          "command": "Skills.NodeAdd",
+          "when": "view == SkillsView && viewItem =~ /#NodeAdd#/",
           "group": "inline@1"
         },
         {
-          "command": "DevDock.NodeRemove",
-          "when": "view == DevDockView && viewItem =~ /#NodeRemove#/",
+          "command": "Skills.NodeRemove",
+          "when": "view == SkillsView && viewItem =~ /#NodeRemove#/",
           "group": "inline@2"
         },
         {
-          "command": "DevDock.NodeRefresh",
-          "when": "view == DevDockView && viewItem =~ /#NodeRefresh#/",
+          "command": "Skills.NodeRefresh",
+          "when": "view == SkillsView && viewItem =~ /#NodeRefresh#/",
           "group": "inline@3"
         },
         {
-          "command": "DevDock.NodeView",
-          "when": "view == DevDockView && viewItem =~ /#NodeView#/",
+          "command": "Skills.NodeView",
+          "when": "view == SkillsView && viewItem =~ /#NodeView#/",
           "group": "inline@4"
         },
         {
-          "command": "DevDock.NodeEdit",
-          "when": "view == DevDockView && viewItem =~ /#NodeEdit#/",
+          "command": "Skills.NodeEdit",
+          "when": "view == SkillsView && viewItem =~ /#NodeEdit#/",
           "group": "inline@5"
         },
         {
-          "command": "DevDock.NodeRun",
-          "when": "view == DevDockView && viewItem =~ /#NodeRun#/",
+          "command": "Skills.NodeRun",
+          "when": "view == SkillsView && viewItem =~ /#NodeRun#/",
           "group": "inline@6"
         },
         {
-          "command": "DevDock.NodeStop",
-          "when": "view == DevDockView && viewItem =~ /#NodeStop#/",
+          "command": "Skills.NodeStop",
+          "when": "view == SkillsView && viewItem =~ /#NodeStop#/",
           "group": "inline@7"
         },
         {
-          "command": "DevDock.NodeOpen",
-          "when": "view == DevDockView && viewItem =~ /#NodeOpen#/",
+          "command": "Skills.NodeOpen",
+          "when": "view == SkillsView && viewItem =~ /#NodeOpen#/",
           "group": "inline@8"
         },
         {
-          "command": "DevDock.NodeInfo",
-          "when": "view == DevDockView && viewItem =~ /#NodeInfo#/",
+          "command": "Skills.NodeInfo",
+          "when": "view == SkillsView && viewItem =~ /#NodeInfo#/",
           "group": "inline@9"
         },
         {
-          "command": "DevDock.NodeCopy",
-          "when": "view == DevDockView && viewItem =~ /#NodeCopy#/",
+          "command": "Skills.NodeCopy",
+          "when": "view == SkillsView && viewItem =~ /#NodeCopy#/",
           "group": "inline@10"
         }
       ]
@@ -348,25 +348,25 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "DevDock",
-          "title": "DevDock",
+          "id": "Skills",
+          "title": "Skills",
           "icon": "media/skills-logo-activitybar.png"
         }
       ]
     },
     "views": {
-      "DevDock": [
+      "Skills": [
         {
-          "id": "DevDockView",
-          "name": "DevDock",
+          "id": "SkillsView",
+          "name": "Skills",
           "icon": "media/skills-logo-activitybar.png"
         }
       ]
     },
     "viewsWelcome": [
       {
-        "view": "DevDockView",
-        "contents": "Click [+] to add items to your dock.\n [Add](command:DevDock.Add)\n\nPin files, create notes, save shell snippets, and keep VS Code commands close at hand."
+        "view": "SkillsView",
+        "contents": "Click [+] to add items to your dock.\n [Add](command:Skills.Add)\n\nPin files, create notes, save shell snippets, and keep VS Code commands close at hand."
       }
     ]
   },

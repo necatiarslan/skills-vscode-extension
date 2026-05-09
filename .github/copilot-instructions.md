@@ -1,7 +1,7 @@
-# DevDock Copilot Instructions
+# Skills Copilot Instructions
 
 ## Project Overview
-DevDock is a VS Code extension that provides a personal dock in the sidebar for organizing developer shortcuts. It is built with TypeScript/Node.js on the VS Code Extension API.
+Skills is a VS Code extension that provides a personal dock in the sidebar for organizing developer shortcuts. It is built with TypeScript/Node.js on the VS Code Extension API.
 
 Current feature set:
 - folders for grouping items
@@ -109,7 +109,7 @@ npm run lint
 ```
 
 ### TypeScript Scope
-The build intentionally includes only the active DevDock code:
+The build intentionally includes only the active Skills code:
 - `src/common/**`
 - `src/filesystem/**`
 - `src/tree/**`
@@ -120,7 +120,7 @@ If new features are added, update [../tsconfig.json](../tsconfig.json) intention
 
 ### Debugging
 - Press F5 in VS Code to launch the extension in a debug window
-- Logs go through `ui.logToOutput()` into DevDock output channels
+- Logs go through `ui.logToOutput()` into Skills output channels
 - Tree behavior is easiest to inspect by following command registration in [../src/tree/TreeView.ts](../src/tree/TreeView.ts)
 
 ---
@@ -197,14 +197,14 @@ If a new action should appear in the tree UI, update both:
 - Keep editor rendering concerns in [../src/filesystem/NoteView.ts](../src/filesystem/NoteView.ts)
 
 **Working on branding**
-- Packaged extension icon: [../media/devdock-logo-extension.png](../media/devdock-logo-extension.png)
-- Activity bar icon: [../media/devdock-logo-activitybar.svg](../media/devdock-logo-activitybar.svg)
+- Packaged extension icon: [../media/skills-logo-extension.png](../media/skills-logo-extension.png)
+- Activity bar icon: [../media/skills-logo-activitybar.svg](../media/skills-logo-activitybar.svg)
 
 ---
 
 ## Guardrails
 
 - Do not reintroduce AWS-specific dependencies, docs, commands, or architecture unless explicitly requested
-- Keep changes aligned with the current DevDock scope
+- Keep changes aligned with the current Skills scope
 - Prefer small, focused node/service additions over reviving the old service-heavy structure
 - Preserve serialization compatibility for existing dock items whenever practical

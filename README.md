@@ -1,7 +1,7 @@
-# DevDock
-![DevDock](media/readme/main.png)
+# Skills
+![Skills](media/readme/main.png)
 
-DevDock is a lightweight VS Code extension for building a personal dock inside the sidebar.
+Skills is a lightweight VS Code extension for building a personal dock inside the sidebar.
 
 It keeps frequently used items close at hand:
 
@@ -17,7 +17,7 @@ It keeps frequently used items close at hand:
 
 ## Getting Started
 
-1. Open the **DevDock** panel in the Activity Bar.
+1. Open the **Skills** panel in the Activity Bar.
 2. Click the **+** button to add an item.
 3. Choose the item type from the quick-pick list.
 
@@ -88,4 +88,4 @@ The dock state is saved to VS Code global storage and restored automatically on 
 
 ## Contributing
 
-Bug reports and feature requests are welcome — use the **Bug and New Feature Request** option in the DevDock toolbar menu.
+Bug reports and feature requests are welcome — use the **Bug and New Feature Request** option in the Skills toolbar menu.
