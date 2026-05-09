@@ -10,6 +10,7 @@ Current feature set:
 - bash scripts
 - bash file shortcuts
 - VS Code command shortcuts
+- AI Skills Marketplace (search and install skills from skillsmp.com)
 
 The extension no longer contains AWS service integrations. Any guidance that assumes AWS resources, credentials, SDK clients, or service-specific node trees is stale and should not be reintroduced unless explicitly requested.
 
@@ -57,21 +58,65 @@ The dock tree is persisted to VS Code `globalState`.
 **On activation** in [../src/extension.ts](../src/extension.ts):
 1. Initialize `Session`
 2. Initialize `ServiceHub`
-3. Create `TreeView`
-4. Load saved tree state
-5. Refresh the tree
+3. Initialize marketplace services (`SkillsStorageService`, `MarketplaceCommands`)
+4. Create `TreeView`
+5. Load saved tree state
+6. Refresh the tree
 
-### 4. Webview Pattern
+### 4. Marketplace Services Architecture
+The Skills Marketplace provides a secondary feature set for discovering and installing AI skills:
+
+**Core Services** (in `src/services/`):
+- **SkillsApiService** — HTTP client for skillsmp.com API
+  - Methods: `search(query, page, limit)`, `fetchDetail(skillId)`, `clearCache()`
+  - Implements 5-minute result caching via `Map<string, CachedSkill>`
+  - Handles all API errors and logs via `logToOutput()`
+  
+- **SkillsStorageService** — Persistence of installed skills to `globalState`
+  - Methods: `addInstalled()`, `removeInstalled()`, `getInstalledByTool()`, `isInstalled()`, `getAllInstalled()`
+  - Storage key format: `skills.installed.{toolName}` (e.g., `skills.installed.vscode`)
+  - Tracks: skillId, name, author, version, installedAt, localPath
+  
+- **ToolInstallService** — Tool detection and skill installation/uninstallation
+  - Methods: `detectTools()`, `installSkill()`, `uninstallSkill()`
+  - Supports: VS Code (`~/.vscode/extensions`), Cursor (`~/.cursor/extensions`), Windsurf (`~/.windsurf/extensions`), Antigravity (`~/.antigravity/skills`)
+  - Future: GitHub tarball download and extraction (currently MVP registers skills with metadata)
+
+**Webview Controller** (in `src/webview/`):
+- **SkillsPanel** — Manages marketplace webview panel lifecycle and messaging
+  - Methods: `createOrShow()`, `handleWebviewMessage()`, handlers for search, install, uninstall, tool detection
+  - Message types: search, install, uninstall, getDetectedTools, getInstalledSkills
+  - Posts back: searchResults, installResult, uninstallResult, detectedTools, installedSkills
+  
+- **MarketplaceCommands** — Registers `Skills.OpenMarketplace` command
+
+**Data Types** (in `src/services/types/`):
+- `Skill` — API response model (id, name, author, description, githubUrl, skillUrl, stars, updatedAt)
+- `ToolConfig` — Tool configuration (name, displayName, globalDir, installed)
+- `InstalledSkill` — Persistence model (skillId, name, author, version, installedAt, localPath)
+
+**UI** (in `media/marketplace/`):
+- `marketplace.html` — Embedded in SkillsPanel webview
+- `marketplace.css` — VS Code theme-aware styling (grid layout, cards, buttons, badges)
+- `marketplace.js` — Client-side event handling, debounced search, install/uninstall flows, cache display
+
+**Integration Points**:
+- Extension activation initializes `SkillsStorageService` with `context.globalState`
+- `MarketplaceCommands` registered in activation, wires `Skills.OpenMarketplace` command
+- Marketplace button appears in Skills toolbar (after Refresh button in package.json menus)
+
+### 5. Webview Pattern
 The main interactive webview currently is the note editor.
 
 - [../src/filesystem/NoteView.ts](../src/filesystem/NoteView.ts) creates and manages a `WebviewPanel`
 - Styles are loaded from [../media/notes/style.css](../media/notes/style.css)
 - The editor uses Quill via CDN and persists changes by posting messages back to the extension
 
-When adding new webviews:
-- keep message passing explicit and minimal
-- use `ui.getUri(...)` for local assets
-- prefer small focused views over complex multi-purpose panels
+The marketplace webview follows the same pattern:
+- [../src/webview/SkillsPanel.ts](../src/webview/SkillsPanel.ts) manages the marketplace panel
+- Styles: [../media/marketplace/marketplace.css](../media/marketplace/marketplace.css)
+- Script: [../media/marketplace/marketplace.js](../media/marketplace/marketplace.js)
+- Message passing: extension host ↔ webview UI
 
 ---
 

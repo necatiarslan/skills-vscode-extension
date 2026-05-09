@@ -4,6 +4,8 @@ import { Session } from './common/Session';
 import { TreeView } from './tree/TreeView';
 import { ServiceHub } from './tree/ServiceHub';
 import { TreeState } from './tree/TreeState';
+import { initializeStorageService } from './services/SkillsStorageService';
+import { MarketplaceCommands } from './webview/MarketplaceCommands';
 
 
 /**
@@ -17,6 +19,10 @@ export function activate(context: vscode.ExtensionContext): void {
         const session = new Session(context); // Initialize session management
         new ServiceHub(context);    // Initialize service hub
         
+        // Initialize marketplace services
+        initializeStorageService(context.globalState);
+        new MarketplaceCommands(context.extensionUri);
+
 		// 1. Initialize the unified Skills tree provider
         new TreeView(context);
 

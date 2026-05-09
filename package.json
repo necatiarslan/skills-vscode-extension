@@ -182,6 +182,11 @@
         "command": "Skills.ImportConfig",
         "title": "Import Config",
         "icon": "$(arrow-up)"
+      },
+      {
+        "command": "Skills.OpenMarketplace",
+        "title": "Open Skills Marketplace",
+        "icon": "$(extensions)"
       }
     ],
     "menus": {
@@ -208,6 +213,11 @@
         },
         {
           "command": "Skills.Refresh",
+          "when": "view == SkillsView",
+          "group": "navigation"
+        },
+        {
+          "command": "Skills.OpenMarketplace",
           "when": "view == SkillsView",
           "group": "navigation"
         },

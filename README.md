@@ -55,6 +55,38 @@ Save a URL with a human-readable alias.
 
 ---
 
+## AI Skills Marketplace
+
+Discover and install reusable AI skills directly from the **Skills Marketplace**. 
+
+### Accessing the Marketplace
+- Click the **Extensions** icon in the Skills toolbar (next to Refresh)
+- Or run the command: `Skills: Open Skills Marketplace`
+
+### Searching for Skills
+- Use the search box to find skills by name or keyword
+- Results are fetched from [skillsmp.com](https://skillsmp.com) in real-time
+- Results are cached for 5 minutes to improve performance
+
+### Installing Skills
+- Click the **Install** button on a skill card
+- Select the target tool (VS Code, Cursor, Windsurf, Antigravity)
+- Skills are installed to your user's global extensions directory
+- Installed skills are tracked and can be uninstalled at any time
+
+### Supported Tools
+- **Visual Studio Code** — `~/.vscode/extensions/`
+- **Cursor** — `~/.cursor/extensions/`
+- **Windsurf** — `~/.windsurf/extensions/`
+- **Antigravity** — `~/.antigravity/skills/`
+
+### Managing Installed Skills
+- Installed skills are marked with a checkmark on their cards
+- Click the **GitHub** icon to visit the skill's repository
+- Click **Uninstall** to remove a skill from a tool
+
+---
+
 ## Common Actions
 
 All item types support:

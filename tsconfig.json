@@ -20,6 +20,7 @@
 		"src/extension.ts",
 		"src/common/**/*.ts",
 		"src/filesystem/**/*.ts",
+		"src/services/**/*.ts",
 		"src/tree/**/*.ts",
 		"src/vscode/**/*.ts"
 	],

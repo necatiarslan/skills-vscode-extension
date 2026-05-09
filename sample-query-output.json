@@ -1,0 +1,221 @@
+{
+  "success": true,
+  "data": {
+    "skills": [
+      {
+        "id": "cgarza1992-nodepress-claude-skills-seo-meta-skill-md",
+        "name": "seo-meta",
+        "author": "cgarza1992",
+        "description": "SEO meta tags, Open Graph, and structured data requirements for christophergarza.dev. Trigger when a PR adds or modifies pages, layouts, head metadata, sitemaps, robots configuration, or JSON-LD.",
+        "githubUrl": "https://github.com/cgarza1992/nodepress/tree/main/.claude/skills/seo-meta",
+        "skillUrl": "https://skillsmp.com/skills/cgarza1992-nodepress-claude-skills-seo-meta-skill-md",
+        "stars": 0,
+        "updatedAt": "1778073803"
+      },
+      {
+        "id": "softspark-ai-toolkit-app-skills-seo-validate-skill-md",
+        "name": "seo-validate",
+        "author": "softspark",
+        "description": "SEO validator: meta/OG, Schema.org, hreflang, Core Web Vitals, crawlability. Triggers: SEO, meta tags, Schema.org, hreflang, LCP, INP, CLS, Core Web Vitals, sitemap, crawlability.",
+        "githubUrl": "https://github.com/softspark/ai-toolkit/tree/main/app/skills/seo-validate",
+        "skillUrl": "https://skillsmp.com/skills/softspark-ai-toolkit-app-skills-seo-validate-skill-md",
+        "stars": 143,
+        "updatedAt": "1778066078"
+      },
+      {
+        "id": "emmraan-agent-skills-skills-seo-skill-md",
+        "name": "seo-strategy-and-optimization",
+        "author": "Emmraan",
+        "description": "A unified, end-to-end SEO capability that guides the AI agent through every phase of search engine optimization — from understanding website goals and performing keyword research to executing technical SEO improvements, optimizing content, analyzing performance, and documenting strategic decisions. This skill serves as the agent's complete framework for improving organic search visibility, traffic, and rankings through structured, data-driven methodology.",
+        "githubUrl": "https://github.com/Emmraan/agent-skills/tree/main/skills/seo",
+        "skillUrl": "https://skillsmp.com/skills/emmraan-agent-skills-skills-seo-skill-md",
+        "stars": 0,
+        "updatedAt": "1778062530"
+      },
+      {
+        "id": "openteams-ai-engineering-blog-claude-skills-seo-meta-description-skill-md",
+        "name": "seo-meta-description",
+        "author": "openteams-ai",
+        "description": "SEO optimization for blog articles: focus keyword, meta description, and on-page checklist. Use proactively before publishing articles, when the user mentions \"SEO\", \"meta description\", \"focus keyword\", \"optimize SEO\", or wants to improve search rankings.",
+        "githubUrl": "https://github.com/openteams-ai/engineering-blog/tree/main/.claude/skills/seo-meta-description",
+        "skillUrl": "https://skillsmp.com/skills/openteams-ai-engineering-blog-claude-skills-seo-meta-description-skill-md",
+        "stars": 0,
+        "updatedAt": "1778060111"
+      },
+      {
+        "id": "adrienenjalbert-flex-carrer-hub-agents-skills-ops-seo-health-skill-md",
+        "name": "seo-health",
+        "author": "Adrienenjalbert",
+        "description": "Specialist tool that wraps `pnpm seo:audit` + adds cannibalization detection (GSC query × page join), anchor diversity scan, schema validity check, pSEO uniqueness ratio per template, intent-mismatch detection. Used by Stage 1 Discovery + Stage 8 UX.",
+        "githubUrl": "https://github.com/Adrienenjalbert/flex-carrer-hub/tree/main/.agents/skills/ops/seo-health",
+        "skillUrl": "https://skillsmp.com/skills/adrienenjalbert-flex-carrer-hub-agents-skills-ops-seo-health-skill-md",
+        "stars": 0,
+        "updatedAt": "1778058421"
+      },
+      {
+        "id": "adrienenjalbert-flex-carrer-hub-agents-skills-seo-seo-audit-skill-md",
+        "name": "seo-audit",
+        "author": "Adrienenjalbert",
+        "description": "Code-generation skill for diagnosing SEO problems in this repo and producing a repo-specific implementation brief or fix list. Use only when the task should lead to metadata, routing, schema, rendering, or internal-linking code changes.",
+        "githubUrl": "https://github.com/Adrienenjalbert/flex-carrer-hub/tree/main/.agents/skills/seo/seo-audit",
+        "skillUrl": "https://skillsmp.com/skills/adrienenjalbert-flex-carrer-hub-agents-skills-seo-seo-audit-skill-md",
+        "stars": 0,
+        "updatedAt": "1778058421"
+      },
+      {
+        "id": "adrienenjalbert-flex-carrer-hub-agents-skills-seo-seo-foundations-skill-md",
+        "name": "seo-foundations",
+        "author": "Adrienenjalbert",
+        "description": "Technical backbone for the Career Hub vital loop. Five SEO + website operating standards (technical SEO health / E-E-A-T + linkable-asset link building / programmatic SEO discipline (Schwartz) / Core Web Vitals + perf budgets / operational reliability with SRE primitives). Plus topical-cluster model, intent-mapping, GEO methodology (Princeton KDD 2024), and runbooks library.",
+        "githubUrl": "https://github.com/Adrienenjalbert/flex-carrer-hub/tree/main/.agents/skills/seo/seo-foundations",
+        "skillUrl": "https://skillsmp.com/skills/adrienenjalbert-flex-carrer-hub-agents-skills-seo-seo-foundations-skill-md",
+        "stars": 0,
+        "updatedAt": "1778058421"
+      },
+      {
+        "id": "adrienenjalbert-flex-carrer-hub-agents-skills-seo-seo-page-rules-skill-md",
+        "name": "seo-page-rules",
+        "author": "Adrienenjalbert",
+        "description": "Code-generation skill. Use only when editing public pages, metadata, canonicals, structured data, sitemaps, robots rules, or other SEO-sensitive repo behavior.",
+        "githubUrl": "https://github.com/Adrienenjalbert/flex-carrer-hub/tree/main/.agents/skills/seo/seo-page-rules",
+        "skillUrl": "https://skillsmp.com/skills/adrienenjalbert-flex-carrer-hub-agents-skills-seo-seo-page-rules-skill-md",
+        "stars": 0,
+        "updatedAt": "1778058421"
+      },
+      {
+        "id": "ebenezerhooknosed777-seobuild-onpage-skill-md",
+        "name": "seobuild-onpage",
+        "author": "Ebenezerhooknosed777",
+        "description": "Write SEO pages that rank on Google AND get cited by LLMs. Uses live SERP data, 500-token chunk architecture, and the Reddit Test quality gate. Triggers on: \"write an SEO page\", \"seo-agi\", \"seo page for [keyword]\", \"rank for [keyword]\", \"rewrite this page for SEO\", \"GEO\", \"AEO\", \"write a page that ranks\".",
+        "githubUrl": "https://github.com/Ebenezerhooknosed777/seobuild-onpage",
+        "skillUrl": "https://skillsmp.com/skills/ebenezerhooknosed777-seobuild-onpage-skill-md",
+        "stars": 0,
+        "updatedAt": "1778058149"
+      },
+      {
+        "id": "caelandrayer-cagents-operator-marketing-sales-seo-specialist-skill-md",
+        "name": "seo-specialist",
+        "author": "CaelanDrayer",
+        "description": "Use when optimizing search rankings, conducting keyword research, performing technical SEO audits, building backlink strategies, or improving organic traffic.",
+        "githubUrl": "https://github.com/CaelanDrayer/cAgents/tree/main/operator/marketing-sales/seo-specialist",
+        "skillUrl": "https://skillsmp.com/skills/caelandrayer-cagents-operator-marketing-sales-seo-specialist-skill-md",
+        "stars": 1,
+        "updatedAt": "1778051227"
+      },
+      {
+        "id": "caelandrayer-cagents-operator-marketing-sales-seo-strategist-skill-md",
+        "name": "seo-strategist",
+        "author": "CaelanDrayer",
+        "description": "Coordinates organic search strategy via question-based delegation. Use for tier 2+ SEO initiatives — site audits, ranking recovery, content strategy, technical health, link planning, and AI-search (GEO) readiness.",
+        "githubUrl": "https://github.com/CaelanDrayer/cAgents/tree/main/operator/marketing-sales/seo-strategist",
+        "skillUrl": "https://skillsmp.com/skills/caelandrayer-cagents-operator-marketing-sales-seo-strategist-skill-md",
+        "stars": 1,
+        "updatedAt": "1778051227"
+      },
+      {
+        "id": "tonone-ai-tonone-skills-ink-seo-skill-md",
+        "name": "ink-seo",
+        "author": "tonone-ai",
+        "description": "SEO strategy and keyword research — build topic clusters, keyword gap analysis, on-page audit, and prioritized SEO roadmap. Use when asked to \"improve our SEO\", \"do keyword research\", \"build a topic cluster\", or \"why aren't we ranking\".",
+        "githubUrl": "https://github.com/tonone-ai/tonone/tree/main/skills/ink-seo",
+        "skillUrl": "https://skillsmp.com/skills/tonone-ai-tonone-skills-ink-seo-skill-md",
+        "stars": 37,
+        "updatedAt": "1778048787"
+      },
+      {
+        "id": "peterbamuhigire-website-skills-skills-seo-skill-md",
+        "name": "seo",
+        "author": "peterbamuhigire",
+        "description": "Comprehensive search engine optimization for multi-language static sites and AI visibility. Implements meta tags, JSON-LD structured data, E-E-A-T schema markup, multi-language sitemap generation, hreflang tags, robots.txt, crawler optimization (IndexNow, sitemap pinging), Google Analytics 4 via Partytown, Google Search Console verification, canonical URLs, and language-specific Open Graph tags. Covers both traditional SEO and Generative Engine Optimization (GEO) for AI platforms. Supports 3 languages: English, French, Kiswahili. Reads from docs/{lang}/seo.md for per-page, per-language configuration. Generates language-specific sitemaps (sitemap-en.xml, sitemap-fr.xml, sitemap-sw.xml) and SEO audit report. Run after page-builder, before deploy.",
+        "githubUrl": "https://github.com/peterbamuhigire/website-skills/tree/main/skills/seo",
+        "skillUrl": "https://skillsmp.com/skills/peterbamuhigire-website-skills-skills-seo-skill-md",
+        "stars": 1,
+        "updatedAt": "1778045250"
+      },
+      {
+        "id": "peterbamuhigire-social-media-skills-skills-seo-geo-optimisation-skill-md",
+        "name": "seo-geo-optimisation",
+        "author": "peterbamuhigire",
+        "description": "Optimises individual pieces of content for Generative Engine Optimisation (GEO) — the discipline of making content findable and citable by AI-powered search engines including ChatGPT Search, Perplexity AI, and Google AI Overviews. Distinct from traditional keyword-based SEO. Invoke when creating or auditing a blog post, website page, or strategy document that must be cited as a trusted source in AI-generated answers. Cross-reference `ai-generative-search-optimisation` for full content audit and monitoring protocol.",
+        "githubUrl": "https://github.com/peterbamuhigire/social-media-skills/tree/main/skills/seo-geo-optimisation",
+        "skillUrl": "https://skillsmp.com/skills/peterbamuhigire-social-media-skills-skills-seo-geo-optimisation-skill-md",
+        "stars": 3,
+        "updatedAt": "1778045250"
+      },
+      {
+        "id": "vtrka-supervibe-skills-seo-audit-skill-md",
+        "name": "seo-audit",
+        "author": "vTRKA",
+        "description": "Use WHEN auditing or building public pages for SEO to verify technical SEO + content SEO using best-practices-researcher for current 2026 patterns. Triggers: 'SEO audit', 'мета-теги', 'проверь SEO', 'seo чеклист'.",
+        "githubUrl": "https://github.com/vTRKA/supervibe/tree/main/skills/seo-audit",
+        "skillUrl": "https://skillsmp.com/skills/vtrka-supervibe-skills-seo-audit-skill-md",
+        "stars": 1,
+        "updatedAt": "1778026254"
+      },
+      {
+        "id": "guilhermemarketing-esc-skills-skills-seo-skill-md",
+        "name": "seo",
+        "author": "guilhermemarketing",
+        "description": "Optimize for search engine visibility and ranking. Use when asked to \"improve SEO\", \"optimize for search\", \"fix meta tags\", \"add structured data\", \"sitemap optimization\", or \"search engine optimization\".",
+        "githubUrl": "https://github.com/guilhermemarketing/esc-skills/tree/main/skills/seo",
+        "skillUrl": "https://skillsmp.com/skills/guilhermemarketing-esc-skills-skills-seo-skill-md",
+        "stars": 35,
+        "updatedAt": "1778023959"
+      },
+      {
+        "id": "bhanunamikaze-agentic-seo-skill-skill-md",
+        "name": "seo",
+        "author": "Bhanunamikaze",
+        "description": "Deterministic LLM-first SEO audits for websites, blog posts, and GitHub repositories. Use this when the user asks to \"perform SEO analysis\", \"run SEO audit\", \"analyze SEO\", \"check technical SEO\", \"review schema\", \"Core Web Vitals\", \"E-E-A-T\", \"hreflang\", \"GEO\", \"AEO\", or GitHub repository SEO optimization. For full/page/repo audits, run bundled scripts for evidence and return prioritized, confidence-labeled fixes.",
+        "githubUrl": "https://github.com/Bhanunamikaze/Agentic-SEO-Skill",
+        "skillUrl": "https://skillsmp.com/skills/bhanunamikaze-agentic-seo-skill-skill-md",
+        "stars": 482,
+        "updatedAt": "1778002951"
+      },
+      {
+        "id": "junjingjesse-jjj-skills-skills-jjj-seo-kgr-search-skill-md",
+        "name": "jjj-seo-kgr-search",
+        "author": "junjingjesse",
+        "description": "\"SEO关键词KGR调研，筛选月搜索量与allintitle比例低的值得做词汇\"",
+        "githubUrl": "https://github.com/junjingjesse/jjj-skills/tree/main/skills/JJJ-seo-kgr-search",
+        "skillUrl": "https://skillsmp.com/skills/junjingjesse-jjj-skills-skills-jjj-seo-kgr-search-skill-md",
+        "stars": 0,
+        "updatedAt": "1778002874"
+      },
+      {
+        "id": "diane-defores-shipflow-skills-sf-audit-seo-skill-md",
+        "name": "sf-audit-seo",
+        "author": "diane-defores",
+        "description": "SEO audit for technical health, metadata, indexing, and intent fit.",
+        "githubUrl": "https://github.com/diane-defores/shipflow/tree/main/skills/sf-audit-seo",
+        "skillUrl": "https://skillsmp.com/skills/diane-defores-shipflow-skills-sf-audit-seo-skill-md",
+        "stars": 1,
+        "updatedAt": "1778000802"
+      },
+      {
+        "id": "maltehedderich-master-class-agents-skills-seo-opportunity-analysis-skill-md",
+        "name": "seo-opportunity-analysis",
+        "author": "maltehedderich",
+        "description": "Analyze a product spec to find SEO content opportunities. Use when interpreting a product or company spec, deriving audience search behavior, mapping topical territory, proposing pillar and cluster strategy, prioritizing topics by demand x winnability x business value, choosing the first SEO piece to publish, analyzing the live SERP with the SEO Opportunity Analyst agent, and saving the report as Markdown in docs/.",
+        "githubUrl": "https://github.com/maltehedderich/master-class-agents/tree/main/skills/seo-opportunity-analysis",
+        "skillUrl": "https://skillsmp.com/skills/maltehedderich-master-class-agents-skills-seo-opportunity-analysis-skill-md",
+        "stars": 3,
+        "updatedAt": "1777998550"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 1000,
+      "totalPages": 2,
+      "hasNext": true,
+      "hasPrev": false,
+      "totalIsExact": false
+    },
+    "filters": { "search": "SEO", "sortBy": "recent" }
+  },
+  "meta": {
+    "requestId": "ac1cf0ca-18be-4db4-978c-1871ba2fbd79",
+    "responseTimeMs": 445
+  }
+}

@@ -7,6 +7,8 @@ const Session_1 = require("./common/Session");
 const TreeView_1 = require("./tree/TreeView");
 const ServiceHub_1 = require("./tree/ServiceHub");
 const TreeState_1 = require("./tree/TreeState");
+const SkillsStorageService_1 = require("./services/SkillsStorageService");
+const MarketplaceCommands_1 = require("./webview/MarketplaceCommands");
 /**
  * Activates the Skills extension.
  * This is the entry point for the extension.
@@ -16,6 +18,9 @@ function activate(context) {
     try {
         const session = new Session_1.Session(context); // Initialize session management
         new ServiceHub_1.ServiceHub(context); // Initialize service hub
+        // Initialize marketplace services
+        (0, SkillsStorageService_1.initializeStorageService)(context.globalState);
+        new MarketplaceCommands_1.MarketplaceCommands(context.extensionUri);
         // 1. Initialize the unified Skills tree provider
         new TreeView_1.TreeView(context);
         // 2. Load saved tree state after TreeView is initialized
