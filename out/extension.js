@@ -2,13 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = activate;
 exports.deactivate = deactivate;
+const vscode = require("vscode");
 const ui = require("./common/UI");
 const Session_1 = require("./common/Session");
-const TreeView_1 = require("./tree/TreeView");
 const ServiceHub_1 = require("./tree/ServiceHub");
-const TreeState_1 = require("./tree/TreeState");
 const SkillsStorageService_1 = require("./services/SkillsStorageService");
-const MarketplaceCommands_1 = require("./webview/MarketplaceCommands");
+const SkillsViewProvider_1 = require("./webview/SkillsViewProvider");
 /**
  * Activates the Skills extension.
  * This is the entry point for the extension.
@@ -20,13 +19,9 @@ function activate(context) {
         new ServiceHub_1.ServiceHub(context); // Initialize service hub
         // Initialize marketplace services
         (0, SkillsStorageService_1.initializeStorageService)(context.globalState);
-        new MarketplaceCommands_1.MarketplaceCommands(context.extensionUri);
-        // 1. Initialize the unified Skills tree provider
-        new TreeView_1.TreeView(context);
-        // 2. Load saved tree state after TreeView is initialized
-        TreeState_1.TreeState.load();
-        // 3. Refresh tree to display loaded nodes
-        TreeView_1.TreeView.Current.Refresh();
+        // Register the Skills Marketplace as a webview view
+        const skillsViewProvider = new SkillsViewProvider_1.SkillsViewProvider(context.extensionUri);
+        context.subscriptions.push(vscode.window.registerWebviewViewProvider(SkillsViewProvider_1.SkillsViewProvider.viewType, skillsViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
         ui.logToOutput('Skills activated successfully.');
     }
     catch (error) {
@@ -35,7 +30,6 @@ function activate(context) {
     }
 }
 function deactivate() {
-    // Save tree state immediately before deactivation
-    TreeState_1.TreeState.saveImmediate();
+    // Nothing to clean up for webview views
 }
 //# sourceMappingURL=extension.js.map

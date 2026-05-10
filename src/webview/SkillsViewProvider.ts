@@ -1,0 +1,327 @@
+import * as vscode from 'vscode';
+import { logToOutput } from '../common/UI';
+import { skillsApiService } from '../services';
+import { getStorageService } from '../services/SkillsStorageService';
+import { toolInstallService } from '../services';
+import { Skill } from '../services/types';
+import { SkillDetailPanel } from './SkillDetailPanel';
+import * as path from 'path';
+
+/**
+ * SkillsViewProvider - WebviewViewProvider for rendering marketplace in sidebar
+ */
+export class SkillsViewProvider implements vscode.WebviewViewProvider {
+  public static readonly viewType = 'SkillsView';
+  private view?: vscode.WebviewView;
+  private extensionUri: vscode.Uri;
+  private currentToolName: string;
+  private currentToolDisplayName: string;
+  private disposables: vscode.Disposable[] = [];
+
+  constructor(extensionUri: vscode.Uri) {
+    this.extensionUri = extensionUri;
+    const currentTool = this.resolveCurrentTool();
+    this.currentToolName = currentTool.name;
+    this.currentToolDisplayName = currentTool.displayName;
+  }
+
+  /**
+   * Resolve the webview view
+   */
+  async resolveWebviewView(
+    webviewView: vscode.WebviewView,
+    _context: vscode.WebviewViewResolveContext,
+    _token: vscode.CancellationToken
+  ): Promise<void> {
+    this.view = webviewView;
+
+    webviewView.webview.options = {
+      enableScripts: true,
+      enableForms: true,
+      localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'media', 'marketplace')]
+    };
+
+    webviewView.webview.html = this.getHtmlContent(webviewView.webview);
+
+    webviewView.webview.onDidReceiveMessage(
+      (message) => this.handleWebviewMessage(message),
+      null,
+      this.disposables
+    );
+
+    logToOutput('[WebviewViewProvider] Skills Marketplace view resolved');
+  }
+
+  /**
+   * Handle messages from the webview
+   */
+  private async handleWebviewMessage(message: any) {
+    logToOutput(`[SkillsView] Message received: ${message.type}`);
+
+    switch (message.type) {
+      case 'search':
+        await this.handleSearch(message.query);
+        break;
+      case 'openSkillDetails':
+        await this.handleOpenSkillDetails(message.skill);
+        break;
+      case 'install':
+        await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
+        break;
+      case 'uninstall':
+        await this.handleUninstall(message.skillId);
+        break;
+      case 'getInstalledSkills':
+        await this.handleGetInstalledSkills();
+        break;
+      default:
+        logToOutput(`[SkillsView] Unknown message type: ${message.type}`);
+    }
+  }
+
+  /**
+   * Handle skill search
+   */
+  private async handleSearch(query: string) {
+    try {
+      if (!query || query.trim().length === 0) {
+        this.postMessage({
+          type: 'searchResults',
+          results: [],
+          error: null
+        });
+        return;
+      }
+
+      logToOutput(`[SkillsView] Searching for: ${query}`);
+      const skills = await skillsApiService.search(query);
+
+      this.postMessage({
+        type: 'searchResults',
+        results: skills,
+        error: null
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[SkillsView] Search error: ${errorMsg}`);
+
+      this.postMessage({
+        type: 'searchResults',
+        results: [],
+        error: errorMsg
+      });
+    }
+  }
+
+  /**
+   * Handle opening skill details
+   */
+  private async handleOpenSkillDetails(skill: Skill) {
+    try {
+      if (!skill?.githubUrl) {
+        throw new Error('This skill does not expose a GitHub URL.');
+      }
+
+      await SkillDetailPanel.createOrShow(
+        this.extensionUri,
+        skill,
+        this.currentToolName,
+        this.currentToolDisplayName
+      );
+
+      this.postMessage({
+        type: 'openSkillDetailsResult',
+        success: true,
+        error: null
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[SkillsView] Details error: ${errorMsg}`);
+      this.postMessage({
+        type: 'openSkillDetailsResult',
+        success: false,
+        error: errorMsg
+      });
+    }
+  }
+
+  /**
+   * Handle skill installation
+   */
+  private async handleInstall(skillId: string, skillName: string, githubUrl: string) {
+    try {
+      logToOutput(`[SkillsView] Installing ${skillName} to ${this.currentToolName}`);
+
+      const installPath = await toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
+
+      // Update storage
+      const storage = getStorageService();
+      await storage.addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installPath);
+
+      this.postMessage({
+        type: 'installResult',
+        skillId,
+        toolName: this.currentToolName,
+        toolDisplayName: this.currentToolDisplayName,
+        success: true,
+        message: `Successfully installed ${skillName}`,
+        error: null
+      });
+
+      logToOutput(`[SkillsView] Installation completed: ${skillId}`);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[SkillsView] Installation error: ${errorMsg}`);
+
+      this.postMessage({
+        type: 'installResult',
+        skillId,
+        toolName: this.currentToolName,
+        toolDisplayName: this.currentToolDisplayName,
+        success: false,
+        message: null,
+        error: errorMsg
+      });
+    }
+  }
+
+  /**
+   * Handle skill uninstallation
+   */
+  private async handleUninstall(skillId: string) {
+    try {
+      logToOutput(`[SkillsView] Uninstalling ${skillId} from ${this.currentToolName}`);
+
+      const storage = getStorageService();
+      const installed = storage.getInstalledSkill(this.currentToolName, skillId);
+
+      if (!installed) {
+        throw new Error('Skill not found in storage');
+      }
+
+      await toolInstallService.uninstallSkill(this.currentToolName, skillId, installed.localPath);
+      await storage.removeInstalled(this.currentToolName, skillId);
+
+      this.postMessage({
+        type: 'uninstallResult',
+        skillId,
+        toolName: this.currentToolName,
+        toolDisplayName: this.currentToolDisplayName,
+        success: true,
+        message: 'Successfully uninstalled skill',
+        error: null
+      });
+
+      logToOutput(`[SkillsView] Uninstallation completed: ${skillId}`);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[SkillsView] Uninstallation error: ${errorMsg}`);
+
+      this.postMessage({
+        type: 'uninstallResult',
+        skillId,
+        toolName: this.currentToolName,
+        toolDisplayName: this.currentToolDisplayName,
+        success: false,
+        message: null,
+        error: errorMsg
+      });
+    }
+  }
+
+  /**
+   * Handle getting installed skills
+   */
+  private async handleGetInstalledSkills() {
+    try {
+      const storage = getStorageService();
+      const installed = storage.getInstalledByTool(this.currentToolName) || [];
+
+      this.postMessage({
+        type: 'installedSkills',
+        skills: installed,
+        toolName: this.currentToolName
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[SkillsView] Get installed skills error: ${errorMsg}`);
+    }
+  }
+
+  /**
+   * Post a message to the webview
+   */
+  private postMessage(message: any) {
+    if (this.view) {
+      this.view.webview.postMessage(message);
+    }
+  }
+
+  /**
+   * Get HTML content for the webview
+   */
+  private getHtmlContent(webview: vscode.Webview): string {
+    const marketplaceCss = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'marketplace', 'marketplace.css')
+    );
+    const marketplaceJs = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'marketplace', 'marketplace.js')
+    );
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skills Marketplace</title>
+    <link rel="stylesheet" href="${marketplaceCss}">
+</head>
+<body>
+    <div class="marketplace-container">
+        <div class="search-container">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Search skills (e.g., ESLint, Prettier, Tailwind...)" 
+                class="search-input"
+                autocomplete="off"
+            />
+        </div>
+        <div id="results" class="results-container"></div>
+    </div>
+    <script src="${marketplaceJs}"></script>
+</body>
+</html>`;
+  }
+
+  /**
+   * Resolve the current tool
+   */
+  private resolveCurrentTool(): { name: string; displayName: string } {
+    const appName = vscode.env.appName;
+
+    if (appName.includes('Cursor')) {
+      return { name: 'cursor', displayName: 'Cursor' };
+    }
+    if (appName.includes('Windsurf')) {
+      return { name: 'windsurf', displayName: 'Windsurf' };
+    }
+    if (appName.includes('Antigravity')) {
+      return { name: 'antigravity', displayName: 'Antigravity' };
+    }
+
+    return { name: 'vscode', displayName: 'VS Code' };
+  }
+
+  /**
+   * Dispose resources
+   */
+  public dispose() {
+    while (this.disposables.length) {
+      const x = this.disposables.pop();
+      if (x) {
+        x.dispose();
+      }
+    }
+  }
+}

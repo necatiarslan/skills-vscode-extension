@@ -192,36 +192,6 @@
     "menus": {
       "view/title": [
         {
-          "command": "Skills.Add",
-          "when": "view == SkillsView",
-          "group": "navigation"
-        },
-        {
-          "command": "Skills.Filter",
-          "when": "view == SkillsView",
-          "group": "navigation"
-        },
-        {
-          "command": "Skills.ShowOnlyFavorite",
-          "when": "view == SkillsView",
-          "group": "navigation"
-        },
-        {
-          "command": "Skills.ShowHidden",
-          "when": "view == SkillsView",
-          "group": "navigation"
-        },
-        {
-          "command": "Skills.Refresh",
-          "when": "view == SkillsView",
-          "group": "navigation"
-        },
-        {
-          "command": "Skills.OpenMarketplace",
-          "when": "view == SkillsView",
-          "group": "navigation"
-        },
-        {
           "command": "Skills.Donate",
           "when": "view == SkillsView",
           "group": "other_2"
@@ -230,128 +200,6 @@
           "command": "Skills.BugAndNewFeatureRequest",
           "when": "view == SkillsView",
           "group": "other_2"
-        },
-        {
-          "command": "Skills.ExportConfig",
-          "when": "view == SkillsView",
-          "group": "other_3"
-        },
-        {
-          "command": "Skills.ImportConfig",
-          "when": "view == SkillsView",
-          "group": "other_3"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "Skills.AddFav",
-          "when": "view == SkillsView && viewItem =~ /#AddFav#/",
-          "group": "Filter"
-        },
-        {
-          "command": "Skills.RemoveFav",
-          "when": "view == SkillsView && viewItem =~ /#RemoveFav#/",
-          "group": "Filter"
-        },
-        {
-          "command": "Skills.Hide",
-          "when": "view == SkillsView && viewItem =~ /#Hide#/",
-          "group": "Filter"
-        },
-        {
-          "command": "Skills.UnHide",
-          "when": "view == SkillsView && viewItem =~ /#UnHide#/",
-          "group": "Filter"
-        },
-        {
-          "command": "Skills.ShowOnlyInThisWorkspace",
-          "when": "view == SkillsView && viewItem =~ /#ShowOnlyInThisWorkspace#/",
-          "group": "Filter"
-        },
-        {
-          "command": "Skills.ShowInAnyWorkspace",
-          "when": "view == SkillsView && viewItem =~ /#ShowInAnyWorkspace#/",
-          "group": "Filter"
-        },
-        {
-          "command": "Skills.NodeAlias",
-          "when": "view == SkillsView && viewItem =~ /#NodeAlias#/",
-          "group": "Filter"
-        },
-        {
-          "command": "Skills.SetTooltip",
-          "when": "view == SkillsView && viewItem =~ /#SetTooltip#/",
-          "group": "Customize"
-        },
-        {
-          "command": "Skills.SetColor",
-          "when": "view == SkillsView && viewItem =~ /#SetColor#/",
-          "group": "Customize"
-        },
-        {
-          "command": "Skills.MoveUp",
-          "when": "view == SkillsView && viewItem =~ /#MoveUp#/",
-          "group": "Order"
-        },
-        {
-          "command": "Skills.MoveDown",
-          "when": "view == SkillsView && viewItem =~ /#MoveDown#/",
-          "group": "Order"
-        },
-        {
-          "command": "Skills.MoveToFolder",
-          "when": "view == SkillsView && viewItem =~ /#NodeMove#/",
-          "group": "Order"
-        },
-        {
-          "command": "Skills.NodeAdd",
-          "when": "view == SkillsView && viewItem =~ /#NodeAdd#/",
-          "group": "inline@1"
-        },
-        {
-          "command": "Skills.NodeRemove",
-          "when": "view == SkillsView && viewItem =~ /#NodeRemove#/",
-          "group": "inline@2"
-        },
-        {
-          "command": "Skills.NodeRefresh",
-          "when": "view == SkillsView && viewItem =~ /#NodeRefresh#/",
-          "group": "inline@3"
-        },
-        {
-          "command": "Skills.NodeView",
-          "when": "view == SkillsView && viewItem =~ /#NodeView#/",
-          "group": "inline@4"
-        },
-        {
-          "command": "Skills.NodeEdit",
-          "when": "view == SkillsView && viewItem =~ /#NodeEdit#/",
-          "group": "inline@5"
-        },
-        {
-          "command": "Skills.NodeRun",
-          "when": "view == SkillsView && viewItem =~ /#NodeRun#/",
-          "group": "inline@6"
-        },
-        {
-          "command": "Skills.NodeStop",
-          "when": "view == SkillsView && viewItem =~ /#NodeStop#/",
-          "group": "inline@7"
-        },
-        {
-          "command": "Skills.NodeOpen",
-          "when": "view == SkillsView && viewItem =~ /#NodeOpen#/",
-          "group": "inline@8"
-        },
-        {
-          "command": "Skills.NodeInfo",
-          "when": "view == SkillsView && viewItem =~ /#NodeInfo#/",
-          "group": "inline@9"
-        },
-        {
-          "command": "Skills.NodeCopy",
-          "when": "view == SkillsView && viewItem =~ /#NodeCopy#/",
-          "group": "inline@10"
         }
       ]
     },
@@ -368,7 +216,8 @@
       "Skills": [
         {
           "id": "SkillsView",
-          "name": "Skills",
+          "name": "Skills Marketplace",
+          "type": "webview",
           "icon": "media/skills-logo-activitybar.png"
         }
       ]
@@ -376,7 +225,7 @@
     "viewsWelcome": [
       {
         "view": "SkillsView",
-        "contents": "Click [+] to add items to your dock.\n [Add](command:Skills.Add)\n\nPin files, create notes, save shell snippets, and keep VS Code commands close at hand."
+        "contents": "Search and discover AI Skills from the marketplace. Start typing in the search box to explore available tools and extensions."
       }
     ]
   },

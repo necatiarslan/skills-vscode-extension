@@ -1,12 +1,9 @@
 import * as vscode from 'vscode';
 import * as ui from './common/UI';
 import { Session } from './common/Session';
-import { TreeView } from './tree/TreeView';
 import { ServiceHub } from './tree/ServiceHub';
-import { TreeState } from './tree/TreeState';
 import { initializeStorageService } from './services/SkillsStorageService';
-import { MarketplaceCommands } from './webview/MarketplaceCommands';
-
+import { SkillsViewProvider } from './webview/SkillsViewProvider';
 
 /**
  * Activates the Skills extension.
@@ -21,16 +18,16 @@ export function activate(context: vscode.ExtensionContext): void {
         
         // Initialize marketplace services
         initializeStorageService(context.globalState);
-        new MarketplaceCommands(context.extensionUri);
-
-		// 1. Initialize the unified Skills tree provider
-        new TreeView(context);
-
-        // 2. Load saved tree state after TreeView is initialized
-        TreeState.load();
         
-        // 3. Refresh tree to display loaded nodes
-        TreeView.Current.Refresh();
+        // Register the Skills Marketplace as a webview view
+        const skillsViewProvider = new SkillsViewProvider(context.extensionUri);
+        context.subscriptions.push(
+            vscode.window.registerWebviewViewProvider(
+                SkillsViewProvider.viewType,
+                skillsViewProvider,
+                { webviewOptions: { retainContextWhenHidden: true } }
+            )
+        );
 
         ui.logToOutput('Skills activated successfully.');
     } catch (error) {
@@ -42,6 +39,5 @@ export function activate(context: vscode.ExtensionContext): void {
 
 
 export function deactivate(): void {
-    // Save tree state immediately before deactivation
-    TreeState.saveImmediate();
+    // Nothing to clean up for webview views
 }
