@@ -8,65 +8,34 @@ const SkillsStorageService_1 = require("../services/SkillsStorageService");
 const services_2 = require("../services");
 const SkillDetailPanel_1 = require("./SkillDetailPanel");
 /**
- * SkillsPanel - Manages the marketplace webview panel
+ * SkillsPanel - WebviewViewProvider for rendering marketplace in sidebar
  */
 class SkillsPanel {
-    static currentPanel;
-    panel;
+    static viewType = 'SkillsView';
+    view;
     extensionUri;
     currentToolName;
     currentToolDisplayName;
     disposables = [];
-    constructor(panel, extensionUri) {
-        this.panel = panel;
+    constructor(extensionUri) {
         this.extensionUri = extensionUri;
         const currentTool = this.resolveCurrentTool();
         this.currentToolName = currentTool.name;
         this.currentToolDisplayName = currentTool.displayName;
-        // Set up event listeners
-        this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
-        this.panel.webview.onDidReceiveMessage((message) => this.handleWebviewMessage(message), null, this.disposables);
-        // Initial setup
-        this.update();
     }
     /**
-     * Create or show the Skills Marketplace panel
+     * Resolve the webview view
      */
-    static async createOrShow(extensionUri) {
-        const column = vscode.ViewColumn.One;
-        // If we already have a panel, show it
-        if (SkillsPanel.currentPanel) {
-            SkillsPanel.currentPanel.panel.reveal(column);
-            return;
-        }
-        // Create the panel
-        const panel = vscode.window.createWebviewPanel('skillsMarketplace', 'Skills Marketplace', column, {
+    async resolveWebviewView(webviewView, _context, _token) {
+        this.view = webviewView;
+        webviewView.webview.options = {
             enableScripts: true,
             enableForms: true,
-            retainContextWhenHidden: true,
-            localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media', 'marketplace')]
-        });
-        SkillsPanel.currentPanel = new SkillsPanel(panel, extensionUri);
-        (0, UI_1.logToOutput)('[Webview] Skills Marketplace opened');
-    }
-    /**
-     * Dispose the panel
-     */
-    dispose() {
-        SkillsPanel.currentPanel = undefined;
-        this.panel.dispose();
-        while (this.disposables.length) {
-            const x = this.disposables.pop();
-            if (x) {
-                x.dispose();
-            }
-        }
-    }
-    /**
-     * Update the webview content
-     */
-    update() {
-        this.panel.webview.html = this.getHtmlContent();
+            localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'media', 'marketplace')]
+        };
+        webviewView.webview.html = this.getHtmlContent(webviewView.webview);
+        webviewView.webview.onDidReceiveMessage((message) => this.handleWebviewMessage(message), null, this.disposables);
+        (0, UI_1.logToOutput)('[SkillsPanel] Skills Marketplace view resolved');
     }
     /**
      * Handle messages from the webview
@@ -268,22 +237,23 @@ class SkillsPanel {
      * Post a message to the webview
      */
     postMessage(message) {
-        this.panel.webview.postMessage(message);
+        if (this.view) {
+            this.view.webview.postMessage(message);
+        }
     }
     /**
      * Get the HTML content for the webview
      */
-    getHtmlContent() {
-        const styleUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'marketplace', 'marketplace.css'));
-        const scriptUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'marketplace', 'marketplace.js'));
-        const nonce = this.getNonce();
+    getHtmlContent(webview) {
+        const marketplaceCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'marketplace', 'marketplace.css'));
+        const marketplaceJs = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'marketplace', 'marketplace.js'));
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Skills Marketplace</title>
-  <link rel="stylesheet" href="${styleUri}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skills Marketplace</title>
+    <link rel="stylesheet" href="${marketplaceCss}">
 </head>
 <body>
   <div id="app">
@@ -295,6 +265,7 @@ class SkillsPanel {
           class="search-input"
           placeholder="Search for skills..."
           aria-label="Search skills"
+          autocomplete="off"
         />
       </div>
 
@@ -313,21 +284,20 @@ class SkillsPanel {
       </div>
     </div>
   </div>
-
-  <script nonce="${nonce}" src="${scriptUri}"></script>
+    <script src="${marketplaceJs}"></script>
 </body>
 </html>`;
     }
     /**
-     * Generate a nonce for inline scripts
+     * Dispose resources
      */
-    getNonce() {
-        let text = '';
-        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (let i = 0; i < 32; i++) {
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
+    dispose() {
+        while (this.disposables.length) {
+            const x = this.disposables.pop();
+            if (x) {
+                x.dispose();
+            }
         }
-        return text;
     }
 }
 exports.SkillsPanel = SkillsPanel;

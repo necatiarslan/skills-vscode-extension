@@ -3,7 +3,7 @@ import * as ui from './common/UI';
 import { Session } from './common/Session';
 import { ServiceHub } from './tree/ServiceHub';
 import { initializeStorageService } from './services/SkillsStorageService';
-import { SkillsViewProvider } from './webview/SkillsViewProvider';
+import { SkillsPanel } from './webview/SkillsPanel';
 
 /**
  * Activates the Skills extension.
@@ -20,10 +20,10 @@ export function activate(context: vscode.ExtensionContext): void {
         initializeStorageService(context.globalState);
         
         // Register the Skills Marketplace as a webview view
-        const skillsViewProvider = new SkillsViewProvider(context.extensionUri);
+        const skillsViewProvider = new SkillsPanel(context.extensionUri);
         context.subscriptions.push(
             vscode.window.registerWebviewViewProvider(
-                SkillsViewProvider.viewType,
+                SkillsPanel.viewType,
                 skillsViewProvider,
                 { webviewOptions: { retainContextWhenHidden: true } }
             )

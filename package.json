@@ -216,7 +216,7 @@
       "Skills": [
         {
           "id": "SkillsView",
-          "name": "Skills Marketplace",
+          "name": "", 
           "type": "webview",
           "icon": "media/skills-logo-activitybar.png"
         }

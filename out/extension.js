@@ -7,7 +7,7 @@ const ui = require("./common/UI");
 const Session_1 = require("./common/Session");
 const ServiceHub_1 = require("./tree/ServiceHub");
 const SkillsStorageService_1 = require("./services/SkillsStorageService");
-const SkillsViewProvider_1 = require("./webview/SkillsViewProvider");
+const SkillsPanel_1 = require("./webview/SkillsPanel");
 /**
  * Activates the Skills extension.
  * This is the entry point for the extension.
@@ -20,8 +20,8 @@ function activate(context) {
         // Initialize marketplace services
         (0, SkillsStorageService_1.initializeStorageService)(context.globalState);
         // Register the Skills Marketplace as a webview view
-        const skillsViewProvider = new SkillsViewProvider_1.SkillsViewProvider(context.extensionUri);
-        context.subscriptions.push(vscode.window.registerWebviewViewProvider(SkillsViewProvider_1.SkillsViewProvider.viewType, skillsViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
+        const skillsViewProvider = new SkillsPanel_1.SkillsPanel(context.extensionUri);
+        context.subscriptions.push(vscode.window.registerWebviewViewProvider(SkillsPanel_1.SkillsPanel.viewType, skillsViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
         ui.logToOutput('Skills activated successfully.');
     }
     catch (error) {
