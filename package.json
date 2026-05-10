@@ -1,7 +1,7 @@
 {
   "name": "skills",
   "displayName": "Skills",
-  "description": "A customizable developer dock for files, notes, scripts, and VS Code commands",
+  "description": "Discover and integrate AI Skills to supercharge your productivity. Search, install, and manage AI-powered tools and extensions directly from the Skills Marketplace within Visual Studio Code.",
   "version": "1.0.0",
   "publisher": "NecatiARSLAN",
   "repository": {
@@ -16,152 +16,17 @@
     "Other"
   ],
   "keywords": [
-    "developer",
-    "productivity",
-    "notes",
-    "scripts",
-    "files",
-    "commands"
+    "skills",
+    "productivity"
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "Skills.Add",
-        "title": "Add",
-        "icon": "$(add)"
-      },
-      {
-        "command": "Skills.Remove",
-        "title": "Remove",
-        "icon": "$(trash)"
-      },
-      {
         "command": "Skills.Refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
-      },
-      {
-        "command": "Skills.Filter",
-        "title": "Filter",
-        "icon": "$(filter)"
-      },
-      {
-        "command": "Skills.ShowOnlyFavorite",
-        "title": "Show Only Favorite",
-        "icon": "$(bookmark)"
-      },
-      {
-        "command": "Skills.ShowHidden",
-        "title": "Show Hidden",
-        "icon": "$(eye-closed)"
-      },
-      {
-        "command": "Skills.Hide",
-        "title": "Hide"
-      },
-      {
-        "command": "Skills.UnHide",
-        "title": "UnHide"
-      },
-      {
-        "command": "Skills.AddFav",
-        "title": "Fav",
-        "icon": "$(star)"
-      },
-      {
-        "command": "Skills.RemoveFav",
-        "title": "UnFav",
-        "icon": "$(star-empty)"
-      },
-      {
-        "command": "Skills.ShowOnlyInThisWorkspace",
-        "title": "Show Only In This Workspace"
-      },
-      {
-        "command": "Skills.ShowInAnyWorkspace",
-        "title": "Show In Any Workspace"
-      },
-      {
-        "command": "Skills.NodeAdd",
-        "title": "Add",
-        "icon": "$(add)"
-      },
-      {
-        "command": "Skills.NodeRemove",
-        "title": "Remove",
-        "icon": "$(trash)"
-      },
-      {
-        "command": "Skills.NodeRefresh",
-        "title": "Refresh",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "Skills.NodeView",
-        "title": "View",
-        "icon": "$(eye)"
-      },
-      {
-        "command": "Skills.NodeEdit",
-        "title": "Edit",
-        "icon": "$(pencil)"
-      },
-      {
-        "command": "Skills.NodeRun",
-        "title": "Run",
-        "icon": "$(play)"
-      },
-      {
-        "command": "Skills.NodeStop",
-        "title": "Stop",
-        "icon": "$(stop)"
-      },
-      {
-        "command": "Skills.NodeOpen",
-        "title": "Open",
-        "icon": "$(go-to-file)"
-      },
-      {
-        "command": "Skills.NodeInfo",
-        "title": "Info",
-        "icon": "$(info)"
-      },
-      {
-        "command": "Skills.NodeCopy",
-        "title": "Copy",
-        "icon": "$(copy)"
-      },
-      {
-        "command": "Skills.NodeAlias",
-        "title": "Alias",
-        "icon": "$(case-sensitive)"
-      },
-      {
-        "command": "Skills.SetTooltip",
-        "title": "Set Tooltip",
-        "icon": "$(comment)"
-      },
-      {
-        "command": "Skills.SetColor",
-        "title": "Set Color",
-        "icon": "$(symbol-color)"
-      },
-      {
-        "command": "Skills.MoveUp",
-        "title": "Move Up",
-        "icon": "$(arrow-up)"
-      },
-      {
-        "command": "Skills.MoveDown",
-        "title": "Move Down",
-        "icon": "$(arrow-down)"
-      },
-      {
-        "command": "Skills.MoveToFolder",
-        "title": "Move to Folder",
-        "icon": "$(folder)"
       },
       {
         "command": "Skills.Donate",
@@ -194,12 +59,12 @@
         {
           "command": "Skills.Donate",
           "when": "view == SkillsView",
-          "group": "other_2"
+          "group": "other_1"
         },
         {
           "command": "Skills.BugAndNewFeatureRequest",
           "when": "view == SkillsView",
-          "group": "other_2"
+          "group": "other_1"
         }
       ]
     },

@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as ui from './common/UI';
 import { Session } from './common/Session';
-import { ServiceHub } from './tree/ServiceHub';
 import { initializeStorageService } from './services/SkillsStorageService';
 import { SkillsPanel } from './webview/SkillsPanel';
 
@@ -14,7 +13,6 @@ export function activate(context: vscode.ExtensionContext): void {
 
     try {
         const session = new Session(context); // Initialize session management
-        new ServiceHub(context);    // Initialize service hub
         
         // Initialize marketplace services
         initializeStorageService(context.globalState);
