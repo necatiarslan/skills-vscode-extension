@@ -31,7 +31,7 @@ class SkillsPanel {
         webviewView.webview.options = {
             enableScripts: true,
             enableForms: true,
-            localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'media', 'marketplace')]
+            localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'media', 'extension')]
         };
         webviewView.webview.html = this.getHtmlContent(webviewView.webview);
         webviewView.webview.onDidReceiveMessage((message) => this.handleWebviewMessage(message), null, this.disposables);
@@ -48,6 +48,9 @@ class SkillsPanel {
                 break;
             case 'openSkillDetails':
                 await this.handleOpenSkillDetails(message.skill);
+                break;
+            case 'openSkillDetailsById':
+                await this.handleOpenSkillDetailsById(message.skillId);
                 break;
             case 'install':
                 await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
@@ -70,6 +73,7 @@ class SkillsPanel {
             if (!query || query.trim().length === 0) {
                 this.postMessage({
                     type: 'searchResults',
+                    query,
                     results: [],
                     error: null
                 });
@@ -79,6 +83,7 @@ class SkillsPanel {
             const skills = await services_1.skillsApiService.search(query);
             this.postMessage({
                 type: 'searchResults',
+                query,
                 results: skills,
                 error: null
             });
@@ -88,7 +93,32 @@ class SkillsPanel {
             (0, UI_1.logToOutput)(`[Webview] Search error: ${errorMsg}`);
             this.postMessage({
                 type: 'searchResults',
+                query,
                 results: [],
+                error: errorMsg
+            });
+        }
+    }
+    /**
+     * Load detail data for a selected skill id.
+     */
+    async handleOpenSkillDetailsById(skillId) {
+        try {
+            if (!skillId) {
+                throw new Error('Skill id is required.');
+            }
+            const skill = await services_1.skillsApiService.fetchDetail(skillId);
+            if (!skill) {
+                throw new Error('Skill detail was not found.');
+            }
+            await this.handleOpenSkillDetails(skill);
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[Webview] Details-by-id error: ${errorMsg}`);
+            this.postMessage({
+                type: 'openSkillDetailsResult',
+                success: false,
                 error: errorMsg
             });
         }
@@ -245,46 +275,55 @@ class SkillsPanel {
      * Get the HTML content for the webview
      */
     getHtmlContent(webview) {
-        const marketplaceCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'marketplace', 'marketplace.css'));
-        const marketplaceJs = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'marketplace', 'marketplace.js'));
+        const skillspanelCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillspanel.css'));
+        const skillspanelJs = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillspanel.js'));
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skills Marketplace</title>
-    <link rel="stylesheet" href="${marketplaceCss}">
+    <link rel="stylesheet" href="${skillspanelCss}">
+    <script type="module">
+      import 'https://esm.sh/@vscode-elements/elements';
+    </script>
 </head>
 <body>
   <div id="app">
     <div class="marketplace-container">
       <div class="search-section">
-        <input
-          type="text"
-          id="searchInput"
-          class="search-input"
-          placeholder="Search for skills..."
-          aria-label="Search skills"
-          autocomplete="off"
-        />
+        <vscode-textfield id="searchInput" class="search-input" placeholder="Search Skills..." aria-label="Search skills" autocomplete="off">
+          <vscode-icon slot="content-before" name="search" title="search"></vscode-icon>
+        </vscode-textfield>
       </div>
 
-      <div class="content-section">
-        <div id="loadingIndicator" class="loading hidden">
-          <span class="spinner"></span> Loading...
+      <div class="content-section" id="contentSection">
+        <div id="loadingIndicator" class="loading hidden" aria-live="polite">
+          Loading...
         </div>
-
-        <div id="skillsList" class="skills-list"></div>
 
         <div id="errorMessage" class="error-message hidden"></div>
 
-        <div id="emptyState" class="empty-state">
-          <p>Search for skills to get started</p>
-        </div>
+        <vscode-collapsible id="searchCollapsible" heading="Search" class="collapsible" open>
+          <vscode-badge id="searchCount" variant="counter" slot="decorations">0</vscode-badge>
+          <div id="searchTable" class="section-table"></div>
+        </vscode-collapsible>
+
+        <vscode-collapsible id="installedCollapsible" heading="Installed" class="collapsible">
+          <vscode-badge id="installedCount" variant="counter" slot="decorations">0</vscode-badge>
+          <div id="installedTable" class="section-table"></div>
+        </vscode-collapsible>
+
+        <vscode-collapsible id="recommendedCollapsible" heading="Recommended" class="collapsible">
+          <vscode-badge id="recommendedCount" variant="counter" slot="decorations">0</vscode-badge>
+          <div id="recommendedTable" class="section-table"></div>
+        </vscode-collapsible>
+
+        <div id="emptyState" class="empty-state">Search for skills to populate results.</div>
       </div>
     </div>
   </div>
-    <script src="${marketplaceJs}"></script>
+    <script src="${skillspanelJs}"></script>
 </body>
 </html>`;
     }

@@ -35,7 +35,7 @@ class SkillDetailPanel {
             enableScripts: true,
             enableForms: true,
             retainContextWhenHidden: true,
-            localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media', 'skill-detail')]
+            localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media', 'extension')]
         });
         SkillDetailPanel.currentPanel = new SkillDetailPanel(panel, extensionUri, skill, currentToolName, currentToolDisplayName);
         await SkillDetailPanel.currentPanel.render();
@@ -166,8 +166,8 @@ class SkillDetailPanel {
         this.panel.webview.postMessage(message);
     }
     getHtmlContent(detailPayload, isInstalled) {
-        const styleUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'skill-detail', 'skill-detail.css'));
-        const scriptUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'skill-detail', 'skill-detail.js'));
+        const styleUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skilldetailpanel.css'));
+        const scriptUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skilldetailpanel.js'));
         const nonce = this.getNonce();
         const initialState = JSON.stringify({
             detail: detailPayload,
@@ -180,6 +180,9 @@ class SkillDetailPanel {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Skill: ${this.escapeHtml(detailPayload.skill.name)}</title>
   <link rel="stylesheet" href="${styleUri}">
+  <script type="module">
+    import 'https://esm.sh/@vscode-elements/elements';
+  </script>
 </head>
 <body>
   <div id="app" class="detail-root">
