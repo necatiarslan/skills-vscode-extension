@@ -18,7 +18,7 @@ class SkillsApiService {
      * Search for skills by query string
      * Results are cached for 5 minutes
      */
-    async search(query, page = 1, limit = 20) {
+    async search(query, page = 1, limit = 50) {
         const cacheKey = `${query}:${page}:${limit}`;
         // Check cache first
         if (this.searchCache.has(cacheKey)) {
@@ -30,7 +30,7 @@ class SkillsApiService {
         }
         try {
             (0, UI_1.logToOutput)(`[API] Searching skills: ${query}`);
-            const response = await this.makeRequest(`/skills/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
+            const response = await this.makeRequest(`/skills/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}&sortBy=stars`);
             const parsed = JSON.parse(response);
             const skills = this.extractSkillsFromSearchResponse(parsed);
             this.searchCache.set(cacheKey, {

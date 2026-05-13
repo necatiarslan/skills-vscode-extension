@@ -238,7 +238,7 @@ function renderSections() {
     };
   });
 
-  const recommendedRows = recommendedResults.filter((skill) => !isSkillInstalled(skill.id)).slice(0, 12);
+  const recommendedRows = recommendedResults.filter((skill) => !isSkillInstalled(skill.id)).slice(0, 20);
 
   searchCount.textContent = String(searchResults.length);
   installedCount.textContent = String(installedRows.length);

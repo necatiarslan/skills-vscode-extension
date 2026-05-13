@@ -49,7 +49,7 @@ Current installation is MVP behavior:
 - Full GitHub repository archive download/extraction is not implemented yet
 
 ## Future Enhancements
-- Full skill installation with repository cloning or archive extraction
-- Better error handling and user feedback during installation
-- Support for additional tools and platforms
-- Improved UI/UX for skill discovery and management
+- test instlliation and uninstallation flows
+- implement full repository download and extraction for installed skills
+- list installed skills in the Installed section with uninstall buttons
+- recommend by workspace content
