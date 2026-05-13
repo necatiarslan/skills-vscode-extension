@@ -122,4 +122,5 @@ export interface SkillDetailPayload {
   initialDirectory?: GitHubDirectoryResult;
   initialPreview?: GitHubFilePreview;
   skillEmoji: string;
+  skillMarkdown?: string;
 }

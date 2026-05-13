@@ -5,7 +5,7 @@ let detail = initialState.detail || null;
 let isInstalled = !!initialState.isInstalled;
 let currentDirectory = detail ? (detail.initialDirectory || detail.rootDirectory) : null;
 let currentPreview = detail ? (detail.initialPreview || null) : null;
-let activeTab = 'files';
+let activeTab = detail && detail.skillMarkdown ? 'skill' : 'details';
 
 const loadingIndicator = document.getElementById('loadingIndicator');
 const errorMessage = document.getElementById('errorMessage');
@@ -67,7 +67,12 @@ function handleDetailContainerChange(event) {
     return;
   }
 
-  activeTab = Number(tabs.selectedIndex) === 1 ? 'files' : 'details';
+  const selectedIndex = Number(tabs.selectedIndex);
+  if (detail.skillMarkdown) {
+    activeTab = selectedIndex === 0 ? 'skill' : selectedIndex === 2 ? 'files' : 'details';
+  } else {
+    activeTab = selectedIndex === 1 ? 'files' : 'details';
+  }
 }
 
 function handleExtensionMessage(message) {
@@ -151,7 +156,16 @@ function render() {
 
       <vscode-divider role="separator"></vscode-divider>
 
-      <vscode-tabs id="detailTabs" class="detail-tabs-shell" panel selected-index="${activeTab === 'files' ? 1 : 0}">
+      <vscode-tabs id="detailTabs" class="detail-tabs-shell" panel selected-index="${activeTab === 'skill' ? 0 : activeTab === 'files' ? 2 : 1}">
+        ${detail.skillMarkdown ? `
+        <vscode-tab-header slot="header">Skill</vscode-tab-header>
+        <vscode-tab-panel>
+          <main class="detail-main">
+            ${renderSkillMarkdown()}
+          </main>
+        </vscode-tab-panel>
+        ` : ''}
+
         <vscode-tab-header slot="header">Details</vscode-tab-header>
         <vscode-tab-panel>
           <main class="detail-main">
@@ -168,6 +182,14 @@ function render() {
       </vscode-tabs>
     </section>
   `;
+}
+
+function renderSkillMarkdown() {
+  if (!detail.skillMarkdown) {
+    return '<div class="code-preview-container">No SKILL.md found.</div>';
+  }
+
+  return `<div class="code-preview-container"><pre class="code-preview"><code>${escapeHtml(detail.skillMarkdown)}</code></pre></div>`;
 }
 
 function renderDetailOverview() {

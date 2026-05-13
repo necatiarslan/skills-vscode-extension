@@ -236,6 +236,18 @@ export class SkillDetailPanel {
     const rootDirectory = initialDirectory;
     const skillEmoji = getSkillEmoji(detailSkill.id);
 
+    let skillMarkdown: string | undefined;
+    try {
+      const skillMarkdownPath = resolvedContext.skillPath
+        ? `${resolvedContext.skillPath}/SKILL.md`
+        : 'SKILL.md';
+      const preview = await gitHubContentService.getFilePreview(resolvedContext, skillMarkdownPath);
+      skillMarkdown = preview.content;
+    } catch {
+      // SKILL.md not found, that's okay
+      skillMarkdown = undefined;
+    }
+
     return {
       skill: detailSkill,
       repoContext: resolvedContext,
@@ -243,7 +255,8 @@ export class SkillDetailPanel {
       rootDirectory,
       initialDirectory,
       initialPreview,
-      skillEmoji
+      skillEmoji,
+      skillMarkdown
     };
   }
 
@@ -274,12 +287,14 @@ export class SkillDetailPanel {
   <script type="module">
     import 'https://esm.sh/@vscode-elements/elements';
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.50.0/min/vs/loader.min.js"></script>
 </head>
 <body>
   <div id="app" class="detail-root">
     <div id="loadingIndicator" class="loading hidden"><span class="spinner"></span> Loading...</div>
     <div id="errorMessage" class="error-message hidden"></div>
     <div id="detailContainer"></div>
+    <div id="monacoEditor" style="display: none; width: 100%; height: 600px;"></div>
   </div>
   <script nonce="${nonce}">window.__SKILL_DETAIL_INITIAL_STATE__ = ${initialState};</script>
   <script nonce="${nonce}" src="${scriptUri}"></script>
