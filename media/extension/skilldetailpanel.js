@@ -3,9 +3,9 @@ const initialState = window.__SKILL_DETAIL_INITIAL_STATE__ || {};
 
 let detail = initialState.detail || null;
 let isInstalled = !!initialState.isInstalled;
-let currentDirectory = detail ? detail.rootDirectory : null;
-let currentPreview = null;
-let activeTab = 'details';
+let currentDirectory = detail ? (detail.initialDirectory || detail.rootDirectory) : null;
+let currentPreview = detail ? (detail.initialPreview || null) : null;
+let activeTab = 'files';
 
 const loadingIndicator = document.getElementById('loadingIndicator');
 const errorMessage = document.getElementById('errorMessage');
@@ -14,7 +14,51 @@ const detailContainer = document.getElementById('detailContainer');
 function initialize() {
   render();
   detailContainer.addEventListener('change', handleDetailContainerChange);
+  detailContainer.addEventListener('click', handleDetailContainerClick);
   window.addEventListener('message', (event) => handleExtensionMessage(event.data));
+}
+
+function handleDetailContainerClick(event) {
+  const target = event.target;
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const actionElement = target.closest('[data-action]');
+  if (!actionElement) {
+    return;
+  }
+
+  event.preventDefault();
+  const action = actionElement.getAttribute('data-action');
+  const value = actionElement.getAttribute('data-value') || '';
+
+  switch (action) {
+    case 'load-path':
+      loadRepoPath(value);
+      break;
+    case 'open-file':
+      openRepoFile(value);
+      break;
+    case 'install':
+      requestInstall(
+        actionElement.getAttribute('data-skill-id') || '',
+        actionElement.getAttribute('data-skill-name') || '',
+        actionElement.getAttribute('data-github-url') || ''
+      );
+      break;
+    case 'uninstall':
+      requestUninstall(actionElement.getAttribute('data-skill-id') || '');
+      break;
+    case 'refresh-dir':
+      reloadCurrentDirectory();
+      break;
+    case 'open-external':
+      openExternal(value);
+      break;
+    default:
+      break;
+  }
 }
 
 function handleDetailContainerChange(event) {
@@ -91,20 +135,16 @@ function render() {
         <div class="extension-icon">${escapeHtml((skill.name || '?').slice(0, 1).toUpperCase())}</div>
         <div class="extension-summary">
           <h1 class="extension-title">${escapeHtml(skill.name)}</h1>
-          <p class="extension-publisher">${escapeHtml(skill.author)}</p>
+          <p class="extension-publisher">${escapeHtml(skill.author)} · ⭐ ${formatCompactNumber(stars)} </p>
           <p class="extension-description">${escapeHtml(skill.description || 'No description available.')}</p>
-          <div class="extension-meta-inline">
-            <vscode-badge variant="counter">${formatCompactNumber(stars)} stars</vscode-badge>
-            <span>${escapeHtml(relativeTime(repoMetadata.updatedAt || skill.updatedAt))}</span>
-            <span>${escapeHtml(repoMetadata.licenseName || 'No license')}</span>
-          </div>
+          <div class="extension-meta-inline"></div>
           ${tagList.length > 0 ? `<div class="extension-tags">${tagList.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
         </div>
         <div class="extension-actions">
           ${isInstalled
-            ? `<vscode-button class="btn-primary" appearance="secondary" onclick='requestUninstall(${JSON.stringify(skill.id)})'>Disable</vscode-button>`
-            : `<vscode-button class="btn-primary" appearance="primary" onclick='requestInstall(${JSON.stringify(skill.id)}, ${JSON.stringify(skill.name)}, ${JSON.stringify(skill.githubUrl)})'>Install</vscode-button>`}
-          ${skill.githubUrl ? `<vscode-button class="btn-secondary" appearance="secondary" onclick='openExternal(${JSON.stringify(skill.githubUrl)})'>Repository</vscode-button>` : ''}
+            ? `<vscode-button class="btn-primary" secondary data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Disable</vscode-button>`
+            : `<vscode-button class="btn-primary" secondary data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install</vscode-button>`}
+          ${skill.githubUrl ? `<vscode-button class="btn-secondary" secondary data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">Repository</vscode-button>` : ''}
         </div>
       </header>
 
@@ -132,6 +172,12 @@ function render() {
 function renderDetailOverview() {
   const skill = detail.skill;
   const repoMetadata = detail.repoMetadata;
+  const repositoryLink = skill.githubUrl
+    ? `<a href="#" data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">Open repository</a>`
+    : 'Unavailable';
+  const marketplaceLink = skill.skillUrl
+    ? `<a href="#" data-action="open-external" data-value="${escapeAttr(skill.skillUrl)}">Open listing</a>`
+    : 'Unavailable';
 
   return `
     <section class="detail-section">
@@ -151,9 +197,9 @@ function renderDetailOverview() {
     </section>
 
     <section class="detail-section">
-      <h2>Resources</h2>
-      ${renderMetaRow('Repository', skill.githubUrl ? `<a href="${escapeAttr(skill.githubUrl)}">Open repository</a>` : 'Unavailable', true)}
-      ${renderMetaRow('Marketplace URL', skill.skillUrl ? `<a href="${escapeAttr(skill.skillUrl)}">Open listing</a>` : 'Unavailable', true)}
+      <h2>Github</h2>
+      ${renderMetaRow('Repository', repositoryLink, true)}
+      ${renderMetaRow('Marketplace URL', marketplaceLink, true)}
       ${renderMetaRow('Skill Path', detail.repoContext.skillPath || 'Repository root')}
       ${renderMetaRow('Branch', detail.repoContext.branch)}
     </section>
@@ -172,7 +218,7 @@ function renderFilesPanel() {
     <section class="files-panel">
       <div class="files-toolbar">
         <div class="files-breadcrumbs">${renderBreadcrumbs(currentDirectory ? currentDirectory.currentPath : '')}</div>
-        <vscode-button class="btn-secondary" appearance="secondary" onclick="reloadCurrentDirectory()">Refresh</vscode-button>
+        <vscode-button class="btn-secondary" appearance="secondary" data-action="refresh-dir">Refresh</vscode-button>
       </div>
       <div class="files-layout">
         <div class="files-browser">
@@ -188,12 +234,10 @@ function renderFilesPanel() {
 
 function renderRepoEntry(entry) {
   const iconName = entry.type === 'dir' ? 'folder' : 'file';
-  const action = entry.type === 'dir'
-    ? `loadRepoPath(${JSON.stringify(entry.path)})`
-    : `openRepoFile(${JSON.stringify(entry.path)})`;
+  const action = entry.type === 'dir' ? 'load-path' : 'open-file';
 
   return `
-    <a class="repo-entry ${entry.type}" href="#" onclick="event.preventDefault(); ${action}">
+    <a class="repo-entry ${entry.type}" href="#" data-action="${action}" data-value="${escapeAttr(entry.path)}">
       <vscode-icon class="repo-entry-icon" name="${iconName}"></vscode-icon>
       <span class="repo-entry-name">${escapeHtml(entry.name)}</span>
       <span class="repo-entry-meta">${entry.type === 'file' ? formatFileSize(entry.size) : 'Folder'}</span>
@@ -216,7 +260,7 @@ function renderPreviewPanel() {
       <div class="preview-empty">
         <h3>${escapeHtml(currentPreview.name)}</h3>
         <p>This file is too large to preview inline.</p>
-        <vscode-button class="btn-secondary" appearance="secondary" onclick='openExternal(${JSON.stringify(currentPreview.htmlUrl)})'>Open on GitHub</vscode-button>
+        <vscode-button class="btn-secondary" appearance="secondary" data-action="open-external" data-value="${escapeAttr(currentPreview.htmlUrl)}">Open on GitHub</vscode-button>
       </div>
     `;
   }
@@ -226,7 +270,7 @@ function renderPreviewPanel() {
       <div class="preview-empty">
         <h3>${escapeHtml(currentPreview.name)}</h3>
         <p>This file appears to be binary and cannot be previewed inline.</p>
-        <vscode-button class="btn-secondary" appearance="secondary" onclick='openExternal(${JSON.stringify(currentPreview.htmlUrl)})'>Open on GitHub</vscode-button>
+        <vscode-button class="btn-secondary" appearance="secondary" data-action="open-external" data-value="${escapeAttr(currentPreview.htmlUrl)}">Open on GitHub</vscode-button>
       </div>
     `;
   }
@@ -237,7 +281,7 @@ function renderPreviewPanel() {
         <h3>${escapeHtml(currentPreview.name)}</h3>
         <p>${escapeHtml(currentPreview.path)}</p>
       </div>
-      <vscode-button class="btn-secondary" appearance="secondary" onclick='openExternal(${JSON.stringify(currentPreview.htmlUrl)})'>Open on GitHub</vscode-button>
+      <vscode-button class="btn-secondary" appearance="secondary" data-action="open-external" data-value="${escapeAttr(currentPreview.htmlUrl)}">Open on GitHub</vscode-button>
     </div>
     <pre class="code-preview"><code>${escapeHtml(currentPreview.content)}</code></pre>
   `;
@@ -245,13 +289,13 @@ function renderPreviewPanel() {
 
 function renderBreadcrumbs(path) {
   const segments = path ? path.split('/') : [];
-  const crumbs = ['<a class="crumb" href="#" onclick="event.preventDefault(); loadRepoPath(\'\'")>root</a>'];
+  const crumbs = ['<a class="crumb" href="#" data-action="load-path" data-value="">root</a>'];
   let current = '';
 
   for (const segment of segments) {
     current = current ? `${current}/${segment}` : segment;
     crumbs.push('<span class="crumb-separator">/</span>');
-    crumbs.push(`<a class="crumb" href="#" onclick="event.preventDefault(); loadRepoPath(${JSON.stringify(current)})">${escapeHtml(segment)}</a>`);
+    crumbs.push(`<a class="crumb" href="#" data-action="load-path" data-value="${escapeAttr(current)}">${escapeHtml(segment)}</a>`);
   }
 
   return crumbs.join('');
@@ -303,7 +347,7 @@ function openExternal(url) {
     return;
   }
 
-  window.open(url, '_blank');
+  vscode.postMessage({ type: 'openExternal', url });
 }
 
 function setLoading(isLoading) {

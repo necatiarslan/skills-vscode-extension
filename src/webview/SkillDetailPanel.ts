@@ -99,6 +99,9 @@ export class SkillDetailPanel {
       case 'openRepoFile':
         await this.handleOpenRepoFile(message.context, message.path);
         break;
+      case 'openExternal':
+        await this.handleOpenExternal(message.url);
+        break;
       case 'install':
         await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
         break;
@@ -127,6 +130,19 @@ export class SkillDetailPanel {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       this.postMessage({ type: 'filePreview', preview: null, error: errorMsg });
+    }
+  }
+
+  private async handleOpenExternal(url: string) {
+    if (!url) {
+      return;
+    }
+
+    try {
+      await vscode.env.openExternal(vscode.Uri.parse(url));
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      this.postMessage({ type: 'externalOpenResult', success: false, error: errorMsg });
     }
   }
 
@@ -193,13 +209,38 @@ export class SkillDetailPanel {
       ...repoContext,
       branch: repoContext.branch === 'HEAD' ? repoMetadata.defaultBranch : repoContext.branch
     };
-    const rootDirectory = await gitHubContentService.listDirectory(resolvedContext, '');
+    const initialPath = resolvedContext.skillPath || '';
+
+    let initialDirectory;
+    let initialPreview;
+
+    if (initialPath) {
+      try {
+        initialDirectory = await gitHubContentService.listDirectory(resolvedContext, initialPath);
+      } catch {
+        const parentPath = initialPath.includes('/') ? initialPath.slice(0, initialPath.lastIndexOf('/')) : '';
+
+        try {
+          initialPreview = await gitHubContentService.getFilePreview(resolvedContext, initialPath);
+        } catch {
+          initialPreview = undefined;
+        }
+
+        initialDirectory = await gitHubContentService.listDirectory(resolvedContext, parentPath);
+      }
+    } else {
+      initialDirectory = await gitHubContentService.listDirectory(resolvedContext, '');
+    }
+
+    const rootDirectory = initialDirectory;
 
     return {
       skill: detailSkill,
       repoContext: resolvedContext,
       repoMetadata,
-      rootDirectory
+      rootDirectory,
+      initialDirectory,
+      initialPreview
     };
   }
 

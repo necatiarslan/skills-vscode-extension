@@ -119,4 +119,6 @@ export interface SkillDetailPayload {
   repoContext: GitHubRepoContext;
   repoMetadata: GitHubRepoMetadata;
   rootDirectory: GitHubDirectoryResult;
+  initialDirectory?: GitHubDirectoryResult;
+  initialPreview?: GitHubFilePreview;
 }
