@@ -352,10 +352,6 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       </div>
 
       <div class="content-section" id="contentSection">
-        <div id="loadingIndicator" class="loading hidden" aria-live="polite">
-          Loading...
-        </div>
-
         <div id="errorMessage" class="error-message hidden"></div>
 
         <vscode-collapsible id="searchCollapsible" heading="Search" class="collapsible" open>

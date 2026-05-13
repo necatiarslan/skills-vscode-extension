@@ -35,7 +35,6 @@ let recommendedResults = [];
 const knownSkillsById = new Map();
 
 const searchInput = document.getElementById('searchInput');
-const loadingIndicator = document.getElementById('loadingIndicator');
 const errorMessage = document.getElementById('errorMessage');
 const emptyState = document.getElementById('emptyState');
 const contentSection = document.getElementById('contentSection');
@@ -322,7 +321,7 @@ function isSkillInstalled(skillId) {
 }
 
 function setLoading(isLoading) {
-  loadingIndicator.classList.toggle('hidden', !isLoading);
+  // Loading indicator removed
 }
 
 function showError(message) {
