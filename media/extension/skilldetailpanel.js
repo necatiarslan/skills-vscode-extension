@@ -160,7 +160,7 @@ function render() {
         ${detail.skillMarkdown ? `
         <vscode-tab-header slot="header">Skill</vscode-tab-header>
         <vscode-tab-panel>
-          <main class="detail-main">
+          <main class="detail-main detail-main-skill">
             ${renderSkillMarkdown()}
           </main>
         </vscode-tab-panel>
@@ -189,7 +189,7 @@ function renderSkillMarkdown() {
     return '<div class="code-preview-container">No SKILL.md found.</div>';
   }
 
-  return `<div class="code-preview-container"><pre class="code-preview"><code>${escapeHtml(detail.skillMarkdown)}</code></pre></div>`;
+  return `<div class="code-preview-container"><pre class="code-preview skill-markdown-preview"><code>${escapeHtml(detail.skillMarkdown)}</code></pre></div>`;
 }
 
 function renderDetailOverview() {
@@ -213,7 +213,7 @@ function renderDetailOverview() {
 
     <section class="detail-section">
       <h2>Marketplace</h2>
-      ${renderMetaRow('Published', relativeTime(skill.updatedAt || repoMetadata.updatedAt))}
+      ${renderMetaRow('Published', formatDateTime(skill.updatedAt || repoMetadata.updatedAt))}
       ${renderMetaRow('Stars', formatCompactNumber(repoMetadata.stargazersCount || skill.stars || 0))}
       ${renderMetaRow('Forks', formatCompactNumber(repoMetadata.forksCount))}
       ${renderMetaRow('Open Issues', formatCompactNumber(repoMetadata.openIssuesCount))}
@@ -415,6 +415,38 @@ function formatFileSize(bytes) {
   }
 
   return `${size.toFixed(size >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return 'Unknown';
+  }
+
+  // Handle epoch timestamps in seconds (10 digits) or milliseconds (13 digits)
+  let timestamp = Number(value);
+  if (Number.isNaN(timestamp)) {
+    return String(value);
+  }
+
+  // If it's a 10-digit number, assume it's seconds; convert to milliseconds
+  if (timestamp < 10000000000) {
+    timestamp *= 1000;
+  }
+
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  // Format as local date/time: e.g., "May 13, 2026, 2:45 PM"
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
 }
 
 function relativeTime(value) {
