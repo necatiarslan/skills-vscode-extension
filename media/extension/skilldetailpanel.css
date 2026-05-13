@@ -68,6 +68,7 @@ body {
   width: 72px;
   height: 72px;
   margin: 12px;
+  flex-shrink: 0;
   border-radius: 6px;
   border: 1px solid var(--panel-border);
   background: var(--vscode-list-inactiveSelectionBackground);
@@ -81,7 +82,7 @@ body {
 
 .extension-summary {
   min-width: 0;
-  padding: 8px 0 12px;
+  padding: 8px 0 12px 16px;
 }
 
 .extension-title {

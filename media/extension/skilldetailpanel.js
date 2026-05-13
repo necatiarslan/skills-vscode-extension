@@ -128,11 +128,12 @@ function render() {
   const repoMetadata = detail.repoMetadata;
   const tagList = Array.isArray(skill.tags) ? skill.tags : [];
   const stars = repoMetadata.stargazersCount || skill.stars || 0;
+  const skillEmoji = detail.skillEmoji || '✨';
 
   detailContainer.innerHTML = `
     <section class="detail-page">
       <header class="extension-header">
-        <div class="extension-icon">${escapeHtml((skill.name || '?').slice(0, 1).toUpperCase())}</div>
+        <div class="extension-icon">${skillEmoji}</div>
         <div class="extension-summary">
           <h1 class="extension-title">${escapeHtml(skill.name)}</h1>
           <p class="extension-publisher">${escapeHtml(skill.author)} · ⭐ ${formatCompactNumber(stars)} </p>

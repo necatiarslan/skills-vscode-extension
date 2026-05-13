@@ -117,14 +117,16 @@ body {
 }
 
 .skill-icon-wrap {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--panel-border);
-  border-radius: 4px;
+  border-radius: 6px;
   color: var(--muted-fg);
+  font-size: 24px;
+  line-height: 1;
   margin-top: 2px;
 }
 

@@ -2,6 +2,31 @@ const vscode = acquireVsCodeApi();
 
 const RECOMMENDED_QUERY = 'vscode';
 
+/**
+ * Get a consistent emoji for a skill based on its ID.
+ */
+function getSkillEmoji(skillId) {
+  const emojis = [
+    '🚀', '💻', '⚡', '🔧', '🛠️', '⚙️', '🔌', '💾', '📡', '🖥️',
+    '💡', '🧠', '🔍', '📊', '📈', '📉', '🎯', '🎨', '🖌️', '✨',
+    '📝', '📚', '📋', '📄', '📑', '🗂️', '📂', '🗃️', '⏰', '⏱️',
+    '🌟', '⭐', '✨', '🔥', '💧', '🌊', '🌈', '🌳', '🌸', '🌺',
+    '🎪', '🎭', '🎬', '🎸', '🎺', '🎲', '🧩', '🎯', '🏆', '🥇',
+    '💬', '💭', '📢', '📣', '📞', '📧', '✉️', '💌', '📮', '📬',
+    '✅', '❌', '⚠️', '❓', '❗', '🔔', '🔕', '📍', '🎯', '🔐',
+    '🎮', '🕹️', '🎲', '🃏', '🎰', '🎪', '🎢', '🎡', '🎠', '🎟️',
+    '📅', '🗓️', '⏳', '⌛', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕',
+    '🌐', '🌍', '🌎', '🌏', '🚢', '🚁', '✈️', '🚂', '🚗', '🚙'
+  ];
+  let hash = 0;
+  for (let i = 0; i < skillId.length; i++) {
+    const char = skillId.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return emojis[Math.abs(hash) % emojis.length];
+}
+
 let searchDebounceTimer;
 let searchQuery = '';
 let installedSkills = [];
@@ -249,11 +274,12 @@ function renderSkillItem(skill) {
   const actionButton = installed
     ? `<vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>`
     : `<vscode-button appearance="primary" class="skill-action-btn" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl || '')}">Install</vscode-button>`;
+  const skillEmoji = getSkillEmoji(skill.id);
 
   return `
     <article class="skill-item" role="listitem" tabindex="0" data-action="open" data-skill-id="${escapeAttr(skill.id)}">
       <div class="skill-icon-wrap" aria-hidden="true">
-        <vscode-icon name="extensions"></vscode-icon>
+        ${skillEmoji}
       </div>
       <div class="skill-main">
         <div class="skill-top-line">

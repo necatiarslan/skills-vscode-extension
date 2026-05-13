@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SkillDetailPanel = void 0;
 const vscode = require("vscode");
 const UI_1 = require("../common/UI");
+const SkillEmoji_1 = require("../common/SkillEmoji");
 const services_1 = require("../services");
 const SkillsStorageService_1 = require("../services/SkillsStorageService");
 class SkillDetailPanel {
@@ -191,13 +192,15 @@ class SkillDetailPanel {
             initialDirectory = await services_1.gitHubContentService.listDirectory(resolvedContext, '');
         }
         const rootDirectory = initialDirectory;
+        const skillEmoji = (0, SkillEmoji_1.getSkillEmoji)(detailSkill.id);
         return {
             skill: detailSkill,
             repoContext: resolvedContext,
             repoMetadata,
             rootDirectory,
             initialDirectory,
-            initialPreview
+            initialPreview,
+            skillEmoji
         };
     }
     postMessage(message) {

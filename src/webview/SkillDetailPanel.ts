@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { logToOutput } from '../common/UI';
+import { getSkillEmoji } from '../common/SkillEmoji';
 import { gitHubContentService, skillsApiService, toolInstallService } from '../services';
 import { getStorageService } from '../services/SkillsStorageService';
 import { GitHubRepoContext, Skill, SkillDetailPayload } from '../services/types';
@@ -233,6 +234,7 @@ export class SkillDetailPanel {
     }
 
     const rootDirectory = initialDirectory;
+    const skillEmoji = getSkillEmoji(detailSkill.id);
 
     return {
       skill: detailSkill,
@@ -240,7 +242,8 @@ export class SkillDetailPanel {
       repoMetadata,
       rootDirectory,
       initialDirectory,
-      initialPreview
+      initialPreview,
+      skillEmoji
     };
   }
 
