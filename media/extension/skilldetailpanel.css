@@ -264,7 +264,7 @@ body {
   margin-bottom: 4px;
   padding: 4px 0;
   text-decoration: none;
-  color: var(--vscode-textLink-foreground);
+  color: #ffffff;
   cursor: pointer;
 }
 
@@ -273,7 +273,8 @@ body {
 }
 
 .repo-entry-icon {
-  color: var(--muted-fg);
+  color: #ffffff;
+  flex-shrink: 0;
 }
 
 .repo-entry-name {
