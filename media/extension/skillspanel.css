@@ -157,13 +157,12 @@ body {
 }
 
 .skill-meta {
-  margin-top: 2px;
   color: var(--muted-fg);
   font-size: 12px;
 }
 
 .skill-description {
-  margin: 4px 0 0;
+  margin: 4px 0;
   color: var(--muted-fg);
   font-size: 12px;
   line-height: 1.35;
@@ -177,6 +176,8 @@ body {
   display: flex;
   align-items: center;
   margin-top: 2px;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .skill-action {

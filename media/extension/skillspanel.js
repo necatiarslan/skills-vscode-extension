@@ -283,11 +283,13 @@ function renderSkillItem(skill) {
       <div class="skill-main">
         <div class="skill-top-line">
           <h4 class="skill-name">${escapeHtml(skill.name)}</h4>
-          ${actionButton}
-          <vscode-badge class="skill-stars" variant="counter" title="stars">${formatCompactNumber(skill.stars || 0)}</vscode-badge>
+          <vscode-badge class="skill-stars" variant="counter" title="stars">⭐ ${formatCompactNumber(skill.stars || 0)}</vscode-badge>
         </div>
-        <div class="skill-meta">${escapeHtml(skill.author || 'Unknown')}</div>
         <p class="skill-description">${escapeHtml(skill.description || '')}</p>
+        <div class="skill-actions">
+          <div class="skill-meta">👤 ${escapeHtml(skill.author || 'Unknown')}</div>
+          ${actionButton}
+        </div>
       </div>
     </article>
   `;

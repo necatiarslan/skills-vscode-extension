@@ -284,6 +284,11 @@ class SkillsPanel {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skills Marketplace</title>
     <link rel="stylesheet" href="${skillspanelCss}">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@vscode/codicons@0.0.36/dist/codicon.css"
+      id="vscode-codicon-stylesheet"
+    >
     <script type="module">
       import 'https://esm.sh/@vscode-elements/elements';
     </script>
