@@ -42,6 +42,9 @@ const contentSection = document.getElementById('contentSection');
 const searchTable = document.getElementById('searchTable');
 const installedTable = document.getElementById('installedTable');
 const recommendedTable = document.getElementById('recommendedTable');
+const searchCollapsible = document.getElementById('searchCollapsible');
+const installedCollapsible = document.getElementById('installedCollapsible');
+const recommendedCollapsible = document.getElementById('recommendedCollapsible');
 
 const searchCount = document.getElementById('searchCount');
 const installedCount = document.getElementById('installedCount');
@@ -216,6 +219,12 @@ function openSkillDetails(skillId) {
 
 function renderSections() {
   searchInput.value = searchQuery;
+  const inSearchMode = Boolean(searchQuery.trim());
+
+  // Hide Search section until user starts searching; in search mode only show Search.
+  searchCollapsible.classList.toggle('hidden', !inSearchMode);
+  installedCollapsible.classList.toggle('hidden', inSearchMode);
+  recommendedCollapsible.classList.toggle('hidden', inSearchMode);
 
   const installedRows = installedSkills.map((installed) => {
     const knownSkill = knownSkillsById.get(installed.skillId);
@@ -239,9 +248,10 @@ function renderSections() {
   installedTable.innerHTML = renderSkillList(installedRows, { section: 'installed' });
   recommendedTable.innerHTML = renderSkillList(recommendedRows, { section: 'recommended' });
 
-  const hasAnyData = searchResults.length > 0 || installedRows.length > 0 || recommendedRows.length > 0;
-  const hasSearchQuery = Boolean(searchQuery.trim());
-  emptyState.classList.toggle('hidden', hasAnyData || hasSearchQuery);
+  const hasAnyData = inSearchMode
+    ? searchResults.length > 0
+    : installedRows.length > 0 || recommendedRows.length > 0;
+  emptyState.classList.toggle('hidden', hasAnyData);
 }
 
 function renderSkillList(skills, options) {
@@ -283,7 +293,7 @@ function renderSkillItem(skill) {
       <div class="skill-main">
         <div class="skill-top-line">
           <h4 class="skill-name">${escapeHtml(skill.name)}</h4>
-          <vscode-badge class="skill-stars" variant="counter" title="stars">⭐ ${formatCompactNumber(skill.stars || 0)}</vscode-badge>
+          <span class="skill-stars" title="stars">⭐ ${formatCompactNumber(skill.stars || 0)}</span>
         </div>
         <p class="skill-description">${escapeHtml(skill.description || '')}</p>
         <div class="skill-actions">
