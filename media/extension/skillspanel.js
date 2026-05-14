@@ -352,6 +352,12 @@ function renderSkillItem(skill, options) {
   const iconWrapClass = isOtherInstalled ? 'skill-icon-wrap skill-icon-wrap--muted' : 'skill-icon-wrap';
   const metaText = `👤 ${escapeHtml(skill.author || 'Unknown')}`;
 
+  // Show install date if present (for installed sections)
+  let installDateHtml = '';
+  if (isInstalledSection && skill.installDate) {
+    installDateHtml = `<div class="skill-meta-date">📅 ${formatDateTime(skill.installDate)}</div>`;
+  }
+
   return `
     <article class="skill-item" role="listitem" tabindex="0" ${cardActionAttr}>
       <div class="${iconWrapClass}" aria-hidden="true">
@@ -364,7 +370,7 @@ function renderSkillItem(skill, options) {
         </div>
         <p class="skill-description">${escapeHtml(skill.description || (isOtherInstalled ? 'Unmanaged skill' : ''))}</p>
         <div class="skill-actions">
-          <div class="skill-meta">${metaText}</div>
+          <div class="skill-meta">${metaText}${installDateHtml}</div>
           <div class="skill-action-group">
             ${actionButtons}
           </div>
@@ -372,6 +378,38 @@ function renderSkillItem(skill, options) {
       </div>
     </article>
   `;
+}
+// Date/time formatting for install date (matches UI.ts)
+function formatDateTime(value) {
+  if (!value) {
+    return 'Unknown';
+  }
+  let date;
+  if (typeof value === 'string') {
+    const asNum = Number(value);
+    if (!isNaN(asNum)) {
+      date = new Date(asNum < 10000000000 ? asNum * 1000 : asNum);
+    } else {
+      date = new Date(value);
+    }
+  } else if (typeof value === 'number') {
+    date = new Date(value < 10000000000 ? value * 1000 : value);
+  } else if (value instanceof Date) {
+    date = value;
+  } else {
+    return 'Unknown';
+  }
+  if (isNaN(date.getTime())) {
+    return String(value);
+  }
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
 }
 
 function normalizeInstalledGroups(groups) {

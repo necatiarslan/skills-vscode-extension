@@ -303,7 +303,7 @@ class SkillDetailPanel {
                 if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
                     try {
                         const stat = await fs.promises.stat(filePath);
-                        installDate = stat.mtime.toISOString();
+                        installDate = (0, UI_1.formatDateTime)(stat.mtime);
                         break;
                     }
                     catch { }

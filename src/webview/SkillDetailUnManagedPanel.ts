@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { logToOutput } from '../common/UI';
+import { logToOutput, formatDateTime } from '../common/UI';
 import { getSkillEmoji } from '../common/SkillEmoji';
 import { toolInstallService } from '../services';
 import { SkillsPanel } from './SkillsPanel';
@@ -20,6 +20,7 @@ interface UnmanagedSkillDetailPayload {
   skillEmoji: string;
   skillMarkdown?: string;
   folderExists: boolean;
+  installDate?: string;
 }
 
 export class SkillDetailUnManagedPanel {
@@ -192,13 +193,28 @@ export class SkillDetailUnManagedPanel {
     const localRootDirectory = await this.listLocalDirectory(rootPath, '');
     const skillMarkdown = await this.readLocalSkillMarkdown(rootPath);
 
+    // Find install date from SKILL.md or skill.md
+    let installDate: string | undefined;
+    const candidates = ['SKILL.md', 'skill.md'];
+    for (const candidate of candidates) {
+      const filePath = path.join(rootPath, candidate);
+      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        try {
+          const stat = await fs.promises.stat(filePath);
+          installDate = formatDateTime(stat.mtime);
+          break;
+        } catch {}
+      }
+    }
+
     return {
       skill,
       localRootDirectory,
       localInitialDirectory: localRootDirectory,
       skillEmoji: getSkillEmoji(skill.skillId || skill.name),
       skillMarkdown,
-      folderExists: true
+      folderExists: true,
+      installDate
     };
   }
 
@@ -386,8 +402,9 @@ export class SkillDetailUnManagedPanel {
       detail: detailPayload,
       installedLocalPath: detailPayload.skill.localPath,
       folderExists: detailPayload.folderExists,
-      currentToolDisplayName: this.currentToolDisplayName
-    }).replace(/</g, '\\u003c');
+      currentToolDisplayName: this.currentToolDisplayName,
+      installDate: detailPayload.installDate || null
+    }).replace(/</g, '\u003c');
 
     return `<!DOCTYPE html>
 <html lang="en">

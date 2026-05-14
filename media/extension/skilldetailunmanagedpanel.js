@@ -209,7 +209,7 @@ function renderDetailsSection() {
   if (!detail) {
     return '';
   }
-
+  const installDate = initialState.installDate || 'Unknown';
   return `
     <section class="detail-section detail-section-wide">
       ${renderMetaRow('Name', detail.skill.name)}
@@ -217,9 +217,46 @@ function renderDetailsSection() {
       ${renderMetaRow('Scope', detail.skill.scope || 'global')}
       ${renderMetaRow('Kind', detail.skill.kind || 'other')}
       ${renderMetaRow('Local Path', installedLocalPath || detail.skill.localPath || 'Unknown')}
+      ${renderMetaRow('Install Date', installDate)}
       ${renderMetaRow('Description', detail.skill.description || 'Unmanaged skill')}
     </section>
   `;
+}
+function formatDateTime(value) {
+  if (!value) {
+    return 'Unknown';
+  }
+  let timestamp = Number(value);
+  if (Number.isNaN(timestamp)) {
+    // Try parsing as ISO string
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return String(value);
+    }
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  }
+  if (timestamp < 10000000000) {
+    timestamp *= 1000;
+  }
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
 }
 
 function renderSkillMarkdown() {

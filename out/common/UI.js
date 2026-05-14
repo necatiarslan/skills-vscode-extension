@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.formatDateTime = formatDateTime;
 exports.sleep = sleep;
 exports.withProgress = withProgress;
 exports.getUri = getUri;
@@ -21,6 +22,47 @@ exports.bytesToText = bytesToText;
 exports.CopyToClipboard = CopyToClipboard;
 exports.CopyListToClipboard = CopyListToClipboard;
 exports.SanitizeFileName = SanitizeFileName;
+/**
+ * Formats a date/time value as a local string, e.g. "May 13, 2026, 14:45:00".
+ * Accepts ISO strings, JS Date, or epoch (seconds/milliseconds).
+ */
+function formatDateTime(value) {
+    if (!value) {
+        return 'Unknown';
+    }
+    let date;
+    if (typeof value === 'string') {
+        // Try ISO string or epoch string
+        const asNum = Number(value);
+        if (!isNaN(asNum)) {
+            // If it's a 10-digit number, assume seconds; convert to ms
+            date = new Date(asNum < 10000000000 ? asNum * 1000 : asNum);
+        }
+        else {
+            date = new Date(value);
+        }
+    }
+    else if (typeof value === 'number') {
+        date = new Date(value < 10000000000 ? value * 1000 : value);
+    }
+    else if (value instanceof Date) {
+        date = value;
+    }
+    else {
+        return 'Unknown';
+    }
+    if (isNaN(date.getTime())) {
+        return String(value);
+    }
+    return date.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+}
 const vscode = require("vscode");
 const fs_1 = require("fs");
 const path_1 = require("path");

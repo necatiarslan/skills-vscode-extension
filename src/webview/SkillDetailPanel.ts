@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getSkillAgentLocation } from '../common/SkillLocationConfig';
-import { logToOutput } from '../common/UI';
+import { logToOutput, formatDateTime } from '../common/UI';
 import { getSkillEmoji } from '../common/SkillEmoji';
 import { gitHubContentService, skillsApiService, toolInstallService } from '../services';
 import { getStorageService } from '../services/SkillsStorageService';
@@ -367,7 +367,7 @@ export class SkillDetailPanel {
         if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
           try {
             const stat = await fs.promises.stat(filePath);
-            installDate = stat.mtime.toISOString();
+            installDate = formatDateTime(stat.mtime);
             break;
           } catch {}
         }

@@ -413,7 +413,7 @@ function renderLocalPanel() {
 function renderInstalledPanel() {
   const skill = detail.skill;
   const hasPath = !!installedLocalPath;
-  const installDate = initialState.installDate ? formatDateTime(initialState.installDate) : 'Unknown';
+  const installDate = initialState.installDate || 'Unknown';
 
   return `
     <section class="detail-section detail-section-wide">

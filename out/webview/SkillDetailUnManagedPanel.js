@@ -138,13 +138,28 @@ class SkillDetailUnManagedPanel {
         const rootPath = this.getLocalRootPath();
         const localRootDirectory = await this.listLocalDirectory(rootPath, '');
         const skillMarkdown = await this.readLocalSkillMarkdown(rootPath);
+        // Find install date from SKILL.md or skill.md
+        let installDate;
+        const candidates = ['SKILL.md', 'skill.md'];
+        for (const candidate of candidates) {
+            const filePath = path.join(rootPath, candidate);
+            if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+                try {
+                    const stat = await fs.promises.stat(filePath);
+                    installDate = (0, UI_1.formatDateTime)(stat.mtime);
+                    break;
+                }
+                catch { }
+            }
+        }
         return {
             skill,
             localRootDirectory,
             localInitialDirectory: localRootDirectory,
             skillEmoji: (0, SkillEmoji_1.getSkillEmoji)(skill.skillId || skill.name),
             skillMarkdown,
-            folderExists: true
+            folderExists: true,
+            installDate
         };
     }
     getLocalRootPath() {
@@ -299,8 +314,9 @@ class SkillDetailUnManagedPanel {
             detail: detailPayload,
             installedLocalPath: detailPayload.skill.localPath,
             folderExists: detailPayload.folderExists,
-            currentToolDisplayName: this.currentToolDisplayName
-        }).replace(/</g, '\\u003c');
+            currentToolDisplayName: this.currentToolDisplayName,
+            installDate: detailPayload.installDate || null
+        }).replace(/</g, '\u003c');
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
