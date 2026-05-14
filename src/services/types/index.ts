@@ -52,6 +52,8 @@ export interface ToolConfig {
   displayName: string;
   globalDir: string;
   canonicalDir?: string;
+  projectSkillDir: string;
+  isUniversal: boolean;
   detectionPaths: string[];
   hostNames: string[];
   preferredInstallMode?: InstallMethod;

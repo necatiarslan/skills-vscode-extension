@@ -6,14 +6,10 @@ const os = require("os");
 const path = require("path");
 function buildSkillLocationConfig() {
     const homeDir = os.homedir();
-    const workspaceScanDirCandidates = [
-        'skills',
-        '.skills/skills',
-        '.copilot/skills',
-        '.github/skills'
-    ];
+    const claudeHome = process.env.CLAUDE_CONFIG_DIR?.trim() || path.join(homeDir, '.claude');
+    const codexHome = process.env.CODEX_HOME?.trim() || path.join(homeDir, '.codex');
     return {
-        canonicalSkillRoot: path.join(homeDir, '.skills', 'skills'),
+        canonicalSkillRoot: path.join(homeDir, '.agents', 'skills'),
         agents: [
             {
                 name: 'vscode',
@@ -21,8 +17,8 @@ function buildSkillLocationConfig() {
                 globalSkillDir: path.join(homeDir, '.copilot', 'skills'),
                 detectionPaths: [path.join(homeDir, '.vscode')],
                 hostNames: ['visual studio code', 'vscode', 'github copilot', 'copilot'],
-                workspaceInstallDir: 'skills',
-                workspaceScanDirCandidates,
+                projectSkillDir: '.agents/skills',
+                isUniversal: true,
                 preferredInstallMode: 'symlink'
             },
             {
@@ -31,18 +27,18 @@ function buildSkillLocationConfig() {
                 globalSkillDir: path.join(homeDir, '.cursor', 'skills'),
                 detectionPaths: [path.join(homeDir, '.cursor')],
                 hostNames: ['cursor'],
-                workspaceInstallDir: 'skills',
-                workspaceScanDirCandidates,
+                projectSkillDir: '.agents/skills',
+                isUniversal: true,
                 preferredInstallMode: 'symlink'
             },
             {
                 name: 'windsurf',
                 displayName: 'Windsurf',
-                globalSkillDir: path.join(homeDir, '.windsurf', 'skills'),
-                detectionPaths: [path.join(homeDir, '.windsurf')],
+                globalSkillDir: path.join(homeDir, '.codeium', 'windsurf', 'skills'),
+                detectionPaths: [path.join(homeDir, '.codeium', 'windsurf')],
                 hostNames: ['windsurf'],
-                workspaceInstallDir: 'skills',
-                workspaceScanDirCandidates,
+                projectSkillDir: '.windsurf/skills',
+                isUniversal: false,
                 preferredInstallMode: 'symlink'
             },
             {
@@ -51,28 +47,28 @@ function buildSkillLocationConfig() {
                 globalSkillDir: path.join(homeDir, '.gemini', 'antigravity', 'skills'),
                 detectionPaths: [path.join(homeDir, '.gemini', 'antigravity')],
                 hostNames: ['antigravity'],
-                workspaceInstallDir: 'skills',
-                workspaceScanDirCandidates,
+                projectSkillDir: '.agents/skills',
+                isUniversal: true,
                 preferredInstallMode: 'symlink'
             },
             {
                 name: 'claude-code',
                 displayName: 'Claude Code',
-                globalSkillDir: path.join(homeDir, '.claude', 'skills'),
-                detectionPaths: [path.join(homeDir, '.claude')],
+                globalSkillDir: path.join(claudeHome, 'skills'),
+                detectionPaths: [claudeHome],
                 hostNames: ['claude', 'claude code'],
-                workspaceInstallDir: 'skills',
-                workspaceScanDirCandidates,
+                projectSkillDir: '.claude/skills',
+                isUniversal: false,
                 preferredInstallMode: 'symlink'
             },
             {
                 name: 'codex',
                 displayName: 'Codex',
-                globalSkillDir: path.join(process.env.CODEX_HOME?.trim() || path.join(homeDir, '.codex'), 'skills'),
-                detectionPaths: [process.env.CODEX_HOME?.trim() || path.join(homeDir, '.codex'), '/etc/codex'],
+                globalSkillDir: path.join(codexHome, 'skills'),
+                detectionPaths: [codexHome, '/etc/codex'],
                 hostNames: ['codex'],
-                workspaceInstallDir: 'skills',
-                workspaceScanDirCandidates,
+                projectSkillDir: '.agents/skills',
+                isUniversal: true,
                 preferredInstallMode: 'symlink'
             },
             {
@@ -81,8 +77,8 @@ function buildSkillLocationConfig() {
                 globalSkillDir: path.join(homeDir, '.gemini', 'skills'),
                 detectionPaths: [path.join(homeDir, '.gemini')],
                 hostNames: ['gemini', 'gemini cli'],
-                workspaceInstallDir: 'skills',
-                workspaceScanDirCandidates,
+                projectSkillDir: '.agents/skills',
+                isUniversal: true,
                 preferredInstallMode: 'symlink'
             },
             {
@@ -91,8 +87,8 @@ function buildSkillLocationConfig() {
                 globalSkillDir: path.join(homeDir, '.config', 'opencode', 'skills'),
                 detectionPaths: [path.join(homeDir, '.config', 'opencode')],
                 hostNames: ['opencode', 'open code'],
-                workspaceInstallDir: 'skills',
-                workspaceScanDirCandidates,
+                projectSkillDir: '.agents/skills',
+                isUniversal: true,
                 preferredInstallMode: 'symlink'
             }
         ]

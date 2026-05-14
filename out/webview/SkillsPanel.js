@@ -383,9 +383,14 @@ class SkillsPanel {
     getWorkspaceSkillRoots() {
         const roots = [];
         const agentLocation = (0, SkillLocationConfig_1.getSkillAgentLocation)(this.currentToolName);
-        const workspaceCandidates = agentLocation?.workspaceScanDirCandidates || [];
+        // Always scan the canonical .agents/skills directory. For non-universal agents
+        // also scan their agent-specific project directory.
+        const candidates = new Set(['.agents/skills']);
+        if (agentLocation && !agentLocation.isUniversal) {
+            candidates.add(agentLocation.projectSkillDir);
+        }
         for (const workspaceRoot of this.getWorkspaceRoots()) {
-            for (const candidate of workspaceCandidates) {
+            for (const candidate of candidates) {
                 roots.push(path.join(workspaceRoot, candidate));
             }
         }

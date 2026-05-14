@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import * as https from 'https';
 import { logToOutput } from '../common/UI';
@@ -27,6 +28,8 @@ export class ToolInstallService {
       displayName: agent.displayName,
       globalDir: agent.globalSkillDir,
       canonicalDir: ToolInstallService.CANONICAL_ROOT,
+      projectSkillDir: agent.projectSkillDir,
+      isUniversal: agent.isUniversal,
       detectionPaths: agent.detectionPaths,
       hostNames: agent.hostNames,
       preferredInstallMode: agent.preferredInstallMode,
@@ -160,14 +163,9 @@ export class ToolInstallService {
         throw new Error(`Tool ${tool.displayName} is not installed on this system`);
       }
 
-      const targetTool: ToolConfig = {
-        ...tool,
-        globalDir: resolvedInstallDirectory
-      };
-
       logToOutput(`[Install] Starting workspace install of ${skillName} to ${resolvedInstallDirectory}`);
 
-      const installResult = await this.downloadSkill(githubUrl, targetTool, skillId, skillName);
+      const installResult = await this.downloadSkill(githubUrl, tool, skillId, skillName, resolvedInstallDirectory);
 
       logToOutput(`[Install] Successfully installed ${skillName} to ${installResult.installPath}`);
       return installResult;
@@ -210,10 +208,11 @@ export class ToolInstallService {
     githubUrl: string,
     tool: ToolConfig,
     skillId: string,
-    skillName: string
+    skillName: string,
+    workspaceRoot?: string
   ): Promise<InstallResult> {
     return new Promise((resolve, reject) => {
-      this.installFromGithub(githubUrl, tool, skillId, skillName).then(resolve).catch(reject);
+      this.installFromGithub(githubUrl, tool, skillId, skillName, workspaceRoot).then(resolve).catch(reject);
     });
   }
 
@@ -221,7 +220,8 @@ export class ToolInstallService {
     githubUrl: string,
     tool: ToolConfig,
     skillId: string,
-    skillName: string
+    skillName: string,
+    workspaceRoot?: string
   ): Promise<InstallResult> {
     const context = gitHubContentService.parseGitHubUrl(githubUrl);
     const metadata = await gitHubContentService.getRepoMetadata(context);
@@ -238,21 +238,55 @@ export class ToolInstallService {
       skillPath
     };
 
-    const canonicalPath = path.join(tool.canonicalDir || ToolInstallService.CANONICAL_ROOT, this.sanitizeSegment(skillId));
-    const installPath = path.join(tool.globalDir, this.sanitizeSegment(skillId));
+    const sanitizedId = this.sanitizeSegment(skillId);
+    const isWorkspace = workspaceRoot !== undefined;
 
-    await fs.promises.mkdir(path.dirname(canonicalPath), { recursive: true });
-    await fs.promises.mkdir(path.dirname(installPath), { recursive: true });
+    // Canonical path: <base>/.agents/skills/<skillId>
+    const canonicalBase = isWorkspace
+      ? path.join(workspaceRoot, '.agents', 'skills')
+      : path.join(os.homedir(), '.agents', 'skills');
+    const canonicalPath = path.join(canonicalBase, sanitizedId);
 
-    await this.removeInstallTarget(installPath);
+    // Agent install path:
+    // - Universal agents share the canonical path (no separate symlink needed)
+    // - Non-universal agents get their own agent-specific subdirectory
+    let installPath: string;
+    if (tool.isUniversal) {
+      installPath = canonicalPath;
+    } else if (isWorkspace) {
+      installPath = path.join(workspaceRoot, tool.projectSkillDir, sanitizedId);
+    } else {
+      installPath = path.join(tool.globalDir, sanitizedId);
+    }
+
+    await fs.promises.mkdir(canonicalBase, { recursive: true });
     await this.removeInstallTarget(canonicalPath);
     await fs.promises.mkdir(canonicalPath, { recursive: true });
 
     await this.downloadDirectory(resolvedContext.owner, resolvedContext.repo, resolvedContext.branch, skillPath, canonicalPath);
     await this.writeInstallMetadata(canonicalPath, skillId, skillName, githubUrl, resolvedContext.owner, resolvedContext.repo, resolvedContext.branch, skillPath);
 
-    const preferredMode = tool.preferredInstallMode || 'symlink';
-    const installMethod = await this.materializeInstall(canonicalPath, installPath, preferredMode);
+    let installMethod: InstallMethod;
+
+    if (tool.isUniversal) {
+      // Universal agents: canonical path IS the install path — no symlink needed
+      installMethod = 'symlink';
+    } else if (isWorkspace) {
+      // For workspace installs of non-universal agents, skip the symlink if the
+      // agent's root directory doesn't already exist in the workspace.
+      const agentRootDir = path.join(workspaceRoot, tool.projectSkillDir.split('/')[0]);
+      if (!fs.existsSync(agentRootDir)) {
+        installMethod = 'symlink';
+      } else {
+        await fs.promises.mkdir(path.dirname(installPath), { recursive: true });
+        await this.removeInstallTarget(installPath);
+        installMethod = await this.materializeInstall(canonicalPath, installPath, tool.preferredInstallMode || 'symlink');
+      }
+    } else {
+      await fs.promises.mkdir(path.dirname(installPath), { recursive: true });
+      await this.removeInstallTarget(installPath);
+      installMethod = await this.materializeInstall(canonicalPath, installPath, tool.preferredInstallMode || 'symlink');
+    }
 
     return {
       tool,

@@ -413,7 +413,7 @@ export class SkillDetailPanel {
     }
 
     const agentLocation = getSkillAgentLocation(this.currentToolName);
-    const workspaceInstallDir = agentLocation?.workspaceInstallDir || 'skills';
+    const workspaceInstallDir = agentLocation?.projectSkillDir || '.agents/skills';
 
     return path.join(workspaceFolder.uri.fsPath, workspaceInstallDir);
   }

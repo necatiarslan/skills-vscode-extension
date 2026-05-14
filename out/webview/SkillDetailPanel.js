@@ -342,7 +342,7 @@ class SkillDetailPanel {
             throw new Error('No workspace folder is open for workspace installation.');
         }
         const agentLocation = (0, SkillLocationConfig_1.getSkillAgentLocation)(this.currentToolName);
-        const workspaceInstallDir = agentLocation?.workspaceInstallDir || 'skills';
+        const workspaceInstallDir = agentLocation?.projectSkillDir || '.agents/skills';
         return path.join(workspaceFolder.uri.fsPath, workspaceInstallDir);
     }
     async readLocalSkillMarkdown(rootPath) {
