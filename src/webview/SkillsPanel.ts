@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getSkillAgentLocation } from '../common/SkillLocationConfig';
+import { getSkillAgentLocation, SKILL_LOCATION_CONFIG } from '../common/SkillLocationConfig';
 import { logToOutput } from '../common/UI';
 import { skillsApiService } from '../services';
 import { getStorageService } from '../services/SkillsStorageService';
@@ -479,11 +479,16 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
 
   private getGlobalSkillRoots(): string[] {
     const toolConfig = toolInstallService.getTool(this.currentToolName);
-    if (!toolConfig) {
-      return [];
+
+    const roots = new Set<string>();
+
+    if (toolConfig?.globalDir) {
+      roots.add(toolConfig.globalDir);
     }
 
-    return [toolConfig.globalDir];
+    roots.add(SKILL_LOCATION_CONFIG.canonicalSkillRoot);
+
+    return Array.from(roots);
   }
 
   private getWorkspaceRoots(): string[] {

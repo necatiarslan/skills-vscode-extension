@@ -399,10 +399,12 @@ class SkillsPanel {
     }
     getGlobalSkillRoots() {
         const toolConfig = services_2.toolInstallService.getTool(this.currentToolName);
-        if (!toolConfig) {
-            return [];
+        const roots = new Set();
+        if (toolConfig?.globalDir) {
+            roots.add(toolConfig.globalDir);
         }
-        return [toolConfig.globalDir];
+        roots.add(SkillLocationConfig_1.SKILL_LOCATION_CONFIG.canonicalSkillRoot);
+        return Array.from(roots);
     }
     getWorkspaceRoots() {
         return (vscode.workspace.workspaceFolders || []).map((folder) => folder.uri.fsPath);
