@@ -240,10 +240,11 @@ export class ToolInstallService {
 
     const sanitizedId = this.sanitizeSegment(skillId);
     const isWorkspace = workspaceRoot !== undefined;
+    const resolvedWorkspaceRoot = isWorkspace ? path.resolve(workspaceRoot!) : '';
 
     // Canonical path: <base>/.agents/skills/<skillId>
     const canonicalBase = isWorkspace
-      ? path.join(workspaceRoot, '.agents', 'skills')
+      ? resolvedWorkspaceRoot
       : path.join(os.homedir(), '.agents', 'skills');
     const canonicalPath = path.join(canonicalBase, sanitizedId);
 
@@ -254,7 +255,7 @@ export class ToolInstallService {
     if (tool.isUniversal) {
       installPath = canonicalPath;
     } else if (isWorkspace) {
-      installPath = path.join(workspaceRoot, tool.projectSkillDir, sanitizedId);
+      installPath = path.join(resolvedWorkspaceRoot!, sanitizedId);
     } else {
       installPath = path.join(tool.globalDir, sanitizedId);
     }
