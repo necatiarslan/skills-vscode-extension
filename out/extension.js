@@ -23,6 +23,12 @@ function activate(context) {
         context.subscriptions.push(vscode.commands.registerCommand('Skills.Refresh', () => {
             SkillsPanel_1.SkillsPanel.Current?.refreshInstalledSkills();
         }));
+        context.subscriptions.push(vscode.commands.registerCommand('Skills.Donate', () => {
+            vscode.env.openExternal(vscode.Uri.parse('https://github.com/sponsors/necatiarslan'));
+        }));
+        context.subscriptions.push(vscode.commands.registerCommand('Skills.BugAndNewFeatureRequest', () => {
+            vscode.env.openExternal(vscode.Uri.parse('https://github.com/necatiarslan/skills-vscode-extension/issues'));
+        }));
         ui.logToOutput('Skills activated successfully.');
     }
     catch (error) {

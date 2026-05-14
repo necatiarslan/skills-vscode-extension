@@ -33,6 +33,18 @@ export function activate(context: vscode.ExtensionContext): void {
             })
         );
 
+        context.subscriptions.push(
+            vscode.commands.registerCommand('Skills.Donate', () => {
+                vscode.env.openExternal(vscode.Uri.parse('https://github.com/sponsors/necatiarslan'));
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand('Skills.BugAndNewFeatureRequest', () => {
+                vscode.env.openExternal(vscode.Uri.parse('https://github.com/necatiarslan/skills-vscode-extension/issues'));
+            })
+        );
+
         ui.logToOutput('Skills activated successfully.');
     } catch (error) {
         ui.logToOutput('Fatal error activating Skills:', error as Error);
