@@ -13,6 +13,7 @@ import {
   SkillInstallScope,
   ToolConfig
 } from '../services/types';
+import { SkillDetailUnManagedPanel } from './SkillDetailUnManagedPanel';
 import { SkillDetailPanel } from './SkillDetailPanel';
 
 /**
@@ -85,6 +86,9 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         break;
       case 'openSkillDetailsById':
         await this.handleOpenSkillDetailsById(message.skillId);
+        break;
+      case 'openUnmanagedSkillDetails':
+        await this.handleOpenUnmanagedSkillDetails(message.skill);
         break;
       case 'install':
         await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
@@ -193,6 +197,38 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       logToOutput(`[Webview] Details error: ${errorMsg}`);
       this.postMessage({
         type: 'openSkillDetailsResult',
+        success: false,
+        error: errorMsg
+      });
+    }
+  }
+
+  /**
+   * Load detail data for an unmanaged skill.
+   */
+  private async handleOpenUnmanagedSkillDetails(skill: MarketplaceInstalledSkill) {
+    try {
+      if (!skill?.localPath) {
+        throw new Error('This skill does not have a local path.');
+      }
+
+      await SkillDetailUnManagedPanel.createOrShow(
+        this.extensionUri,
+        skill,
+        this.currentToolName,
+        this.currentToolDisplayName
+      );
+
+      this.postMessage({
+        type: 'openUnmanagedSkillDetailsResult',
+        success: true,
+        error: null
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[Webview] Unmanaged details error: ${errorMsg}`);
+      this.postMessage({
+        type: 'openUnmanagedSkillDetailsResult',
         success: false,
         error: errorMsg
       });
@@ -371,6 +407,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         skillId: installed.skillId,
         name: installed.name || installed.skillId,
         author: installed.author || 'Unknown',
+        description: 'Managed skill',
         localPath: installed.localPath,
         scope,
         kind: 'managed',
@@ -430,11 +467,12 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
           skillId: '',
           name: entry.name,
           author: 'Unknown',
+          description: 'Unmanaged skill',
           localPath: skillPath,
           scope,
           kind: 'other',
-          canOpenDetails: false,
-          canUninstall: false
+          canOpenDetails: true,
+          canUninstall: true
         });
       }
     }

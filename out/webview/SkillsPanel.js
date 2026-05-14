@@ -9,6 +9,7 @@ const UI_1 = require("../common/UI");
 const services_1 = require("../services");
 const SkillsStorageService_1 = require("../services/SkillsStorageService");
 const services_2 = require("../services");
+const SkillDetailUnManagedPanel_1 = require("./SkillDetailUnManagedPanel");
 const SkillDetailPanel_1 = require("./SkillDetailPanel");
 /**
  * SkillsPanel - WebviewViewProvider for rendering marketplace in sidebar
@@ -62,6 +63,9 @@ class SkillsPanel {
                 break;
             case 'openSkillDetailsById':
                 await this.handleOpenSkillDetailsById(message.skillId);
+                break;
+            case 'openUnmanagedSkillDetails':
+                await this.handleOpenUnmanagedSkillDetails(message.skill);
                 break;
             case 'install':
                 await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
@@ -157,6 +161,31 @@ class SkillsPanel {
             (0, UI_1.logToOutput)(`[Webview] Details error: ${errorMsg}`);
             this.postMessage({
                 type: 'openSkillDetailsResult',
+                success: false,
+                error: errorMsg
+            });
+        }
+    }
+    /**
+     * Load detail data for an unmanaged skill.
+     */
+    async handleOpenUnmanagedSkillDetails(skill) {
+        try {
+            if (!skill?.localPath) {
+                throw new Error('This skill does not have a local path.');
+            }
+            await SkillDetailUnManagedPanel_1.SkillDetailUnManagedPanel.createOrShow(this.extensionUri, skill, this.currentToolName, this.currentToolDisplayName);
+            this.postMessage({
+                type: 'openUnmanagedSkillDetailsResult',
+                success: true,
+                error: null
+            });
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[Webview] Unmanaged details error: ${errorMsg}`);
+            this.postMessage({
+                type: 'openUnmanagedSkillDetailsResult',
                 success: false,
                 error: errorMsg
             });
@@ -314,6 +343,7 @@ class SkillsPanel {
                 skillId: installed.skillId,
                 name: installed.name || installed.skillId,
                 author: installed.author || 'Unknown',
+                description: 'Managed skill',
                 localPath: installed.localPath,
                 scope,
                 kind: 'managed',
@@ -359,11 +389,12 @@ class SkillsPanel {
                     skillId: '',
                     name: entry.name,
                     author: 'Unknown',
+                    description: 'Unmanaged skill',
                     localPath: skillPath,
                     scope,
                     kind: 'other',
-                    canOpenDetails: false,
-                    canUninstall: false
+                    canOpenDetails: true,
+                    canUninstall: true
                 });
             }
         }

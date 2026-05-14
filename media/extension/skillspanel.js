@@ -129,6 +129,12 @@ function handleExtensionMessage(message) {
         showError(`Failed to open skill details: ${message.error}`);
       }
       break;
+    case 'openUnmanagedSkillDetailsResult':
+      setLoading(false);
+      if (!message.success) {
+        showError(`Failed to open unmanaged skill details: ${message.error}`);
+      }
+      break;
     default:
       break;
   }
@@ -204,6 +210,25 @@ function handleSectionClick(event) {
     event.stopPropagation();
     const localPath = actionEl.getAttribute('data-local-path') || '';
     vscode.postMessage({ type: 'openInstalledFolder', skillId, localPath });
+    return;
+  }
+
+  if (action === 'open-unmanaged') {
+    event.stopPropagation();
+    vscode.postMessage({
+      type: 'openUnmanagedSkillDetails',
+      skill: {
+        skillId,
+        name: actionEl.getAttribute('data-skill-name') || skillId,
+        author: actionEl.getAttribute('data-skill-author') || 'Unknown',
+        description: actionEl.getAttribute('data-skill-description') || 'Unmanaged skill',
+        localPath: actionEl.getAttribute('data-local-path') || '',
+        scope: actionEl.getAttribute('data-scope') || 'global',
+        kind: actionEl.getAttribute('data-kind') || 'other',
+        canOpenDetails: true,
+        canUninstall: true
+      }
+    });
     return;
   }
 
@@ -335,13 +360,14 @@ function renderSkillItem(skill, options) {
     `;
   } else if (isOtherInstalledSection) {
     actionButtons = `
-      <vscode-button appearance="secondary" class="skill-action-btn" data-action="open-folder" data-skill-id="" data-local-path="${escapeAttr(skill.localPath || '')}">Open</vscode-button>
+      <vscode-button appearance="secondary" class="skill-action-btn" data-action="open-unmanaged" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-skill-author="${escapeAttr(skill.author || 'Unknown')}" data-skill-description="${escapeAttr(skill.description || 'Unmanaged skill')}" data-local-path="${escapeAttr(skill.localPath || '')}" data-scope="${escapeAttr(skill.scope || 'global')}" data-kind="${escapeAttr(skill.kind || 'other')}">Open</vscode-button>
     `;
   }
 
   const skillEmoji = getSkillEmoji(skill.id || skill.name);
-  const canOpenDetails = !isOtherInstalledSection;
-  const cardActionAttr = canOpenDetails ? `data-action="open" data-skill-id="${escapeAttr(skill.id)}"` : '';
+  const cardActionAttr = isOtherInstalledSection
+    ? `data-action="open-unmanaged" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-skill-author="${escapeAttr(skill.author || 'Unknown')}" data-skill-description="${escapeAttr(skill.description || 'Unmanaged skill')}" data-local-path="${escapeAttr(skill.localPath || '')}" data-scope="${escapeAttr(skill.scope || 'global')}" data-kind="${escapeAttr(skill.kind || 'other')}"`
+    : `data-action="open" data-skill-id="${escapeAttr(skill.id)}"`;
   const iconWrapClass = isOtherInstalledSection ? 'skill-icon-wrap skill-icon-wrap--muted' : 'skill-icon-wrap';
   const metaText = `👤 ${escapeHtml(skill.author || 'Unknown')}`;
 
@@ -383,7 +409,7 @@ function buildSectionRows(sectionSkills) {
       id: installed.skillId || '',
       name: knownSkill?.name || installed.name || installed.skillId || 'Unknown skill',
       author: knownSkill?.author || installed.author || 'Unknown',
-      description: knownSkill?.description || 'Unmanaged skill',
+      description: knownSkill?.description || installed.description || 'Unmanaged skill',
       stars: knownSkill?.stars || 0,
       githubUrl: knownSkill?.githubUrl || '',
       localPath: String(installed.localPath || '')

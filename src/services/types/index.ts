@@ -102,6 +102,7 @@ export interface MarketplaceInstalledSkill {
   skillId: string;
   name: string;
   author: string;
+  description?: string;
   localPath: string;
   scope: SkillInstallScope;
   kind: SkillInstallKind;
