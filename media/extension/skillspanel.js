@@ -342,21 +342,20 @@ function renderSkillItem(skill, options) {
   const skillEmoji = getSkillEmoji(skill.id);
   const canOpenDetails = !isOtherInstalledSection;
   const cardActionAttr = canOpenDetails ? `data-action="open" data-skill-id="${escapeAttr(skill.id)}"` : '';
-  const metaText = isOtherInstalledSection
-    ? `📁 ${escapeHtml(skill.localPath || '')}`
-    : `👤 ${escapeHtml(skill.author || 'Unknown')}`;
+  const iconWrapClass = isOtherInstalledSection ? 'skill-icon-wrap skill-icon-wrap--muted' : 'skill-icon-wrap';
+  const metaText = `👤 ${escapeHtml(skill.author || 'Unknown')}`;
 
   return `
     <article class="skill-item" role="listitem" tabindex="0" ${cardActionAttr}>
-      <div class="skill-icon-wrap" aria-hidden="true">
+      <div class="${iconWrapClass}" aria-hidden="true">
         ${skillEmoji}
       </div>
       <div class="skill-main">
         <div class="skill-top-line">
           <h4 class="skill-name">${escapeHtml(skill.name)}</h4>
-          <span class="skill-stars" title="stars">⭐ ${formatCompactNumber(skill.stars || 0)}</span>
+          ${isOtherInstalledSection ? '' : `<span class="skill-stars" title="stars">⭐ ${formatCompactNumber(skill.stars || 0)}</span>`}
         </div>
-        <p class="skill-description">${escapeHtml(skill.description || '')}</p>
+        <p class="skill-description">${escapeHtml(skill.description || (isOtherInstalledSection ? 'Unmanaged skill' : ''))}</p>
         <div class="skill-actions">
           <div class="skill-meta">${metaText}</div>
           <div class="skill-action-group">
@@ -384,7 +383,7 @@ function buildSectionRows(sectionSkills) {
       id: installed.skillId || '',
       name: knownSkill?.name || installed.name || installed.skillId || 'Unknown skill',
       author: knownSkill?.author || installed.author || 'Unknown',
-      description: knownSkill?.description || 'Installed skill',
+      description: knownSkill?.description || 'Unmanaged skill',
       stars: knownSkill?.stars || 0,
       githubUrl: knownSkill?.githubUrl || '',
       localPath: String(installed.localPath || '')

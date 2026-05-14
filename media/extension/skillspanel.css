@@ -136,6 +136,10 @@ body {
   margin-top: 2px;
 }
 
+.skill-icon-wrap--muted {
+  filter: grayscale(100%) saturate(0%) opacity(0.72);
+}
+
 .skill-main {
   min-width: 0;
 }
