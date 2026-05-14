@@ -535,8 +535,8 @@ class SkillDetailPanel {
         this.panel.webview.postMessage(message);
     }
     getHtmlContent(detailPayload, isInstalled) {
-        const styleUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skilldetailpanel.css'));
-        const scriptUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skilldetailpanel.js'));
+        const styleUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailPanel.css'));
+        const scriptUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailPanel.js'));
         const nonce = this.getNonce();
         const installedSkill = (0, SkillsStorageService_1.getStorageService)().getInstalledSkill(this.currentToolName, detailPayload.skill.id);
         const initialState = JSON.stringify({

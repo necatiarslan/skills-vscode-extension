@@ -469,8 +469,8 @@ class SkillsPanel {
      * Get the HTML content for the webview
      */
     getHtmlContent(webview) {
-        const skillspanelCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillspanel.css'));
-        const skillspanelJs = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillspanel.js'));
+        const skillspanelCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillsPanel.css'));
+        const skillspanelJs = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillsPanel.js'));
         return `<!DOCTYPE html>
 <html lang="en">
 <head>

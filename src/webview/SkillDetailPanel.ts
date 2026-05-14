@@ -637,10 +637,10 @@ export class SkillDetailPanel {
 
   private getHtmlContent(detailPayload: SkillDetailPayload & { installDate?: string }, isInstalled: boolean): string {
     const styleUri = this.panel.webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skilldetailpanel.css')
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailPanel.css')
     );
     const scriptUri = this.panel.webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skilldetailpanel.js')
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailPanel.js')
     );
     const nonce = this.getNonce();
     const installedSkill = getStorageService().getInstalledSkill(this.currentToolName, detailPayload.skill.id);

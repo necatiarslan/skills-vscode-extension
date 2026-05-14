@@ -569,10 +569,10 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
    */
   private getHtmlContent(webview: vscode.Webview): string {
     const skillspanelCss = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillspanel.css')
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillsPanel.css')
     );
     const skillspanelJs = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillspanel.js')
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillsPanel.js')
     );
 
     return `<!DOCTYPE html>
