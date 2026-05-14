@@ -10,15 +10,37 @@ let localDirectory = detail ? (detail.localInitialDirectory || detail.localRootD
 let localPreview = detail ? (detail.localInitialPreview || null) : null;
 let activeTab = detail && detail.skillMarkdown ? 'skill' : 'details';
 
+let markdownIt = null;
+
 const loadingIndicator = document.getElementById('loadingIndicator');
 const errorMessage = document.getElementById('errorMessage');
 const detailContainer = document.getElementById('detailContainer');
 
 function initialize() {
-  render();
-  detailContainer.addEventListener('change', handleDetailContainerChange);
-  detailContainer.addEventListener('click', handleDetailContainerClick);
-  window.addEventListener('message', (event) => handleExtensionMessage(event.data));
+  // Import and initialize markdown-it
+  import('https://esm.sh/markdown-it@14.1.0').then((module) => {
+    const MarkdownIt = module.default;
+    markdownIt = new MarkdownIt({
+      html: false,
+      linkify: true,
+      typographer: true,
+      breaks: true
+    });
+    
+    // Add security: disable dangerous HTML and script tags
+    markdownIt.disable(['html', 'image']);
+    
+    render();
+    detailContainer.addEventListener('change', handleDetailContainerChange);
+    detailContainer.addEventListener('click', handleDetailContainerClick);
+    window.addEventListener('message', (event) => handleExtensionMessage(event.data));
+  }).catch((error) => {
+    console.error('Failed to load markdown-it:', error);
+    render();
+    detailContainer.addEventListener('change', handleDetailContainerChange);
+    detailContainer.addEventListener('click', handleDetailContainerClick);
+    window.addEventListener('message', (event) => handleExtensionMessage(event.data));
+  });
 }
 
 function handleDetailContainerClick(event) {
@@ -284,10 +306,20 @@ function getSelectedTabIndex(tabOrder) {
 
 function renderSkillMarkdown() {
   if (!detail.skillMarkdown) {
-    return '<div class="code-preview-container">No SKILL.md found.</div>';
+    return '<div class="markdown-container">No SKILL.md found.</div>';
   }
 
-  return `<div class="code-preview-container"><pre class="code-preview skill-markdown-preview"><code>${escapeHtml(detail.skillMarkdown)}</code></pre></div>`;
+  if (!markdownIt) {
+    return '<div class="markdown-container"><p>Markdown renderer is loading...</p></div>';
+  }
+
+  try {
+    const renderedHtml = markdownIt.render(detail.skillMarkdown);
+    return `<div class="markdown-container">${renderedHtml}</div>`;
+  } catch (error) {
+    console.error('Error rendering markdown:', error);
+    return `<div class="markdown-container"><p>Error rendering markdown content.</p></div>`;
+  }
 }
 
 function renderDetailOverview() {

@@ -86,7 +86,7 @@
       "Skills": [
         {
           "id": "SkillsView",
-          "name": "", 
+          "name": "",
           "type": "webview",
           "icon": "media/skills-logo-activitybar.png"
         }
@@ -130,6 +130,7 @@
     "archiver": "^7.0.1",
     "js-tiktoken": "^1.0.21",
     "js-yaml": "^4.1.1",
+    "markdown-it": "^14.1.1",
     "reflect-metadata": "^0.2.2",
     "tmp": "^0.2.5",
     "uuid": "^13.0.0",

@@ -351,6 +351,221 @@ a {
   max-height: none;
 }
 
+/* Markdown Rendering Styles */
+.markdown-container {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: 12px;
+  line-height: 1.6;
+  
+  /* Reset and normalize */
+  display: block;
+  box-sizing: border-box;
+  background: var(--panel-bg);
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  
+  /* Prevent overflow and distortion */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+}
+
+/* Reset all markdown elements */
+.markdown-container * {
+  box-sizing: border-box;
+}
+
+/* Ensure list items display correctly */
+.markdown-container ul,
+.markdown-container ol {
+  display: block;
+  margin: 8px 0 !important;
+  padding-left: 24px !important;
+  list-style-position: outside !important;
+}
+
+.markdown-container li {
+  display: list-item;
+  margin: 4px 0 !important;
+}
+
+.markdown-container h1,
+.markdown-container h2,
+.markdown-container h3,
+.markdown-container h4,
+.markdown-container h5,
+.markdown-container h6 {
+  display: block;
+  margin: 16px 0 8px 0 !important;
+  font-weight: 600;
+  line-height: 1.4;
+  border-bottom: 1px solid transparent;
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+.markdown-container h1 {
+  font-size: 1.8em !important;
+  border-bottom-color: var(--panel-border);
+  padding-bottom: 8px !important;
+}
+
+.markdown-container h2 {
+  font-size: 1.5em !important;
+  border-bottom-color: var(--panel-border);
+  padding-bottom: 4px !important;
+}
+
+.markdown-container h3 {
+  font-size: 1.25em !important;
+}
+
+.markdown-container h4 {
+  font-size: 1.1em !important;
+}
+
+.markdown-container h5,
+.markdown-container h6 {
+  font-size: 1em !important;
+}
+
+.markdown-container p {
+  display: block;
+  margin: 8px 0 !important;
+  padding: 0 !important;
+}
+
+.markdown-container ul,
+.markdown-container ol {
+  margin: 8px 0 !important;
+  padding-left: 24px !important;
+}
+
+.markdown-container li {
+  margin: 4px 0 !important;
+}
+
+.markdown-container blockquote {
+  display: block;
+  margin: 8px 0 !important;
+  padding: 8px 12px !important;
+  border-left: 3px solid var(--vscode-textBlockQuote-border) !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  color: var(--vscode-textBlockQuote-foreground);
+  background: color-mix(in srgb, var(--vscode-textBlockQuote-border) 10%, transparent);
+  border-radius: 2px;
+}
+
+.markdown-container code {
+  display: inline;
+  background: color-mix(in srgb, var(--panel-bg) 92%, black 8%);
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+  padding: 2px 6px !important;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.9em !important;
+  margin: 0 !important;
+  color: inherit;
+}
+
+.markdown-container pre {
+  display: block;
+  margin: 8px 0 !important;
+  padding: 12px !important;
+  background: color-mix(in srgb, var(--panel-bg) 88%, black 12%);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  overflow-x: auto;
+  line-height: 1.4;
+  white-space: pre;
+  word-wrap: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.markdown-container pre code {
+  display: block;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.9em;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.markdown-container table {
+  display: table;
+  border-collapse: collapse;
+  margin: 12px 0 !important;
+  width: 100%;
+  border: 1px solid var(--panel-border);
+}
+
+.markdown-container th,
+.markdown-container td {
+  display: table-cell;
+  border: 1px solid var(--panel-border);
+  padding: 8px 12px !important;
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-container th {
+  background: color-mix(in srgb, var(--panel-bg) 92%, white 8%);
+  font-weight: 600;
+}
+
+.markdown-container a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+  cursor: pointer;
+  display: inline;
+}
+
+.markdown-container a:hover {
+  text-decoration: underline;
+}
+
+.markdown-container hr {
+  display: block;
+  margin: 12px 0 !important;
+  border: none !important;
+  border-top: 1px solid var(--panel-border) !important;
+  padding: 0 !important;
+}
+
+.markdown-container em,
+.markdown-container i {
+  display: inline;
+  font-style: italic;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.markdown-container strong,
+.markdown-container b {
+  display: inline;
+  font-weight: 600;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.markdown-container img {
+  display: block;
+  max-width: 100% !important;
+  height: auto;
+  border-radius: 4px;
+  margin: 8px 0 !important;
+}
+
 @media (max-width: 980px) {
   .extension-header {
     grid-template-columns: 60px minmax(0, 1fr);
