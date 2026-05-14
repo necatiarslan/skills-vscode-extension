@@ -288,12 +288,26 @@ class SkillDetailPanel {
         const skillEmoji = (0, SkillEmoji_1.getSkillEmoji)(detailSkill.id);
         const installedSkill = (0, SkillsStorageService_1.getStorageService)().getInstalledSkill(this.currentToolName, detailSkill.id);
         let localRootDirectory;
+        let installDate;
         if (installedSkill?.localPath && fs.existsSync(installedSkill.localPath)) {
             try {
                 localRootDirectory = await this.listLocalDirectory(installedSkill.localPath, '');
             }
             catch {
                 localRootDirectory = undefined;
+            }
+            // Try to get install date from SKILL.md or skill.md
+            const candidates = ['SKILL.md', 'skill.md'];
+            for (const candidate of candidates) {
+                const filePath = path.join(installedSkill.localPath, candidate);
+                if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+                    try {
+                        const stat = await fs.promises.stat(filePath);
+                        installDate = stat.mtime.toISOString();
+                        break;
+                    }
+                    catch { }
+                }
             }
         }
         let skillMarkdown;
@@ -323,7 +337,8 @@ class SkillDetailPanel {
             localRootDirectory,
             localInitialDirectory: localRootDirectory,
             skillEmoji,
-            skillMarkdown
+            skillMarkdown,
+            installDate
         };
     }
     getInstalledSkillRoot(skillId) {
@@ -485,8 +500,9 @@ class SkillDetailPanel {
             detail: detailPayload,
             isInstalled,
             installedLocalPath: installedSkill?.localPath || '',
-            currentToolDisplayName: this.currentToolDisplayName
-        }).replace(/</g, '\\u003c');
+            currentToolDisplayName: this.currentToolDisplayName,
+            installDate: detailPayload.installDate || null
+        }).replace(/</g, '\u003c');
         return `<!DOCTYPE html>
 <html lang="en">
 <head>

@@ -317,7 +317,7 @@ export class SkillDetailPanel {
     }
   }
 
-  private async createSkillDetailPayload(skill: Skill): Promise<SkillDetailPayload> {
+  private async createSkillDetailPayload(skill: Skill): Promise<SkillDetailPayload & { installDate?: string }> {
     const detailSkill = await skillsApiService.fetchDetail(skill.id) ?? skill;
     const repoContext = gitHubContentService.parseGitHubUrl(detailSkill.githubUrl);
     const repoMetadata = await gitHubContentService.getRepoMetadata(repoContext);
@@ -353,11 +353,24 @@ export class SkillDetailPanel {
     const installedSkill = getStorageService().getInstalledSkill(this.currentToolName, detailSkill.id);
 
     let localRootDirectory: LocalDirectoryResult | undefined;
+    let installDate: string | undefined;
     if (installedSkill?.localPath && fs.existsSync(installedSkill.localPath)) {
       try {
         localRootDirectory = await this.listLocalDirectory(installedSkill.localPath, '');
       } catch {
         localRootDirectory = undefined;
+      }
+      // Try to get install date from SKILL.md or skill.md
+      const candidates = ['SKILL.md', 'skill.md'];
+      for (const candidate of candidates) {
+        const filePath = path.join(installedSkill.localPath, candidate);
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+          try {
+            const stat = await fs.promises.stat(filePath);
+            installDate = stat.mtime.toISOString();
+            break;
+          } catch {}
+        }
       }
     }
 
@@ -389,7 +402,8 @@ export class SkillDetailPanel {
       localRootDirectory,
       localInitialDirectory: localRootDirectory,
       skillEmoji,
-      skillMarkdown
+      skillMarkdown,
+      installDate
     };
   }
 
@@ -573,7 +587,7 @@ export class SkillDetailPanel {
     this.panel.webview.postMessage(message);
   }
 
-  private getHtmlContent(detailPayload: SkillDetailPayload, isInstalled: boolean): string {
+  private getHtmlContent(detailPayload: SkillDetailPayload & { installDate?: string }, isInstalled: boolean): string {
     const styleUri = this.panel.webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skilldetailpanel.css')
     );
@@ -586,8 +600,9 @@ export class SkillDetailPanel {
       detail: detailPayload,
       isInstalled,
       installedLocalPath: installedSkill?.localPath || '',
-      currentToolDisplayName: this.currentToolDisplayName
-    }).replace(/</g, '\\u003c');
+      currentToolDisplayName: this.currentToolDisplayName,
+      installDate: detailPayload.installDate || null
+    }).replace(/</g, '\u003c');
 
     return `<!DOCTYPE html>
 <html lang="en">

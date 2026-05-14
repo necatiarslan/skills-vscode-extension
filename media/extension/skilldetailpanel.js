@@ -413,12 +413,14 @@ function renderLocalPanel() {
 function renderInstalledPanel() {
   const skill = detail.skill;
   const hasPath = !!installedLocalPath;
+  const installDate = initialState.installDate ? formatDateTime(initialState.installDate) : 'Unknown';
 
   return `
     <section class="detail-section detail-section-wide">
       <h2>Installed Location</h2>
       ${renderMetaRow('Tool', initialState.currentToolDisplayName || 'Current Tool')}
       ${renderMetaRow('Local Path', installedLocalPath || 'Unknown')}
+      ${renderMetaRow('Install Date', installDate)}
       <div class="installed-actions">
         <vscode-button
           class="btn-secondary"
