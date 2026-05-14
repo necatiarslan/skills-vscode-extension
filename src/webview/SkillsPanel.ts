@@ -73,6 +73,9 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       case 'uninstall':
         await this.handleUninstall(message.skillId);
         break;
+      case 'openInstalledFolder':
+        await this.handleOpenInstalledFolder(message.skillId, message.localPath);
+        break;
       case 'getInstalledSkills':
         await this.handleGetInstalledSkills();
         break;
@@ -184,11 +187,12 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
     try {
       logToOutput(`[Webview] Installing ${skillName} to ${this.currentToolName}`);
 
-      const installPath = await toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
+      const installResult = await toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
 
       // Update storage
       const storage = getStorageService();
-      await storage.addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installPath);
+      await storage.addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installResult);
+      await this.showInstallSuccess(skillName, installResult.installPath);
 
       this.postMessage({
         type: 'installResult',
@@ -196,7 +200,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         toolName: this.currentToolName,
         toolDisplayName: this.currentToolDisplayName,
         success: true,
-        message: `Successfully installed ${skillName}`,
+        message: `Successfully installed ${skillName} to ${installResult.installPath}`,
         error: null
       });
 
@@ -261,6 +265,35 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
     }
   }
 
+  private async handleOpenInstalledFolder(skillId: string, localPath: string) {
+    try {
+      const storage = getStorageService();
+      const installed = storage.getInstalledSkill(this.currentToolName, skillId);
+      const folderPath = installed?.localPath || localPath;
+
+      if (!folderPath) {
+        throw new Error('Installed skill folder was not found.');
+      }
+
+      await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(folderPath));
+      this.postMessage({
+        type: 'openFolderResult',
+        skillId,
+        success: true,
+        error: null
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[Webview] Open folder error: ${errorMsg}`);
+      this.postMessage({
+        type: 'openFolderResult',
+        skillId,
+        success: false,
+        error: errorMsg
+      });
+    }
+  }
+
   /**
    * Get installed skills across all tools
    */
@@ -294,21 +327,20 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
    * Resolve the current host where extension is running.
    */
   private resolveCurrentTool(): { name: string; displayName: string } {
-    const appName = vscode.env.appName.toLowerCase();
+    const tool = toolInstallService.resolveCurrentTool(vscode.env.appName);
+    return { name: tool.name, displayName: tool.displayName };
+  }
 
-    if (appName.includes('windsurf')) {
-      return { name: 'windsurf', displayName: 'Windsurf' };
+  private async showInstallSuccess(skillName: string, installPath: string) {
+    const openFolder = 'Open Folder';
+    const selection = await vscode.window.showInformationMessage(
+      `${skillName} is installed to ${installPath}`,
+      openFolder
+    );
+
+    if (selection === openFolder) {
+      await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(installPath));
     }
-
-    if (appName.includes('cursor')) {
-      return { name: 'cursor', displayName: 'Cursor' };
-    }
-
-    if (appName.includes('antigravity')) {
-      return { name: 'antigravity', displayName: 'Antigravity' };
-    }
-
-    return { name: 'vscode', displayName: 'Visual Studio Code' };
   }
 
   /**

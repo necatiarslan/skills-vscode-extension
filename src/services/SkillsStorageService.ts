@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { logToOutput } from '../common/UI';
-import { InstalledSkill } from './types';
+import { InstalledSkill, InstallResult } from './types';
 
 /**
  * SkillsStorageService - Manages persistence of installed skills
@@ -27,11 +27,13 @@ export class SkillsStorageService {
     skillName: string,
     author: string,
     version: string,
-    localPath: string
+    installResult: string | InstallResult
   ): Promise<void> {
     try {
       const toolKey = this.getToolKey(tool);
       const installed = this.globalState.get<Record<string, InstalledSkill>>(toolKey, {});
+
+      const localPath = typeof installResult === 'string' ? installResult : installResult.installPath;
 
       installed[skillId] = {
         skillId,
@@ -39,7 +41,12 @@ export class SkillsStorageService {
         author,
         version,
         installedAt: Date.now(),
-        localPath
+        localPath,
+        canonicalPath: typeof installResult === 'string' ? undefined : installResult.canonicalPath,
+        installMethod: typeof installResult === 'string' ? undefined : installResult.installMethod,
+        sourceUrl: typeof installResult === 'string' ? undefined : installResult.source.githubUrl,
+        sourceBranch: typeof installResult === 'string' ? undefined : installResult.source.branch,
+        sourcePath: typeof installResult === 'string' ? undefined : installResult.source.skillPath
       };
 
       await this.globalState.update(toolKey, installed);

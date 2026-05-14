@@ -23,17 +23,23 @@ class SkillsStorageService {
     /**
      * Add an installed skill for a tool
      */
-    async addInstalled(tool, skillId, skillName, author, version, localPath) {
+    async addInstalled(tool, skillId, skillName, author, version, installResult) {
         try {
             const toolKey = this.getToolKey(tool);
             const installed = this.globalState.get(toolKey, {});
+            const localPath = typeof installResult === 'string' ? installResult : installResult.installPath;
             installed[skillId] = {
                 skillId,
                 name: skillName,
                 author,
                 version,
                 installedAt: Date.now(),
-                localPath
+                localPath,
+                canonicalPath: typeof installResult === 'string' ? undefined : installResult.canonicalPath,
+                installMethod: typeof installResult === 'string' ? undefined : installResult.installMethod,
+                sourceUrl: typeof installResult === 'string' ? undefined : installResult.source.githubUrl,
+                sourceBranch: typeof installResult === 'string' ? undefined : installResult.source.branch,
+                sourcePath: typeof installResult === 'string' ? undefined : installResult.source.skillPath
             };
             await this.globalState.update(toolKey, installed);
             (0, UI_1.logToOutput)(`[Storage] Added skill ${skillId} to ${tool}`);

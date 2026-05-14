@@ -51,7 +51,29 @@ export interface ToolConfig {
   name: string;
   displayName: string;
   globalDir: string;
+  canonicalDir?: string;
+  detectionPaths: string[];
+  hostNames: string[];
+  preferredInstallMode?: InstallMethod;
   installed: boolean;
+}
+
+export type InstallMethod = 'symlink' | 'copy';
+
+export interface InstallSourceInfo {
+  githubUrl: string;
+  owner: string;
+  repo: string;
+  branch: string;
+  skillPath: string;
+}
+
+export interface InstallResult {
+  tool: ToolConfig;
+  canonicalPath: string;
+  installPath: string;
+  installMethod: InstallMethod;
+  source: InstallSourceInfo;
 }
 
 /**
@@ -64,6 +86,11 @@ export interface InstalledSkill {
   version: string;
   installedAt: number;
   localPath: string;
+  canonicalPath?: string;
+  installMethod?: InstallMethod;
+  sourceUrl?: string;
+  sourceBranch?: string;
+  sourcePath?: string;
 }
 
 export interface GitHubRepoContext {
@@ -114,6 +141,28 @@ export interface GitHubFilePreview {
   isBinary: boolean;
 }
 
+export interface LocalRepoEntry {
+  name: string;
+  path: string;
+  type: 'file' | 'dir';
+  size?: number;
+}
+
+export interface LocalDirectoryResult {
+  currentPath: string;
+  entries: LocalRepoEntry[];
+}
+
+export interface LocalFilePreview {
+  path: string;
+  name: string;
+  languageHint: string;
+  content: string;
+  truncated: boolean;
+  tooLarge: boolean;
+  isBinary: boolean;
+}
+
 export interface SkillDetailPayload {
   skill: Skill;
   repoContext: GitHubRepoContext;
@@ -121,6 +170,9 @@ export interface SkillDetailPayload {
   rootDirectory: GitHubDirectoryResult;
   initialDirectory?: GitHubDirectoryResult;
   initialPreview?: GitHubFilePreview;
+  localRootDirectory?: LocalDirectoryResult;
+  localInitialDirectory?: LocalDirectoryResult;
+  localInitialPreview?: LocalFilePreview;
   skillEmoji: string;
   skillMarkdown?: string;
 }

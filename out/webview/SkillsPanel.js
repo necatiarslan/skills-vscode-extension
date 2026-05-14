@@ -58,6 +58,9 @@ class SkillsPanel {
             case 'uninstall':
                 await this.handleUninstall(message.skillId);
                 break;
+            case 'openInstalledFolder':
+                await this.handleOpenInstalledFolder(message.skillId, message.localPath);
+                break;
             case 'getInstalledSkills':
                 await this.handleGetInstalledSkills();
                 break;
@@ -154,17 +157,18 @@ class SkillsPanel {
     async handleInstall(skillId, skillName, githubUrl) {
         try {
             (0, UI_1.logToOutput)(`[Webview] Installing ${skillName} to ${this.currentToolName}`);
-            const installPath = await services_2.toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
+            const installResult = await services_2.toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
             // Update storage
             const storage = (0, SkillsStorageService_1.getStorageService)();
-            await storage.addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installPath);
+            await storage.addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installResult);
+            await this.showInstallSuccess(skillName, installResult.installPath);
             this.postMessage({
                 type: 'installResult',
                 skillId,
                 toolName: this.currentToolName,
                 toolDisplayName: this.currentToolDisplayName,
                 success: true,
-                message: `Successfully installed ${skillName}`,
+                message: `Successfully installed ${skillName} to ${installResult.installPath}`,
                 error: null
             });
             (0, UI_1.logToOutput)(`[Webview] Installation completed: ${skillId}`);
@@ -221,6 +225,33 @@ class SkillsPanel {
             });
         }
     }
+    async handleOpenInstalledFolder(skillId, localPath) {
+        try {
+            const storage = (0, SkillsStorageService_1.getStorageService)();
+            const installed = storage.getInstalledSkill(this.currentToolName, skillId);
+            const folderPath = installed?.localPath || localPath;
+            if (!folderPath) {
+                throw new Error('Installed skill folder was not found.');
+            }
+            await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(folderPath));
+            this.postMessage({
+                type: 'openFolderResult',
+                skillId,
+                success: true,
+                error: null
+            });
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[Webview] Open folder error: ${errorMsg}`);
+            this.postMessage({
+                type: 'openFolderResult',
+                skillId,
+                success: false,
+                error: errorMsg
+            });
+        }
+    }
     /**
      * Get installed skills across all tools
      */
@@ -251,17 +282,15 @@ class SkillsPanel {
      * Resolve the current host where extension is running.
      */
     resolveCurrentTool() {
-        const appName = vscode.env.appName.toLowerCase();
-        if (appName.includes('windsurf')) {
-            return { name: 'windsurf', displayName: 'Windsurf' };
+        const tool = services_2.toolInstallService.resolveCurrentTool(vscode.env.appName);
+        return { name: tool.name, displayName: tool.displayName };
+    }
+    async showInstallSuccess(skillName, installPath) {
+        const openFolder = 'Open Folder';
+        const selection = await vscode.window.showInformationMessage(`${skillName} is installed to ${installPath}`, openFolder);
+        if (selection === openFolder) {
+            await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(installPath));
         }
-        if (appName.includes('cursor')) {
-            return { name: 'cursor', displayName: 'Cursor' };
-        }
-        if (appName.includes('antigravity')) {
-            return { name: 'antigravity', displayName: 'Antigravity' };
-        }
-        return { name: 'vscode', displayName: 'Visual Studio Code' };
     }
     /**
      * Post a message to the webview

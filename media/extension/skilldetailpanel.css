@@ -180,6 +180,12 @@ body {
   line-height: 1.5;
 }
 
+.installed-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
 .meta-row {
   display: grid;
   grid-template-columns: 120px minmax(0, 1fr);

@@ -234,7 +234,8 @@ function renderSections() {
       author: knownSkill?.author || installed.author || 'Unknown',
       description: knownSkill?.description || 'Installed skill',
       stars: knownSkill?.stars || 0,
-      githubUrl: knownSkill?.githubUrl || ''
+      githubUrl: knownSkill?.githubUrl || '',
+      localPath: String(installed.localPath || '')
     };
   });
 
@@ -273,15 +274,17 @@ function renderSkillList(skills, options) {
 
   return `
     <div class="skills-list" role="list">
-      ${skills.map((skill) => renderSkillItem(skill)).join('')}
+      ${skills.map((skill) => renderSkillItem(skill, options)).join('')}
     </div>
   `;
 }
 
-function renderSkillItem(skill) {
+function renderSkillItem(skill, options) {
   const installed = isSkillInstalled(skill.id);
-  const actionButton = installed
-    ? `<vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>`
+  const actionButtons = installed
+    ? `
+      <vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>
+    `
     : `<vscode-button appearance="primary" class="skill-action-btn" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl || '')}">Install</vscode-button>`;
   const skillEmoji = getSkillEmoji(skill.id);
 
@@ -298,7 +301,9 @@ function renderSkillItem(skill) {
         <p class="skill-description">${escapeHtml(skill.description || '')}</p>
         <div class="skill-actions">
           <div class="skill-meta">👤 ${escapeHtml(skill.author || 'Unknown')}</div>
-          ${actionButton}
+          <div class="skill-action-group">
+            ${actionButtons}
+          </div>
         </div>
       </div>
     </article>

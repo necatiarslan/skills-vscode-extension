@@ -1,9 +1,18 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 import { logToOutput } from '../common/UI';
 import { getSkillEmoji } from '../common/SkillEmoji';
 import { gitHubContentService, skillsApiService, toolInstallService } from '../services';
 import { getStorageService } from '../services/SkillsStorageService';
-import { GitHubRepoContext, Skill, SkillDetailPayload } from '../services/types';
+import {
+  GitHubRepoContext,
+  LocalDirectoryResult,
+  LocalFilePreview,
+  LocalRepoEntry,
+  Skill,
+  SkillDetailPayload
+} from '../services/types';
 
 export class SkillDetailPanel {
   public static currentPanel: SkillDetailPanel | undefined;
@@ -14,6 +23,7 @@ export class SkillDetailPanel {
   private readonly currentToolDisplayName: string;
   private disposables: vscode.Disposable[] = [];
   private skill: Skill;
+  private static readonly MAX_LOCAL_PREVIEW_BYTES = 100_000;
 
   private constructor(
     panel: vscode.WebviewPanel,
@@ -100,8 +110,17 @@ export class SkillDetailPanel {
       case 'openRepoFile':
         await this.handleOpenRepoFile(message.context, message.path);
         break;
+      case 'loadLocalPath':
+        await this.handleLoadLocalPath(message.skillId, message.path);
+        break;
+      case 'openLocalFile':
+        await this.handleOpenLocalFile(message.skillId, message.path);
+        break;
       case 'openExternal':
         await this.handleOpenExternal(message.url);
+        break;
+      case 'openInstalledFolder':
+        await this.handleOpenInstalledFolder(message.skillId, message.localPath);
         break;
       case 'install':
         await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
@@ -134,6 +153,28 @@ export class SkillDetailPanel {
     }
   }
 
+  private async handleLoadLocalPath(skillId: string, localPath: string) {
+    try {
+      const rootPath = this.getInstalledSkillRoot(skillId);
+      const directory = await this.listLocalDirectory(rootPath, localPath || '');
+      this.postMessage({ type: 'localDirectory', directory, error: null });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      this.postMessage({ type: 'localDirectory', directory: null, error: errorMsg });
+    }
+  }
+
+  private async handleOpenLocalFile(skillId: string, localPath: string) {
+    try {
+      const rootPath = this.getInstalledSkillRoot(skillId);
+      const preview = await this.getLocalFilePreview(rootPath, localPath || '');
+      this.postMessage({ type: 'localFilePreview', preview, error: null });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      this.postMessage({ type: 'localFilePreview', preview: null, error: errorMsg });
+    }
+  }
+
   private async handleOpenExternal(url: string) {
     if (!url) {
       return;
@@ -149,14 +190,21 @@ export class SkillDetailPanel {
 
   private async handleInstall(skillId: string, skillName: string, githubUrl: string) {
     try {
-      const installPath = await toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
-      await getStorageService().addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installPath);
+      const installResult = await toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
+      await getStorageService().addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installResult);
+
+      const localSkillMarkdown = await this.readLocalSkillMarkdown(installResult.installPath);
+      const localRootDirectory = await this.listLocalDirectory(installResult.installPath, '');
+
       this.postMessage({
         type: 'installResult',
         skillId,
         toolName: this.currentToolName,
         toolDisplayName: this.currentToolDisplayName,
         success: true,
+        localPath: installResult.installPath,
+        localSkillMarkdown,
+        localRootDirectory,
         error: null
       });
     } catch (error) {
@@ -202,6 +250,23 @@ export class SkillDetailPanel {
     }
   }
 
+  private async handleOpenInstalledFolder(skillId: string, localPath: string) {
+    try {
+      const installed = getStorageService().getInstalledSkill(this.currentToolName, skillId);
+      const folderPath = installed?.localPath || localPath;
+
+      if (!folderPath) {
+        throw new Error('Installed skill folder was not found.');
+      }
+
+      await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(folderPath));
+      this.postMessage({ type: 'openFolderResult', skillId, success: true, error: null });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      this.postMessage({ type: 'openFolderResult', skillId, success: false, error: errorMsg });
+    }
+  }
+
   private async createSkillDetailPayload(skill: Skill): Promise<SkillDetailPayload> {
     const detailSkill = await skillsApiService.fetchDetail(skill.id) ?? skill;
     const repoContext = gitHubContentService.parseGitHubUrl(detailSkill.githubUrl);
@@ -235,17 +300,33 @@ export class SkillDetailPanel {
 
     const rootDirectory = initialDirectory;
     const skillEmoji = getSkillEmoji(detailSkill.id);
+    const installedSkill = getStorageService().getInstalledSkill(this.currentToolName, detailSkill.id);
+
+    let localRootDirectory: LocalDirectoryResult | undefined;
+    if (installedSkill?.localPath && fs.existsSync(installedSkill.localPath)) {
+      try {
+        localRootDirectory = await this.listLocalDirectory(installedSkill.localPath, '');
+      } catch {
+        localRootDirectory = undefined;
+      }
+    }
 
     let skillMarkdown: string | undefined;
-    try {
-      const skillMarkdownPath = resolvedContext.skillPath
-        ? `${resolvedContext.skillPath}/SKILL.md`
-        : 'SKILL.md';
-      const preview = await gitHubContentService.getFilePreview(resolvedContext, skillMarkdownPath);
-      skillMarkdown = preview.content;
-    } catch {
-      // SKILL.md not found, that's okay
-      skillMarkdown = undefined;
+    if (installedSkill?.localPath && fs.existsSync(installedSkill.localPath)) {
+      skillMarkdown = await this.readLocalSkillMarkdown(installedSkill.localPath);
+    }
+
+    if (!skillMarkdown) {
+      try {
+        const skillMarkdownPath = resolvedContext.skillPath
+          ? `${resolvedContext.skillPath}/SKILL.md`
+          : 'SKILL.md';
+        const preview = await gitHubContentService.getFilePreview(resolvedContext, skillMarkdownPath);
+        skillMarkdown = preview.content;
+      } catch {
+        // SKILL.md not found, that's okay
+        skillMarkdown = undefined;
+      }
     }
 
     return {
@@ -255,9 +336,175 @@ export class SkillDetailPanel {
       rootDirectory,
       initialDirectory,
       initialPreview,
+      localRootDirectory,
+      localInitialDirectory: localRootDirectory,
       skillEmoji,
       skillMarkdown
     };
+  }
+
+  private getInstalledSkillRoot(skillId: string): string {
+    const installed = getStorageService().getInstalledSkill(this.currentToolName, skillId);
+    if (!installed?.localPath) {
+      throw new Error('This skill is not installed locally.');
+    }
+
+    if (!fs.existsSync(installed.localPath)) {
+      throw new Error('Local skill folder does not exist.');
+    }
+
+    return installed.localPath;
+  }
+
+  private async readLocalSkillMarkdown(rootPath: string): Promise<string | undefined> {
+    const candidates = ['SKILL.md', 'skill.md'];
+    for (const candidate of candidates) {
+      const filePath = path.join(rootPath, candidate);
+      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        return fs.promises.readFile(filePath, 'utf8');
+      }
+    }
+
+    return undefined;
+  }
+
+  private async listLocalDirectory(rootPath: string, relativePath: string): Promise<LocalDirectoryResult> {
+    const safeRelativePath = this.normalizeRelativePath(relativePath);
+    const absolutePath = this.resolveLocalPath(rootPath, safeRelativePath);
+    const entries = await fs.promises.readdir(absolutePath, { withFileTypes: true });
+
+    const mappedEntries: LocalRepoEntry[] = await Promise.all(entries.map(async (entry) => {
+      const entryRelativePath = safeRelativePath
+        ? `${safeRelativePath}/${entry.name}`
+        : entry.name;
+
+      if (entry.isDirectory()) {
+        return {
+          name: entry.name,
+          path: entryRelativePath,
+          type: 'dir'
+        };
+      }
+
+      let size: number | undefined;
+      if (entry.isFile()) {
+        const stat = await fs.promises.stat(path.join(absolutePath, entry.name));
+        size = stat.size;
+      }
+
+      return {
+        name: entry.name,
+        path: entryRelativePath,
+        type: 'file',
+        size
+      };
+    }));
+
+    mappedEntries.sort((left, right) => {
+      if (left.type !== right.type) {
+        return left.type === 'dir' ? -1 : 1;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
+
+    return {
+      currentPath: safeRelativePath,
+      entries: mappedEntries
+    };
+  }
+
+  private async getLocalFilePreview(rootPath: string, relativePath: string): Promise<LocalFilePreview> {
+    const safeRelativePath = this.normalizeRelativePath(relativePath);
+    const absolutePath = this.resolveLocalPath(rootPath, safeRelativePath);
+    const fileStat = await fs.promises.stat(absolutePath);
+
+    if (!fileStat.isFile()) {
+      throw new Error('Selected path is not a file.');
+    }
+
+    if (fileStat.size > SkillDetailPanel.MAX_LOCAL_PREVIEW_BYTES) {
+      return {
+        path: safeRelativePath,
+        name: path.basename(safeRelativePath),
+        languageHint: this.getLanguageHint(safeRelativePath),
+        content: '',
+        truncated: true,
+        tooLarge: true,
+        isBinary: false
+      };
+    }
+
+    const buffer = await fs.promises.readFile(absolutePath);
+    const isBinary = this.looksBinary(buffer);
+
+    return {
+      path: safeRelativePath,
+      name: path.basename(safeRelativePath),
+      languageHint: this.getLanguageHint(safeRelativePath),
+      content: isBinary ? '' : buffer.toString('utf8'),
+      truncated: false,
+      tooLarge: false,
+      isBinary
+    };
+  }
+
+  private normalizeRelativePath(value: string): string {
+    return value
+      .replace(/\\/g, '/')
+      .replace(/^\/+/, '')
+      .replace(/\/+/g, '/');
+  }
+
+  private resolveLocalPath(rootPath: string, relativePath: string): string {
+    const normalizedRoot = path.resolve(rootPath);
+    const resolvedPath = path.resolve(normalizedRoot, relativePath || '.');
+    const rootPrefix = normalizedRoot.endsWith(path.sep) ? normalizedRoot : `${normalizedRoot}${path.sep}`;
+
+    if (resolvedPath !== normalizedRoot && !resolvedPath.startsWith(rootPrefix)) {
+      throw new Error('Path is outside of the installed skill folder.');
+    }
+
+    return resolvedPath;
+  }
+
+  private looksBinary(buffer: Buffer): boolean {
+    const sample = buffer.subarray(0, 512);
+    for (const byte of sample) {
+      if (byte === 0) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private getLanguageHint(filePath: string): string {
+    const extension = filePath.includes('.') ? filePath.split('.').pop()?.toLowerCase() ?? '' : '';
+
+    switch (extension) {
+      case 'ts':
+      case 'tsx':
+        return 'typescript';
+      case 'js':
+      case 'jsx':
+      case 'mjs':
+      case 'cjs':
+        return 'javascript';
+      case 'json':
+        return 'json';
+      case 'md':
+        return 'markdown';
+      case 'yml':
+      case 'yaml':
+        return 'yaml';
+      case 'py':
+        return 'python';
+      case 'sh':
+        return 'shell';
+      default:
+        return 'text';
+    }
   }
 
   private postMessage(message: any) {
@@ -272,9 +519,12 @@ export class SkillDetailPanel {
       vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skilldetailpanel.js')
     );
     const nonce = this.getNonce();
+    const installedSkill = getStorageService().getInstalledSkill(this.currentToolName, detailPayload.skill.id);
     const initialState = JSON.stringify({
       detail: detailPayload,
-      isInstalled
+      isInstalled,
+      installedLocalPath: installedSkill?.localPath || '',
+      currentToolDisplayName: this.currentToolDisplayName
     }).replace(/</g, '\\u003c');
 
     return `<!DOCTYPE html>
