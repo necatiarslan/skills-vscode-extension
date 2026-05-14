@@ -89,20 +89,14 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint \"src/**/*.ts\"",
-    "test": "node ./out/test/runTest.js"
+    "lint": "eslint \"src/**/*.ts\""
   },
   "devDependencies": {
-    "@types/glob": "^9.0.0",
-    "@types/mocha": "^10.0.10",
     "@types/node": "^25.8.0",
     "@types/vscode": "^1.120.0",
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
-    "@vscode/test-electron": "^2.5.2",
     "eslint": "^10.3.0",
-    "glob": "^13.0.6",
-    "mocha": "^11.7.5",
     "typescript": "^5.9.3"
   },
   "dependencies": {
@@ -110,15 +104,5 @@
     "@vscode/codicons": "^0.0.45",
     "markdown-it": "^14.1.1",
     "reflect-metadata": "^0.2.2"
-  },
-  "overrides": {
-    "mocha": {
-      "diff": "8.0.3",
-      "glob": {
-        "minimatch": "9.0.9"
-      },
-      "minimatch": "9.0.9",
-      "serialize-javascript": "7.0.4"
-    }
   }
 }
