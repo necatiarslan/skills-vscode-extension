@@ -346,10 +346,10 @@ function renderDetailOverview() {
   const skill = detail.skill;
   const repoMetadata = detail.repoMetadata;
   const repositoryLink = skill.githubUrl
-    ? `<a href="#" data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">Open repository</a>`
+    ? `<a href="#" data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">${escapeHtml(skill.githubUrl)}</a>`
     : 'Unavailable';
   const marketplaceLink = skill.skillUrl
-    ? `<a href="#" data-action="open-external" data-value="${escapeAttr(skill.skillUrl)}">Open listing</a>`
+    ? `<a href="#" data-action="open-external" data-value="${escapeAttr(skill.skillUrl)}">${escapeHtml(skill.skillUrl)}</a>`
     : 'Unavailable';
 
   return `
@@ -358,28 +358,6 @@ function renderDetailOverview() {
       ${renderMetaRow('Identifier', skill.id)}
       ${renderMetaRow('Version', '1.0.0')}
       ${renderMetaRow('Last Updated', relativeTime(repoMetadata.updatedAt || skill.updatedAt))}
-      ${renderMetaRow('Size', 'N/A')}
-    </section>
-
-    <section class="detail-section">
-      <h2>Marketplace</h2>
-      ${renderMetaRow('Published', formatDateTime(skill.updatedAt || repoMetadata.updatedAt))}
-      ${renderMetaRow('Stars', formatCompactNumber(repoMetadata.stargazersCount || skill.stars || 0))}
-      ${renderMetaRow('Forks', formatCompactNumber(repoMetadata.forksCount))}
-      ${renderMetaRow('Open Issues', formatCompactNumber(repoMetadata.openIssuesCount))}
-    </section>
-
-    <section class="detail-section">
-      <h2>Github</h2>
-      ${renderMetaRow('Repository', repositoryLink, true)}
-      ${renderMetaRow('Marketplace URL', marketplaceLink, true)}
-      ${renderMetaRow('Skill Path', detail.repoContext.skillPath || 'Repository root')}
-      ${renderMetaRow('Branch', detail.repoContext.branch)}
-    </section>
-
-    <section class="detail-section detail-section-wide">
-      <h2>Repository Overview</h2>
-      <p class="section-text">${escapeHtml(repoMetadata.description || 'No repository description available.')}</p>
     </section>
 
     ${isInstalled ? `
@@ -390,6 +368,22 @@ function renderDetailOverview() {
       ${renderMetaRow('Install Date', initialState.installDate || 'Unknown')}
     </section>
     ` : ''}
+
+    <section class="detail-section">
+      <h2>Github</h2>
+      ${renderMetaRow('Repository', repositoryLink, true)}
+      ${renderMetaRow('Skill Path', detail.repoContext.skillPath || 'Repository root')}
+      ${renderMetaRow('Branch', detail.repoContext.branch)}
+    </section>
+
+    <section class="detail-section">
+      <h2>Marketplace</h2>
+      ${renderMetaRow('Published', formatDateTime(skill.updatedAt || repoMetadata.updatedAt))}
+      ${renderMetaRow('Stars', formatCompactNumber(repoMetadata.stargazersCount || skill.stars || 0))}
+      ${renderMetaRow('Forks', formatCompactNumber(repoMetadata.forksCount))}
+      ${renderMetaRow('Open Issues', formatCompactNumber(repoMetadata.openIssuesCount))}
+      ${renderMetaRow('Listing URL', marketplaceLink, true)}
+    </section>
   `;
 }
 
