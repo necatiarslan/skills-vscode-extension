@@ -8,6 +8,7 @@ const UI_1 = require("../common/UI");
 const SkillEmoji_1 = require("../common/SkillEmoji");
 const services_1 = require("../services");
 const SkillsStorageService_1 = require("../services/SkillsStorageService");
+const SkillsPanel_1 = require("./SkillsPanel");
 class SkillDetailPanel {
     static currentPanel;
     panel;
@@ -148,6 +149,7 @@ class SkillDetailPanel {
             await (0, SkillsStorageService_1.getStorageService)().addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installResult);
             const localSkillMarkdown = await this.readLocalSkillMarkdown(installResult.installPath);
             const localRootDirectory = await this.listLocalDirectory(installResult.installPath, '');
+            SkillsPanel_1.SkillsPanel.Current?.refreshInstalledSkills();
             this.postMessage({
                 type: 'installResult',
                 skillId,
@@ -180,6 +182,7 @@ class SkillDetailPanel {
             }
             await services_1.toolInstallService.uninstallSkill(this.currentToolName, skillId, installed.localPath);
             await (0, SkillsStorageService_1.getStorageService)().removeInstalled(this.currentToolName, skillId);
+            SkillsPanel_1.SkillsPanel.Current?.refreshInstalledSkills();
             this.postMessage({
                 type: 'uninstallResult',
                 skillId,

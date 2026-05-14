@@ -27,6 +27,12 @@ export function activate(context: vscode.ExtensionContext): void {
             )
         );
 
+        context.subscriptions.push(
+            vscode.commands.registerCommand('Skills.Refresh', () => {
+                SkillsPanel.Current?.refreshInstalledSkills();
+            })
+        );
+
         ui.logToOutput('Skills activated successfully.');
     } catch (error) {
         ui.logToOutput('Fatal error activating Skills:', error as Error);

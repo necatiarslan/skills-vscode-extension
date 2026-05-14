@@ -93,6 +93,27 @@ export interface InstalledSkill {
   sourcePath?: string;
 }
 
+export type SkillInstallScope = 'global' | 'workspace';
+export type SkillInstallKind = 'managed' | 'other';
+
+export interface MarketplaceInstalledSkill {
+  skillId: string;
+  name: string;
+  author: string;
+  localPath: string;
+  scope: SkillInstallScope;
+  kind: SkillInstallKind;
+  canOpenDetails: boolean;
+  canUninstall: boolean;
+}
+
+export interface MarketplaceInstalledGroups {
+  installedGlobal: MarketplaceInstalledSkill[];
+  installedWorkspace: MarketplaceInstalledSkill[];
+  installedOtherGlobal: MarketplaceInstalledSkill[];
+  installedOtherWorkspace: MarketplaceInstalledSkill[];
+}
+
 export interface GitHubRepoContext {
   owner: string;
   repo: string;

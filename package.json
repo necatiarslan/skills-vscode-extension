@@ -57,6 +57,11 @@
     "menus": {
       "view/title": [
         {
+          "command": "Skills.Refresh",
+          "when": "view == SkillsView",
+          "group": "navigation"
+        },
+        {
           "command": "Skills.Donate",
           "when": "view == SkillsView",
           "group": "other_1"

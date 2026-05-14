@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SkillsPanel = void 0;
 const vscode = require("vscode");
+const fs = require("fs");
+const path = require("path");
 const UI_1 = require("../common/UI");
 const services_1 = require("../services");
 const SkillsStorageService_1 = require("../services/SkillsStorageService");
@@ -12,6 +14,13 @@ const SkillDetailPanel_1 = require("./SkillDetailPanel");
  */
 class SkillsPanel {
     static viewType = 'SkillsView';
+    static Current;
+    static WORKSPACE_SKILL_DIR_CANDIDATES = [
+        'skills',
+        '.skills/skills',
+        '.copilot/skills',
+        '.github/skills'
+    ];
     view;
     extensionUri;
     currentToolName;
@@ -19,6 +28,7 @@ class SkillsPanel {
     disposables = [];
     constructor(extensionUri) {
         this.extensionUri = extensionUri;
+        SkillsPanel.Current = this;
         const currentTool = this.resolveCurrentTool();
         this.currentToolName = currentTool.name;
         this.currentToolDisplayName = currentTool.displayName;
@@ -36,6 +46,12 @@ class SkillsPanel {
         webviewView.webview.html = this.getHtmlContent(webviewView.webview);
         webviewView.webview.onDidReceiveMessage((message) => this.handleWebviewMessage(message), null, this.disposables);
         (0, UI_1.logToOutput)('[SkillsPanel] Skills Marketplace view resolved');
+    }
+    refreshInstalledSkills() {
+        if (!this.view) {
+            return;
+        }
+        this.handleGetInstalledSkills();
     }
     /**
      * Handle messages from the webview
@@ -257,15 +273,15 @@ class SkillsPanel {
      */
     async handleGetInstalledSkills() {
         try {
-            const storage = (0, SkillsStorageService_1.getStorageService)();
-            const installed = storage.getInstalledByTool(this.currentToolName);
+            const groups = this.collectInstalledGroups();
             this.postMessage({
                 type: 'installedSkills',
                 toolName: this.currentToolName,
                 toolDisplayName: this.currentToolDisplayName,
-                installed
+                groups,
+                installed: [...groups.installedGlobal, ...groups.installedWorkspace]
             });
-            (0, UI_1.logToOutput)(`[Webview] Retrieved installed skills`);
+            (0, UI_1.logToOutput)('[Webview] Retrieved installed skill groups');
         }
         catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
@@ -274,8 +290,126 @@ class SkillsPanel {
                 type: 'installedSkills',
                 toolName: this.currentToolName,
                 toolDisplayName: this.currentToolDisplayName,
+                groups: {
+                    installedGlobal: [],
+                    installedWorkspace: [],
+                    installedOtherGlobal: [],
+                    installedOtherWorkspace: []
+                },
                 installed: []
             });
+        }
+    }
+    collectInstalledGroups() {
+        const storage = (0, SkillsStorageService_1.getStorageService)();
+        const installedByExtension = storage.getInstalledByTool(this.currentToolName);
+        const workspaceRoots = this.getWorkspaceRoots();
+        const groups = {
+            installedGlobal: [],
+            installedWorkspace: [],
+            installedOtherGlobal: [],
+            installedOtherWorkspace: []
+        };
+        const managedPaths = new Set();
+        for (const installed of installedByExtension) {
+            const scope = this.getScopeForPath(installed.localPath, workspaceRoots);
+            const normalizedLocalPath = this.normalizePath(installed.localPath);
+            managedPaths.add(normalizedLocalPath);
+            const item = {
+                skillId: installed.skillId,
+                name: installed.name || installed.skillId,
+                author: installed.author || 'Unknown',
+                localPath: installed.localPath,
+                scope,
+                kind: 'managed',
+                canOpenDetails: true,
+                canUninstall: true
+            };
+            if (scope === 'workspace') {
+                groups.installedWorkspace.push(item);
+            }
+            else {
+                groups.installedGlobal.push(item);
+            }
+        }
+        const globalOther = this.scanOtherSkills(this.getGlobalSkillRoots(), 'global', managedPaths);
+        const workspaceOther = this.scanOtherSkills(this.getWorkspaceSkillRoots(), 'workspace', managedPaths);
+        groups.installedOtherGlobal.push(...globalOther);
+        groups.installedOtherWorkspace.push(...workspaceOther);
+        return groups;
+    }
+    scanOtherSkills(roots, scope, managedPaths) {
+        const items = [];
+        const seen = new Set();
+        for (const root of roots) {
+            if (!root || !fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
+                continue;
+            }
+            const entries = fs.readdirSync(root, { withFileTypes: true });
+            for (const entry of entries) {
+                if (!entry.isDirectory()) {
+                    continue;
+                }
+                const skillPath = path.join(root, entry.name);
+                const normalizedPath = this.normalizePath(skillPath);
+                if (managedPaths.has(normalizedPath) || seen.has(normalizedPath)) {
+                    continue;
+                }
+                const hasMetadata = fs.existsSync(path.join(skillPath, 'skill.json'));
+                if (hasMetadata) {
+                    continue;
+                }
+                seen.add(normalizedPath);
+                items.push({
+                    skillId: '',
+                    name: entry.name,
+                    author: 'Unknown',
+                    localPath: skillPath,
+                    scope,
+                    kind: 'other',
+                    canOpenDetails: false,
+                    canUninstall: false
+                });
+            }
+        }
+        items.sort((left, right) => left.name.localeCompare(right.name));
+        return items;
+    }
+    getGlobalSkillRoots() {
+        const toolConfig = services_2.toolInstallService.getTool(this.currentToolName);
+        if (!toolConfig) {
+            return [];
+        }
+        return [toolConfig.globalDir];
+    }
+    getWorkspaceRoots() {
+        return (vscode.workspace.workspaceFolders || []).map((folder) => folder.uri.fsPath);
+    }
+    getWorkspaceSkillRoots() {
+        const roots = [];
+        for (const workspaceRoot of this.getWorkspaceRoots()) {
+            for (const candidate of SkillsPanel.WORKSPACE_SKILL_DIR_CANDIDATES) {
+                roots.push(path.join(workspaceRoot, candidate));
+            }
+        }
+        return roots;
+    }
+    getScopeForPath(localPath, workspaceRoots) {
+        const normalized = this.normalizePath(localPath);
+        for (const workspaceRoot of workspaceRoots) {
+            const normalizedRoot = this.normalizePath(workspaceRoot);
+            if (normalized === normalizedRoot || normalized.startsWith(`${normalizedRoot}${path.sep}`)) {
+                return 'workspace';
+            }
+        }
+        return 'global';
+    }
+    normalizePath(targetPath) {
+        try {
+            return fs.realpathSync.native(targetPath);
+        }
+        catch {
+            return path.resolve(targetPath);
         }
     }
     /**
@@ -339,9 +473,24 @@ class SkillsPanel {
           <div id="searchTable" class="section-table"></div>
         </vscode-collapsible>
 
-        <vscode-collapsible id="installedCollapsible" heading="Installed" class="collapsible">
-          <vscode-badge id="installedCount" variant="counter" slot="decorations">0</vscode-badge>
-          <div id="installedTable" class="section-table"></div>
+        <vscode-collapsible id="installedGlobalCollapsible" heading="Installed Global" class="collapsible">
+          <vscode-badge id="installedGlobalCount" variant="counter" slot="decorations">0</vscode-badge>
+          <div id="installedGlobalTable" class="section-table"></div>
+        </vscode-collapsible>
+
+        <vscode-collapsible id="installedWorkspaceCollapsible" heading="Installed Workspace" class="collapsible">
+          <vscode-badge id="installedWorkspaceCount" variant="counter" slot="decorations">0</vscode-badge>
+          <div id="installedWorkspaceTable" class="section-table"></div>
+        </vscode-collapsible>
+
+        <vscode-collapsible id="installedOtherGlobalCollapsible" heading="Installed Other Global" class="collapsible">
+          <vscode-badge id="installedOtherGlobalCount" variant="counter" slot="decorations">0</vscode-badge>
+          <div id="installedOtherGlobalTable" class="section-table"></div>
+        </vscode-collapsible>
+
+        <vscode-collapsible id="installedOtherWorkspaceCollapsible" heading="Installed Other Workspace" class="collapsible">
+          <vscode-badge id="installedOtherWorkspaceCount" variant="counter" slot="decorations">0</vscode-badge>
+          <div id="installedOtherWorkspaceTable" class="section-table"></div>
         </vscode-collapsible>
 
         <vscode-collapsible id="recommendedCollapsible" heading="Recommended" class="collapsible">

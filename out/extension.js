@@ -20,6 +20,9 @@ function activate(context) {
         // Register the Skills Marketplace as a webview view
         const skillsViewProvider = new SkillsPanel_1.SkillsPanel(context.extensionUri);
         context.subscriptions.push(vscode.window.registerWebviewViewProvider(SkillsPanel_1.SkillsPanel.viewType, skillsViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
+        context.subscriptions.push(vscode.commands.registerCommand('Skills.Refresh', () => {
+            SkillsPanel_1.SkillsPanel.Current?.refreshInstalledSkills();
+        }));
         ui.logToOutput('Skills activated successfully.');
     }
     catch (error) {

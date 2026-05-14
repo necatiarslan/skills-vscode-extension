@@ -5,6 +5,7 @@ import { logToOutput } from '../common/UI';
 import { getSkillEmoji } from '../common/SkillEmoji';
 import { gitHubContentService, skillsApiService, toolInstallService } from '../services';
 import { getStorageService } from '../services/SkillsStorageService';
+import { SkillsPanel } from './SkillsPanel';
 import {
   GitHubRepoContext,
   LocalDirectoryResult,
@@ -196,6 +197,8 @@ export class SkillDetailPanel {
       const localSkillMarkdown = await this.readLocalSkillMarkdown(installResult.installPath);
       const localRootDirectory = await this.listLocalDirectory(installResult.installPath, '');
 
+      SkillsPanel.Current?.refreshInstalledSkills();
+
       this.postMessage({
         type: 'installResult',
         skillId,
@@ -229,6 +232,7 @@ export class SkillDetailPanel {
 
       await toolInstallService.uninstallSkill(this.currentToolName, skillId, installed.localPath);
       await getStorageService().removeInstalled(this.currentToolName, skillId);
+      SkillsPanel.Current?.refreshInstalledSkills();
       this.postMessage({
         type: 'uninstallResult',
         skillId,

@@ -30,6 +30,12 @@ function getSkillEmoji(skillId) {
 let searchDebounceTimer;
 let searchQuery = '';
 let installedSkills = [];
+let installedGroups = {
+  installedGlobal: [],
+  installedWorkspace: [],
+  installedOtherGlobal: [],
+  installedOtherWorkspace: []
+};
 let searchResults = [];
 let recommendedResults = [];
 const knownSkillsById = new Map();
@@ -40,14 +46,23 @@ const emptyState = document.getElementById('emptyState');
 const contentSection = document.getElementById('contentSection');
 
 const searchTable = document.getElementById('searchTable');
-const installedTable = document.getElementById('installedTable');
+const installedGlobalTable = document.getElementById('installedGlobalTable');
+const installedWorkspaceTable = document.getElementById('installedWorkspaceTable');
+const installedOtherGlobalTable = document.getElementById('installedOtherGlobalTable');
+const installedOtherWorkspaceTable = document.getElementById('installedOtherWorkspaceTable');
 const recommendedTable = document.getElementById('recommendedTable');
 const searchCollapsible = document.getElementById('searchCollapsible');
-const installedCollapsible = document.getElementById('installedCollapsible');
+const installedGlobalCollapsible = document.getElementById('installedGlobalCollapsible');
+const installedWorkspaceCollapsible = document.getElementById('installedWorkspaceCollapsible');
+const installedOtherGlobalCollapsible = document.getElementById('installedOtherGlobalCollapsible');
+const installedOtherWorkspaceCollapsible = document.getElementById('installedOtherWorkspaceCollapsible');
 const recommendedCollapsible = document.getElementById('recommendedCollapsible');
 
 const searchCount = document.getElementById('searchCount');
-const installedCount = document.getElementById('installedCount');
+const installedGlobalCount = document.getElementById('installedGlobalCount');
+const installedWorkspaceCount = document.getElementById('installedWorkspaceCount');
+const installedOtherGlobalCount = document.getElementById('installedOtherGlobalCount');
+const installedOtherWorkspaceCount = document.getElementById('installedOtherWorkspaceCount');
 const recommendedCount = document.getElementById('recommendedCount');
 
 function initialize() {
@@ -90,7 +105,11 @@ function handleExtensionMessage(message) {
       handleSearchResults(message);
       break;
     case 'installedSkills':
-      installedSkills = Array.isArray(message.installed) ? message.installed : [];
+      installedGroups = normalizeInstalledGroups(message.groups);
+      installedSkills = [
+        ...installedGroups.installedGlobal,
+        ...installedGroups.installedWorkspace
+      ];
       renderSections();
       break;
     case 'installResult':
@@ -98,6 +117,11 @@ function handleExtensionMessage(message) {
       break;
     case 'uninstallResult':
       handleUninstallResult(message);
+      break;
+    case 'openFolderResult':
+      if (!message.success) {
+        showError(`Failed to open skill folder: ${message.error}`);
+      }
       break;
     case 'openSkillDetailsResult':
       setLoading(false);
@@ -170,9 +194,20 @@ function handleSectionClick(event) {
   }
 
   const action = actionEl.getAttribute('data-action');
-  const skillId = actionEl.getAttribute('data-skill-id');
+  const skillId = actionEl.getAttribute('data-skill-id') || '';
 
-  if (!action || !skillId) {
+  if (!action) {
+    return;
+  }
+
+  if (action === 'open-folder') {
+    event.stopPropagation();
+    const localPath = actionEl.getAttribute('data-local-path') || '';
+    vscode.postMessage({ type: 'openInstalledFolder', skillId, localPath });
+    return;
+  }
+
+  if (!skillId) {
     return;
   }
 
@@ -223,35 +258,40 @@ function renderSections() {
 
   // Hide Search section until user starts searching; in search mode only show Search.
   searchCollapsible.classList.toggle('hidden', !inSearchMode);
-  installedCollapsible.classList.toggle('hidden', inSearchMode);
+  installedGlobalCollapsible.classList.toggle('hidden', inSearchMode);
+  installedWorkspaceCollapsible.classList.toggle('hidden', inSearchMode);
+  installedOtherGlobalCollapsible.classList.toggle('hidden', inSearchMode);
+  installedOtherWorkspaceCollapsible.classList.toggle('hidden', inSearchMode);
   recommendedCollapsible.classList.toggle('hidden', inSearchMode);
 
-  const installedRows = installedSkills.map((installed) => {
-    const knownSkill = knownSkillsById.get(installed.skillId);
-    return {
-      id: installed.skillId,
-      name: knownSkill?.name || installed.name || installed.skillId,
-      author: knownSkill?.author || installed.author || 'Unknown',
-      description: knownSkill?.description || 'Installed skill',
-      stars: knownSkill?.stars || 0,
-      githubUrl: knownSkill?.githubUrl || '',
-      localPath: String(installed.localPath || '')
-    };
-  });
+  const installedGlobalRows = buildSectionRows(installedGroups.installedGlobal);
+  const installedWorkspaceRows = buildSectionRows(installedGroups.installedWorkspace);
+  const installedOtherGlobalRows = buildSectionRows(installedGroups.installedOtherGlobal);
+  const installedOtherWorkspaceRows = buildSectionRows(installedGroups.installedOtherWorkspace);
 
   const recommendedRows = recommendedResults.filter((skill) => !isSkillInstalled(skill.id)).slice(0, 20);
 
   searchCount.textContent = String(searchResults.length);
-  installedCount.textContent = String(installedRows.length);
+  installedGlobalCount.textContent = String(installedGlobalRows.length);
+  installedWorkspaceCount.textContent = String(installedWorkspaceRows.length);
+  installedOtherGlobalCount.textContent = String(installedOtherGlobalRows.length);
+  installedOtherWorkspaceCount.textContent = String(installedOtherWorkspaceRows.length);
   recommendedCount.textContent = String(recommendedRows.length);
 
   searchTable.innerHTML = renderSkillList(searchResults, { section: 'search' });
-  installedTable.innerHTML = renderSkillList(installedRows, { section: 'installed' });
+  installedGlobalTable.innerHTML = renderSkillList(installedGlobalRows, { section: 'installedGlobal' });
+  installedWorkspaceTable.innerHTML = renderSkillList(installedWorkspaceRows, { section: 'installedWorkspace' });
+  installedOtherGlobalTable.innerHTML = renderSkillList(installedOtherGlobalRows, { section: 'installedOtherGlobal' });
+  installedOtherWorkspaceTable.innerHTML = renderSkillList(installedOtherWorkspaceRows, { section: 'installedOtherWorkspace' });
   recommendedTable.innerHTML = renderSkillList(recommendedRows, { section: 'recommended' });
 
   const hasAnyData = inSearchMode
     ? searchResults.length > 0
-    : installedRows.length > 0 || recommendedRows.length > 0;
+    : installedGlobalRows.length > 0
+      || installedWorkspaceRows.length > 0
+      || installedOtherGlobalRows.length > 0
+      || installedOtherWorkspaceRows.length > 0
+      || recommendedRows.length > 0;
   emptyState.classList.toggle('hidden', hasAnyData);
 }
 
@@ -261,8 +301,13 @@ function renderSkillList(skills, options) {
       return '<div class="section-empty">No skills found for this query.</div>';
     }
 
-    if (options.section === 'installed') {
-      return '<div class="section-empty">No installed skills for this tool.</div>';
+    if (
+      options.section === 'installedGlobal'
+      || options.section === 'installedWorkspace'
+      || options.section === 'installedOtherGlobal'
+      || options.section === 'installedOtherWorkspace'
+    ) {
+      return '<div class="section-empty">No skills in this section.</div>';
     }
 
     if (options.section === 'recommended') {
@@ -280,16 +325,29 @@ function renderSkillList(skills, options) {
 }
 
 function renderSkillItem(skill, options) {
-  const installed = isSkillInstalled(skill.id);
-  const actionButtons = installed
-    ? `
+  const isManagedInstalledSection = options.section === 'installedGlobal' || options.section === 'installedWorkspace';
+  const isOtherInstalledSection = options.section === 'installedOtherGlobal' || options.section === 'installedOtherWorkspace';
+
+  let actionButtons = `<vscode-button appearance="primary" class="skill-action-btn" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl || '')}">Install</vscode-button>`;
+  if (isManagedInstalledSection) {
+    actionButtons = `
       <vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>
-    `
-    : `<vscode-button appearance="primary" class="skill-action-btn" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl || '')}">Install</vscode-button>`;
+    `;
+  } else if (isOtherInstalledSection) {
+    actionButtons = `
+      <vscode-button appearance="secondary" class="skill-action-btn" data-action="open-folder" data-skill-id="" data-local-path="${escapeAttr(skill.localPath || '')}">Open</vscode-button>
+    `;
+  }
+
   const skillEmoji = getSkillEmoji(skill.id);
+  const canOpenDetails = !isOtherInstalledSection;
+  const cardActionAttr = canOpenDetails ? `data-action="open" data-skill-id="${escapeAttr(skill.id)}"` : '';
+  const metaText = isOtherInstalledSection
+    ? `📁 ${escapeHtml(skill.localPath || '')}`
+    : `👤 ${escapeHtml(skill.author || 'Unknown')}`;
 
   return `
-    <article class="skill-item" role="listitem" tabindex="0" data-action="open" data-skill-id="${escapeAttr(skill.id)}">
+    <article class="skill-item" role="listitem" tabindex="0" ${cardActionAttr}>
       <div class="skill-icon-wrap" aria-hidden="true">
         ${skillEmoji}
       </div>
@@ -300,7 +358,7 @@ function renderSkillItem(skill, options) {
         </div>
         <p class="skill-description">${escapeHtml(skill.description || '')}</p>
         <div class="skill-actions">
-          <div class="skill-meta">👤 ${escapeHtml(skill.author || 'Unknown')}</div>
+          <div class="skill-meta">${metaText}</div>
           <div class="skill-action-group">
             ${actionButtons}
           </div>
@@ -308,6 +366,30 @@ function renderSkillItem(skill, options) {
       </div>
     </article>
   `;
+}
+
+function normalizeInstalledGroups(groups) {
+  return {
+    installedGlobal: Array.isArray(groups?.installedGlobal) ? groups.installedGlobal : [],
+    installedWorkspace: Array.isArray(groups?.installedWorkspace) ? groups.installedWorkspace : [],
+    installedOtherGlobal: Array.isArray(groups?.installedOtherGlobal) ? groups.installedOtherGlobal : [],
+    installedOtherWorkspace: Array.isArray(groups?.installedOtherWorkspace) ? groups.installedOtherWorkspace : []
+  };
+}
+
+function buildSectionRows(sectionSkills) {
+  return sectionSkills.map((installed) => {
+    const knownSkill = installed.skillId ? knownSkillsById.get(installed.skillId) : null;
+    return {
+      id: installed.skillId || '',
+      name: knownSkill?.name || installed.name || installed.skillId || 'Unknown skill',
+      author: knownSkill?.author || installed.author || 'Unknown',
+      description: knownSkill?.description || 'Installed skill',
+      stars: knownSkill?.stars || 0,
+      githubUrl: knownSkill?.githubUrl || '',
+      localPath: String(installed.localPath || '')
+    };
+  });
 }
 
 function normalizeSkills(items) {
