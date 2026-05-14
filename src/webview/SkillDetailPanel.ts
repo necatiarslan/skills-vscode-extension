@@ -133,6 +133,9 @@ export class SkillDetailPanel {
       case 'uninstall':
         await this.handleUninstall(message.skillId);
         break;
+      case 'update':
+        await this.handleUpdate(message.skillId, message.skillName, message.githubUrl);
+        break;
       default:
         logToOutput(`[SkillDetail] Unknown message type: ${message.type}`);
     }
@@ -291,6 +294,51 @@ export class SkillDetailPanel {
       const errorMsg = error instanceof Error ? error.message : String(error);
       this.postMessage({
         type: 'uninstallResult',
+        skillId,
+        toolName: this.currentToolName,
+        toolDisplayName: this.currentToolDisplayName,
+        success: false,
+        error: errorMsg
+      });
+    }
+  }
+
+  private async handleUpdate(skillId: string, skillName: string, githubUrl: string) {
+    try {
+      // Get current installed skill
+      const installed = getStorageService().getInstalledSkill(this.currentToolName, skillId);
+      if (!installed) {
+        throw new Error('Skill not found in storage');
+      }
+
+      // Uninstall (delete local files)
+      await toolInstallService.uninstallSkill(this.currentToolName, skillId, installed.localPath);
+      await getStorageService().removeInstalled(this.currentToolName, skillId);
+
+      // Reinstall (download new files)
+      const installResult = await toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
+      await getStorageService().addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installResult);
+
+      const localSkillMarkdown = await this.readLocalSkillMarkdown(installResult.installPath);
+      const localRootDirectory = await this.listLocalDirectory(installResult.installPath, '');
+
+      SkillsPanel.Current?.refreshInstalledSkills();
+
+      this.postMessage({
+        type: 'updateResult',
+        skillId,
+        toolName: this.currentToolName,
+        toolDisplayName: this.currentToolDisplayName,
+        success: true,
+        localPath: installResult.installPath,
+        localSkillMarkdown,
+        localRootDirectory,
+        error: null
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      this.postMessage({
+        type: 'updateResult',
         skillId,
         toolName: this.currentToolName,
         toolDisplayName: this.currentToolDisplayName,

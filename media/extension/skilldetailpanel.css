@@ -222,6 +222,13 @@ body {
   margin-bottom: 8px;
 }
 
+.files-toolbar-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .files-breadcrumbs {
   display: flex;
   align-items: center;

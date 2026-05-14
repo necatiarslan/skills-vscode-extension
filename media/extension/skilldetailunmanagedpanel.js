@@ -149,13 +149,12 @@ function render() {
         <div class="extension-icon">${skillEmoji}</div>
         <div class="extension-summary">
           <h1 class="extension-title">${escapeHtml(skill.name)}</h1>
-          <p class="extension-publisher">${escapeHtml(skill.author || 'Unknown')} · ${escapeHtml(skill.scope || 'global')} · ${escapeHtml(skill.kind || 'other')}</p>
+          <p class="extension-publisher">${escapeHtml(skill.author || 'Unknown')}</p>
           <p class="extension-description">${escapeHtml(skill.description || 'Unmanaged skill')}</p>
           <div class="extension-meta-inline"></div>
         </div>
         <div class="extension-actions">
           <vscode-button class="btn-primary" secondary data-action="uninstall" ${folderExists && installedLocalPath ? '' : 'disabled'}>Uninstall</vscode-button>
-          <vscode-button class="btn-secondary" secondary data-action="open-installed-folder" ${folderExists && installedLocalPath ? '' : 'disabled'}>Open</vscode-button>
 
         </div>
       </header>
@@ -177,7 +176,7 @@ function render() {
           </main>
         </vscode-tab-panel>
 
-        <vscode-tab-header slot="header">LOCAL</vscode-tab-header>
+        <vscode-tab-header slot="header">FILES</vscode-tab-header>
         <vscode-tab-panel>
           <main class="detail-main">
             ${renderLocalPanel()}
@@ -213,12 +212,9 @@ function renderDetailsSection() {
   return `
     <section class="detail-section detail-section-wide">
       ${renderMetaRow('Name', detail.skill.name)}
-      ${renderMetaRow('Author', detail.skill.author || 'Unknown')}
       ${renderMetaRow('Scope', detail.skill.scope || 'global')}
-      ${renderMetaRow('Kind', detail.skill.kind || 'other')}
       ${renderMetaRow('Local Path', installedLocalPath || detail.skill.localPath || 'Unknown')}
       ${renderMetaRow('Install Date', installDate)}
-      ${renderMetaRow('Description', detail.skill.description || 'Unmanaged skill')}
     </section>
   `;
 }
@@ -288,7 +284,10 @@ function renderLocalPanel() {
     <section class="files-panel">
       <div class="files-toolbar">
         <div class="files-breadcrumbs">${renderLocalBreadcrumbs(currentDirectory ? currentDirectory.currentPath : '')}</div>
-        <vscode-button class="btn-secondary" appearance="secondary" data-action="refresh-local-dir">Refresh</vscode-button>
+        <div class="files-toolbar-actions">
+          <vscode-button class="btn-secondary" appearance="secondary" data-action="open-installed-folder" ${folderExists && installedLocalPath ? '' : 'disabled'}>Open</vscode-button>
+          <vscode-button class="btn-secondary" appearance="secondary" data-action="refresh-local-dir">Refresh</vscode-button>
+        </div>
       </div>
       <div class="files-layout">
         <div class="files-browser">

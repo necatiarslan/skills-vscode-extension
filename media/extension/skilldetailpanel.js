@@ -100,6 +100,13 @@ function handleDetailContainerClick(event) {
     case 'open-installed-folder':
       openInstalledFolder(actionElement.getAttribute('data-skill-id') || '', value);
       break;
+    case 'update':
+      requestUpdate(
+        actionElement.getAttribute('data-skill-id') || '',
+        actionElement.getAttribute('data-skill-name') || '',
+        actionElement.getAttribute('data-github-url') || ''
+      );
+      break;
     default:
       break;
   }
@@ -191,6 +198,29 @@ function handleExtensionMessage(message) {
         showError(`Uninstallation failed: ${message.error}`);
       }
       break;
+    case 'updateResult':
+      setLoading(false);
+      if (message.success) {
+        isInstalled = true;
+        installedLocalPath = message.localPath || installedLocalPath;
+        if (message.localSkillMarkdown) {
+          detail.skillMarkdown = message.localSkillMarkdown;
+        }
+        if (message.localRootDirectory) {
+          localDirectory = message.localRootDirectory;
+          localPreview = null;
+        }
+        // Reset repository browser state
+        currentDirectory = null;
+        currentPreview = null;
+        // Switch to local files tab to show updated files
+        activeTab = 'local';
+        showSuccess(`${message.skillId} updated`);
+        render();
+      } else {
+        showError(`Update failed: ${message.error}`);
+      }
+      break;
     default:
       break;
   }
@@ -216,7 +246,7 @@ function render() {
         <div class="extension-icon">${skillEmoji}</div>
         <div class="extension-summary">
           <h1 class="extension-title">${escapeHtml(skill.name)}</h1>
-          <p class="extension-publisher">${escapeHtml(skill.author)} · ⭐ ${formatCompactNumber(stars)} </p>
+          <p class="extension-publisher">${escapeHtml(skill.author)} &nbsp; | &nbsp; ⭐ ${formatCompactNumber(stars)} </p>
           <p class="extension-description">${escapeHtml(skill.description || 'No description available.')}</p>
           <div class="extension-meta-inline"></div>
           ${tagList.length > 0 ? `<div class="extension-tags">${tagList.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
@@ -228,8 +258,7 @@ function render() {
               <vscode-button class="btn-primary" secondary data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Global</vscode-button>
               <vscode-button class="btn-secondary" secondary data-action="install-workspace" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Workspace</vscode-button>
             `}
-          ${skill.githubUrl ? `<vscode-button class="btn-secondary" secondary data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">Repository</vscode-button>` : ''}
-          ${isInstalled ? `<vscode-button class="btn-secondary" secondary data-action="open-installed-folder" data-skill-id="${escapeAttr(skill.id)}" data-value="${escapeAttr(installedLocalPath)}" ${installedLocalPath ? '' : 'disabled'}>Open</vscode-button>` : ''}
+          ${isInstalled ? `<vscode-button class="btn-secondary" secondary data-action="update" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Update</vscode-button>` : ''}
         </div>
       </header>
 
@@ -252,15 +281,8 @@ function render() {
           </main>
         </vscode-tab-panel>
 
-        <vscode-tab-header slot="header">Repository</vscode-tab-header>
-        <vscode-tab-panel>
-          <main class="detail-main">
-            ${renderFilesPanel()}
-          </main>
-        </vscode-tab-panel>
-
         ${isInstalled ? `
-        <vscode-tab-header slot="header">Local</vscode-tab-header>
+        <vscode-tab-header slot="header">FILES</vscode-tab-header>
         <vscode-tab-panel>
           <main class="detail-main">
             ${renderLocalPanel()}
@@ -268,14 +290,12 @@ function render() {
         </vscode-tab-panel>
         ` : ''}
 
-        ${isInstalled ? `
-        <vscode-tab-header slot="header">Installed</vscode-tab-header>
+        <vscode-tab-header slot="header">Repository</vscode-tab-header>
         <vscode-tab-panel>
           <main class="detail-main">
-            ${renderInstalledPanel()}
+            ${renderFilesPanel()}
           </main>
         </vscode-tab-panel>
-        ` : ''}
       </vscode-tabs>
     </section>
   `;
@@ -289,12 +309,12 @@ function getTabOrder() {
   }
 
   tabOrder.push('details');
-  tabOrder.push('repository');
 
   if (isInstalled) {
     tabOrder.push('local');
-    tabOrder.push('installed');
   }
+
+  tabOrder.push('repository');
 
   return tabOrder;
 }
@@ -361,6 +381,15 @@ function renderDetailOverview() {
       <h2>Repository Overview</h2>
       <p class="section-text">${escapeHtml(repoMetadata.description || 'No repository description available.')}</p>
     </section>
+
+    ${isInstalled ? `
+    <section class="detail-section">
+      <h2>Installation</h2>
+      ${renderMetaRow('Tool', initialState.currentToolDisplayName || 'Current Tool')}
+      ${renderMetaRow('Local Path', installedLocalPath || 'Unknown')}
+      ${renderMetaRow('Install Date', initialState.installDate || 'Unknown')}
+    </section>
+    ` : ''}
   `;
 }
 
@@ -371,7 +400,10 @@ function renderFilesPanel() {
     <section class="files-panel">
       <div class="files-toolbar">
         <div class="files-breadcrumbs">${renderBreadcrumbs(currentDirectory ? currentDirectory.currentPath : '')}</div>
-        <vscode-button class="btn-secondary" appearance="secondary" data-action="refresh-dir">Refresh</vscode-button>
+        <div class="files-toolbar-actions">
+          ${detail.skill.githubUrl ? `<vscode-button class="btn-secondary" appearance="secondary" data-action="open-external" data-value="${escapeAttr(detail.skill.githubUrl)}">Open</vscode-button>` : ''}
+          <vscode-button class="btn-secondary" appearance="secondary" data-action="refresh-dir">Refresh</vscode-button>
+        </div>
       </div>
       <div class="files-layout">
         <div class="files-browser">
@@ -396,7 +428,10 @@ function renderLocalPanel() {
     <section class="files-panel">
       <div class="files-toolbar">
         <div class="files-breadcrumbs">${renderLocalBreadcrumbs(localDirectory ? localDirectory.currentPath : '', detail.skill.id)}</div>
-        <vscode-button class="btn-secondary" appearance="secondary" data-action="refresh-local-dir" data-skill-id="${escapeAttr(detail.skill.id)}">Refresh</vscode-button>
+        <div class="files-toolbar-actions">
+          <vscode-button class="btn-secondary" appearance="secondary" data-action="open-installed-folder" data-skill-id="${escapeAttr(detail.skill.id)}" data-value="${escapeAttr(installedLocalPath)}">Open</vscode-button>
+          <vscode-button class="btn-secondary" appearance="secondary" data-action="refresh-local-dir" data-skill-id="${escapeAttr(detail.skill.id)}">Refresh</vscode-button>
+        </div>
       </div>
       <div class="files-layout">
         <div class="files-browser">
@@ -412,25 +447,13 @@ function renderLocalPanel() {
 
 function renderInstalledPanel() {
   const skill = detail.skill;
-  const hasPath = !!installedLocalPath;
   const installDate = initialState.installDate || 'Unknown';
 
   return `
     <section class="detail-section detail-section-wide">
-      <h2>Installed Location</h2>
       ${renderMetaRow('Tool', initialState.currentToolDisplayName || 'Current Tool')}
       ${renderMetaRow('Local Path', installedLocalPath || 'Unknown')}
       ${renderMetaRow('Install Date', installDate)}
-      <div class="installed-actions">
-        <vscode-button
-          class="btn-secondary"
-          appearance="secondary"
-          data-action="open-installed-folder"
-          data-skill-id="${escapeAttr(skill.id)}"
-          data-value="${escapeAttr(installedLocalPath)}"
-          ${hasPath ? '' : 'disabled'}
-        >Open</vscode-button>
-      </div>
     </section>
   `;
 }
@@ -648,6 +671,12 @@ function requestUninstall(skillId) {
   setLoading(true);
   hideMessage();
   vscode.postMessage({ type: 'uninstall', skillId });
+}
+
+function requestUpdate(skillId, skillName, githubUrl) {
+  setLoading(true);
+  hideMessage();
+  vscode.postMessage({ type: 'update', skillId, skillName, githubUrl });
 }
 
 function openExternal(url) {
