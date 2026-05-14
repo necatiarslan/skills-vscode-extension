@@ -316,9 +316,7 @@ class SkillsPanel {
                 toolDisplayName: this.currentToolDisplayName,
                 groups: {
                     installedGlobal: [],
-                    installedWorkspace: [],
-                    installedOtherGlobal: [],
-                    installedOtherWorkspace: []
+                    installedWorkspace: []
                 },
                 installed: []
             });
@@ -330,9 +328,7 @@ class SkillsPanel {
         const workspaceRoots = this.getWorkspaceRoots();
         const groups = {
             installedGlobal: [],
-            installedWorkspace: [],
-            installedOtherGlobal: [],
-            installedOtherWorkspace: []
+            installedWorkspace: []
         };
         const managedPaths = new Set();
         for (const installed of installedByExtension) {
@@ -359,8 +355,8 @@ class SkillsPanel {
         }
         const globalOther = this.scanOtherSkills(this.getGlobalSkillRoots(), 'global', managedPaths);
         const workspaceOther = this.scanOtherSkills(this.getWorkspaceSkillRoots(), 'workspace', managedPaths);
-        groups.installedOtherGlobal.push(...globalOther);
-        groups.installedOtherWorkspace.push(...workspaceOther);
+        groups.installedGlobal.push(...globalOther);
+        groups.installedWorkspace.push(...workspaceOther);
         return groups;
     }
     scanOtherSkills(roots, scope, managedPaths) {
@@ -506,24 +502,14 @@ class SkillsPanel {
           <div id="searchTable" class="section-table"></div>
         </vscode-collapsible>
 
-        <vscode-collapsible id="installedGlobalCollapsible" heading="Installed Global" class="collapsible">
+        <vscode-collapsible id="installedGlobalCollapsible" heading="Global" class="collapsible">
           <vscode-badge id="installedGlobalCount" variant="counter" slot="decorations">0</vscode-badge>
           <div id="installedGlobalTable" class="section-table"></div>
         </vscode-collapsible>
 
-        <vscode-collapsible id="installedWorkspaceCollapsible" heading="Installed Workspace" class="collapsible">
+        <vscode-collapsible id="installedWorkspaceCollapsible" heading="Workspace" class="collapsible">
           <vscode-badge id="installedWorkspaceCount" variant="counter" slot="decorations">0</vscode-badge>
           <div id="installedWorkspaceTable" class="section-table"></div>
-        </vscode-collapsible>
-
-        <vscode-collapsible id="installedOtherGlobalCollapsible" heading="Installed Other Global" class="collapsible">
-          <vscode-badge id="installedOtherGlobalCount" variant="counter" slot="decorations">0</vscode-badge>
-          <div id="installedOtherGlobalTable" class="section-table"></div>
-        </vscode-collapsible>
-
-        <vscode-collapsible id="installedOtherWorkspaceCollapsible" heading="Installed Other Workspace" class="collapsible">
-          <vscode-badge id="installedOtherWorkspaceCount" variant="counter" slot="decorations">0</vscode-badge>
-          <div id="installedOtherWorkspaceTable" class="section-table"></div>
         </vscode-collapsible>
 
         <vscode-collapsible id="recommendedCollapsible" heading="Recommended" class="collapsible">

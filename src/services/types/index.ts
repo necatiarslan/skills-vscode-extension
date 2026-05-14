@@ -113,8 +113,6 @@ export interface MarketplaceInstalledSkill {
 export interface MarketplaceInstalledGroups {
   installedGlobal: MarketplaceInstalledSkill[];
   installedWorkspace: MarketplaceInstalledSkill[];
-  installedOtherGlobal: MarketplaceInstalledSkill[];
-  installedOtherWorkspace: MarketplaceInstalledSkill[];
 }
 
 export interface GitHubRepoContext {
