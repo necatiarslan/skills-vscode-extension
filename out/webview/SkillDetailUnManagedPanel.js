@@ -307,7 +307,7 @@ class SkillDetailUnManagedPanel {
         this.panel.webview.postMessage(message);
     }
     getHtmlContent(detailPayload) {
-        const styleUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailPanel.css'));
+        const styleUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailUnManagedPanel.css'));
         const scriptUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailUnManagedPanel.js'));
         const nonce = this.getNonce();
         const initialState = JSON.stringify({

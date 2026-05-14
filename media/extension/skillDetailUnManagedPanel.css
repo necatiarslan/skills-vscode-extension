@@ -1,0 +1,23 @@
+/* Markdown preview container fits width, scrolls vertically if needed */
+.markdown-container {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: 100%;
+  max-height: 480px;
+  min-height: 240px;
+  padding: 12px;
+  line-height: 1.6;
+  display: block;
+  box-sizing: border-box;
+  background: var(--panel-bg);
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Prevent overflow and distortion */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+}

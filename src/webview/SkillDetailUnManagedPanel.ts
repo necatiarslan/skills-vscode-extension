@@ -392,7 +392,7 @@ export class SkillDetailUnManagedPanel {
 
   private getHtmlContent(detailPayload: UnmanagedSkillDetailPayload): string {
     const styleUri = this.panel.webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailPanel.css')
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailUnManagedPanel.css')
     );
     const scriptUri = this.panel.webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailUnManagedPanel.js')
