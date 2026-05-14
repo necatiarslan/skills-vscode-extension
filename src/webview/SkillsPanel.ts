@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getSkillAgentLocation } from '../common/SkillLocationConfig';
 import { logToOutput } from '../common/UI';
 import { skillsApiService } from '../services';
 import { getStorageService } from '../services/SkillsStorageService';
@@ -20,12 +21,6 @@ import { SkillDetailPanel } from './SkillDetailPanel';
 export class SkillsPanel implements vscode.WebviewViewProvider {
   public static readonly viewType = 'SkillsView';
   public static Current: SkillsPanel | undefined;
-  private static readonly WORKSPACE_SKILL_DIR_CANDIDATES = [
-    'skills',
-    '.skills/skills',
-    '.copilot/skills',
-    '.github/skills'
-  ];
   private view?: vscode.WebviewView;
   private readonly extensionUri: vscode.Uri;
   private readonly currentToolName: string;
@@ -463,9 +458,11 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
 
   private getWorkspaceSkillRoots(): string[] {
     const roots: string[] = [];
+    const agentLocation = getSkillAgentLocation(this.currentToolName);
+    const workspaceCandidates = agentLocation?.workspaceScanDirCandidates || [];
 
     for (const workspaceRoot of this.getWorkspaceRoots()) {
-      for (const candidate of SkillsPanel.WORKSPACE_SKILL_DIR_CANDIDATES) {
+      for (const candidate of workspaceCandidates) {
         roots.push(path.join(workspaceRoot, candidate));
       }
     }

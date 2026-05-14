@@ -3,15 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.toolInstallService = exports.ToolInstallService = void 0;
 const fs = require("fs");
 const path = require("path");
-const os = require("os");
 const https = require("https");
 const UI_1 = require("../common/UI");
+const SkillLocationConfig_1 = require("../common/SkillLocationConfig");
 const GitHubContentService_1 = require("./GitHubContentService");
 /**
  * ToolInstallService - Handles tool detection and skill installation/uninstallation
  */
 class ToolInstallService {
-    static CANONICAL_ROOT = path.join(os.homedir(), '.skills', 'skills');
+    static CANONICAL_ROOT = SkillLocationConfig_1.SKILL_LOCATION_CONFIG.canonicalSkillRoot;
     tools = new Map();
     constructor() {
         this.initializeTools();
@@ -21,89 +21,16 @@ class ToolInstallService {
      * Initialize tool directory mappings
      */
     initializeTools() {
-        const homeDir = os.homedir();
-        const toolConfigs = [
-            {
-                name: 'vscode',
-                displayName: 'Visual Studio Code',
-                globalDir: path.join(homeDir, '.copilot', 'skills'),
-                canonicalDir: ToolInstallService.CANONICAL_ROOT,
-                detectionPaths: [path.join(homeDir, '.vscode')],
-                hostNames: ['visual studio code', 'vscode', 'github copilot', 'copilot'],
-                preferredInstallMode: 'symlink',
-                installed: false
-            },
-            {
-                name: 'cursor',
-                displayName: 'Cursor',
-                globalDir: path.join(homeDir, '.cursor', 'skills'),
-                canonicalDir: ToolInstallService.CANONICAL_ROOT,
-                detectionPaths: [path.join(homeDir, '.cursor')],
-                hostNames: ['cursor'],
-                preferredInstallMode: 'symlink',
-                installed: false
-            },
-            {
-                name: 'windsurf',
-                displayName: 'Windsurf',
-                globalDir: path.join(homeDir, '.windsurf', 'skills'),
-                canonicalDir: ToolInstallService.CANONICAL_ROOT,
-                detectionPaths: [path.join(homeDir, '.windsurf')],
-                hostNames: ['windsurf'],
-                preferredInstallMode: 'symlink',
-                installed: false
-            },
-            {
-                name: 'antigravity',
-                displayName: 'Antigravity',
-                globalDir: path.join(homeDir, '.gemini', 'antigravity', 'skills'),
-                canonicalDir: ToolInstallService.CANONICAL_ROOT,
-                detectionPaths: [path.join(homeDir, '.gemini', 'antigravity')],
-                hostNames: ['antigravity'],
-                preferredInstallMode: 'symlink',
-                installed: false
-            },
-            {
-                name: 'claude-code',
-                displayName: 'Claude Code',
-                globalDir: path.join(homeDir, '.claude', 'skills'),
-                canonicalDir: ToolInstallService.CANONICAL_ROOT,
-                detectionPaths: [path.join(homeDir, '.claude')],
-                hostNames: ['claude', 'claude code'],
-                preferredInstallMode: 'symlink',
-                installed: false
-            },
-            {
-                name: 'codex',
-                displayName: 'Codex',
-                globalDir: path.join(process.env.CODEX_HOME?.trim() || path.join(homeDir, '.codex'), 'skills'),
-                canonicalDir: ToolInstallService.CANONICAL_ROOT,
-                detectionPaths: [process.env.CODEX_HOME?.trim() || path.join(homeDir, '.codex'), '/etc/codex'],
-                hostNames: ['codex'],
-                preferredInstallMode: 'symlink',
-                installed: false
-            },
-            {
-                name: 'gemini-cli',
-                displayName: 'Gemini CLI',
-                globalDir: path.join(homeDir, '.gemini', 'skills'),
-                canonicalDir: ToolInstallService.CANONICAL_ROOT,
-                detectionPaths: [path.join(homeDir, '.gemini')],
-                hostNames: ['gemini', 'gemini cli'],
-                preferredInstallMode: 'symlink',
-                installed: false
-            },
-            {
-                name: 'opencode',
-                displayName: 'OpenCode',
-                globalDir: path.join(homeDir, '.config', 'opencode', 'skills'),
-                canonicalDir: ToolInstallService.CANONICAL_ROOT,
-                detectionPaths: [path.join(homeDir, '.config', 'opencode')],
-                hostNames: ['opencode', 'open code'],
-                preferredInstallMode: 'symlink',
-                installed: false
-            }
-        ];
+        const toolConfigs = SkillLocationConfig_1.SKILL_LOCATION_CONFIG.agents.map((agent) => ({
+            name: agent.name,
+            displayName: agent.displayName,
+            globalDir: agent.globalSkillDir,
+            canonicalDir: ToolInstallService.CANONICAL_ROOT,
+            detectionPaths: agent.detectionPaths,
+            hostNames: agent.hostNames,
+            preferredInstallMode: agent.preferredInstallMode,
+            installed: false
+        }));
         for (const toolConfig of toolConfigs) {
             this.tools.set(toolConfig.name, toolConfig);
         }
@@ -178,6 +105,41 @@ class ToolInstallService {
         catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
             (0, UI_1.logToOutput)(`[ERROR] Installation failed: ${errorMsg}`);
+            throw error;
+        }
+    }
+    /**
+     * Install a skill to a custom directory (used for workspace installs).
+     */
+    async installSkillToDirectory(toolName, skillId, skillName, githubUrl, installDirectory) {
+        try {
+            const tool = this.tools.get(toolName);
+            if (!tool) {
+                throw new Error(`Unknown tool: ${toolName}`);
+            }
+            if (!installDirectory || installDirectory.trim().length === 0) {
+                throw new Error('Install directory is required.');
+            }
+            const resolvedInstallDirectory = path.resolve(installDirectory);
+            // Refresh detection at install time in case the host/tool appeared after activation.
+            if (!tool.installed) {
+                tool.installed = tool.detectionPaths.some((candidate) => fs.existsSync(candidate));
+            }
+            if (!tool.installed) {
+                throw new Error(`Tool ${tool.displayName} is not installed on this system`);
+            }
+            const targetTool = {
+                ...tool,
+                globalDir: resolvedInstallDirectory
+            };
+            (0, UI_1.logToOutput)(`[Install] Starting workspace install of ${skillName} to ${resolvedInstallDirectory}`);
+            const installResult = await this.downloadSkill(githubUrl, targetTool, skillId, skillName);
+            (0, UI_1.logToOutput)(`[Install] Successfully installed ${skillName} to ${installResult.installPath}`);
+            return installResult;
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[ERROR] Workspace installation failed: ${errorMsg}`);
             throw error;
         }
     }

@@ -4,6 +4,7 @@ exports.SkillsPanel = void 0;
 const vscode = require("vscode");
 const fs = require("fs");
 const path = require("path");
+const SkillLocationConfig_1 = require("../common/SkillLocationConfig");
 const UI_1 = require("../common/UI");
 const services_1 = require("../services");
 const SkillsStorageService_1 = require("../services/SkillsStorageService");
@@ -15,12 +16,6 @@ const SkillDetailPanel_1 = require("./SkillDetailPanel");
 class SkillsPanel {
     static viewType = 'SkillsView';
     static Current;
-    static WORKSPACE_SKILL_DIR_CANDIDATES = [
-        'skills',
-        '.skills/skills',
-        '.copilot/skills',
-        '.github/skills'
-    ];
     view;
     extensionUri;
     currentToolName;
@@ -387,8 +382,10 @@ class SkillsPanel {
     }
     getWorkspaceSkillRoots() {
         const roots = [];
+        const agentLocation = (0, SkillLocationConfig_1.getSkillAgentLocation)(this.currentToolName);
+        const workspaceCandidates = agentLocation?.workspaceScanDirCandidates || [];
         for (const workspaceRoot of this.getWorkspaceRoots()) {
-            for (const candidate of SkillsPanel.WORKSPACE_SKILL_DIR_CANDIDATES) {
+            for (const candidate of workspaceCandidates) {
                 roots.push(path.join(workspaceRoot, candidate));
             }
         }

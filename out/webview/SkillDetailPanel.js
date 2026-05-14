@@ -4,6 +4,7 @@ exports.SkillDetailPanel = void 0;
 const vscode = require("vscode");
 const fs = require("fs");
 const path = require("path");
+const SkillLocationConfig_1 = require("../common/SkillLocationConfig");
 const UI_1 = require("../common/UI");
 const SkillEmoji_1 = require("../common/SkillEmoji");
 const services_1 = require("../services");
@@ -82,6 +83,9 @@ class SkillDetailPanel {
             case 'install':
                 await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
                 break;
+            case 'installWorkspace':
+                await this.handleInstallWorkspace(message.skillId, message.skillName, message.githubUrl);
+                break;
             case 'uninstall':
                 await this.handleUninstall(message.skillId);
                 break;
@@ -146,6 +150,38 @@ class SkillDetailPanel {
     async handleInstall(skillId, skillName, githubUrl) {
         try {
             const installResult = await services_1.toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
+            await (0, SkillsStorageService_1.getStorageService)().addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installResult);
+            const localSkillMarkdown = await this.readLocalSkillMarkdown(installResult.installPath);
+            const localRootDirectory = await this.listLocalDirectory(installResult.installPath, '');
+            SkillsPanel_1.SkillsPanel.Current?.refreshInstalledSkills();
+            this.postMessage({
+                type: 'installResult',
+                skillId,
+                toolName: this.currentToolName,
+                toolDisplayName: this.currentToolDisplayName,
+                success: true,
+                localPath: installResult.installPath,
+                localSkillMarkdown,
+                localRootDirectory,
+                error: null
+            });
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            this.postMessage({
+                type: 'installResult',
+                skillId,
+                toolName: this.currentToolName,
+                toolDisplayName: this.currentToolDisplayName,
+                success: false,
+                error: errorMsg
+            });
+        }
+    }
+    async handleInstallWorkspace(skillId, skillName, githubUrl) {
+        try {
+            const workspaceInstallDir = this.getWorkspaceInstallDirectory();
+            const installResult = await services_1.toolInstallService.installSkillToDirectory(this.currentToolName, skillId, skillName, githubUrl, workspaceInstallDir);
             await (0, SkillsStorageService_1.getStorageService)().addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installResult);
             const localSkillMarkdown = await this.readLocalSkillMarkdown(installResult.installPath);
             const localRootDirectory = await this.listLocalDirectory(installResult.installPath, '');
@@ -299,6 +335,15 @@ class SkillDetailPanel {
             throw new Error('Local skill folder does not exist.');
         }
         return installed.localPath;
+    }
+    getWorkspaceInstallDirectory() {
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) {
+            throw new Error('No workspace folder is open for workspace installation.');
+        }
+        const agentLocation = (0, SkillLocationConfig_1.getSkillAgentLocation)(this.currentToolName);
+        const workspaceInstallDir = agentLocation?.workspaceInstallDir || 'skills';
+        return path.join(workspaceFolder.uri.fsPath, workspaceInstallDir);
     }
     async readLocalSkillMarkdown(rootPath) {
         const candidates = ['SKILL.md', 'skill.md'];

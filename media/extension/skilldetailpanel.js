@@ -56,6 +56,13 @@ function handleDetailContainerClick(event) {
         actionElement.getAttribute('data-github-url') || ''
       );
       break;
+    case 'install-workspace':
+      requestInstallWorkspace(
+        actionElement.getAttribute('data-skill-id') || '',
+        actionElement.getAttribute('data-skill-name') || '',
+        actionElement.getAttribute('data-github-url') || ''
+      );
+      break;
     case 'uninstall':
       requestUninstall(actionElement.getAttribute('data-skill-id') || '');
       break;
@@ -195,7 +202,10 @@ function render() {
         <div class="extension-actions">
           ${isInstalled
             ? `<vscode-button class="btn-primary" secondary data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>`
-            : `<vscode-button class="btn-primary" secondary data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install</vscode-button>`}
+            : `
+              <vscode-button class="btn-primary" secondary data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Global</vscode-button>
+              <vscode-button class="btn-secondary" secondary data-action="install-workspace" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Workspace</vscode-button>
+            `}
           ${skill.githubUrl ? `<vscode-button class="btn-secondary" secondary data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">Repository</vscode-button>` : ''}
           ${isInstalled ? `<vscode-button class="btn-secondary" secondary data-action="open-installed-folder" data-skill-id="${escapeAttr(skill.id)}" data-value="${escapeAttr(installedLocalPath)}" ${installedLocalPath ? '' : 'disabled'}>Open</vscode-button>` : ''}
         </div>
@@ -592,6 +602,12 @@ function requestInstall(skillId, skillName, githubUrl) {
   setLoading(true);
   hideMessage();
   vscode.postMessage({ type: 'install', skillId, skillName, githubUrl });
+}
+
+function requestInstallWorkspace(skillId, skillName, githubUrl) {
+  setLoading(true);
+  hideMessage();
+  vscode.postMessage({ type: 'installWorkspace', skillId, skillName, githubUrl });
 }
 
 function requestUninstall(skillId) {
