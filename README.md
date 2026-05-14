@@ -1,7 +1,7 @@
-# Skills
-![Skills](media/readme/main.png)
+# AI Skills
+![AI Skills](media/readme/main.png)
 
-Skills is a VS Code extension focused on discovering, inspecting, and managing AI skills from the **[Skills Marketplace](https://skillsmp.com/)**.
+AI Skills is a VS Code extension focused on discovering, inspecting, and managing AI skills from the **[Skills Marketplace](https://skillsmp.com/)**.
 
 ## What It Does
 
@@ -56,7 +56,7 @@ Skills can be installed in two ways:
 
 ## Managed vs Unmanaged Skills
 
-**Managed Skills** are installed through the Skills extension marketplace:
+**Managed Skills** are installed through the AI Skills extension marketplace:
 - Tracked in VS Code global storage
 - Show marketplace metadata (author, version, stars)
 - Can be uninstalled directly from the UI
@@ -69,7 +69,7 @@ Skills can be installed in two ways:
 
 ## Support & Feedback
 
-- **Report Issues or Request Features**: Click the bug icon in the Skills panel or visit [GitHub Issues](https://github.com/necatiarslan/skills-vscode-extension/issues)
+- **Report Issues or Request Features**: Click the bug icon in the AI Skills panel or visit [GitHub Issues](https://github.com/necatiarslan/skills-vscode-extension/issues)
 - **Support the Project**: [Become a Sponsor](https://github.com/sponsors/necatiarslan)
 
 ## Future Enhancements

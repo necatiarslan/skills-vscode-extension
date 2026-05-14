@@ -38,9 +38,9 @@ function withProgress(task) {
 function getUri(webview, extensionUri, pathList) {
     return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
 }
-function showOutputMessage(message, popupMessage = "Results are printed to OUTPUT / Skills-Extension", clearPrevMessages = true) {
+function showOutputMessage(message, popupMessage = "Results are printed to OUTPUT / AI-Skills-Extension", clearPrevMessages = true) {
     if (!outputChannel) {
-        outputChannel = vscode.window.createOutputChannel("Skills-Extension");
+        outputChannel = vscode.window.createOutputChannel("AI-Skills-Extension");
     }
     if (clearPrevMessages) {
         outputChannel.clear();
@@ -59,7 +59,7 @@ function showOutputMessage(message, popupMessage = "Results are printed to OUTPU
 function logToOutput(message, error) {
     let now = new Date().toLocaleString();
     if (!logsOutputChannel) {
-        logsOutputChannel = vscode.window.createOutputChannel("Skills-Log");
+        logsOutputChannel = vscode.window.createOutputChannel("AI-Skills-Log");
     }
     if (typeof message === "object") {
         logsOutputChannel.appendLine("[" + now + "] " + JSON.stringify(message, null, 4));

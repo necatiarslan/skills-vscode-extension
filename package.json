@@ -1,6 +1,6 @@
 {
-  "name": "skills",
-  "displayName": "Skills",
+  "name": "ai-skills",
+  "displayName": "AI Skills",
   "description": "Discover and integrate AI Skills to supercharge your productivity. Search, install, and manage AI-powered tools and extensions directly from the Skills Marketplace within Visual Studio Code.",
   "version": "1.0.0",
   "publisher": "NecatiARSLAN",
@@ -50,7 +50,7 @@
       },
       {
         "command": "Skills.OpenMarketplace",
-        "title": "Open Skills Marketplace",
+        "title": "Open AI Skills Marketplace",
         "icon": "$(extensions)"
       }
     ],
@@ -77,7 +77,7 @@
       "activitybar": [
         {
           "id": "Skills",
-          "title": "Skills",
+          "title": "AI Skills",
           "icon": "media/skills-logo-activitybar.png"
         }
       ]

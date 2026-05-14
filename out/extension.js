@@ -8,16 +8,16 @@ const Session_1 = require("./common/Session");
 const SkillsStorageService_1 = require("./services/SkillsStorageService");
 const SkillsPanel_1 = require("./webview/SkillsPanel");
 /**
- * Activates the Skills extension.
+ * Activates the AI Skills extension.
  * This is the entry point for the extension.
  */
 function activate(context) {
-    ui.logToOutput('Activating Skills...');
+    ui.logToOutput('Activating AI Skills...');
     try {
         const session = new Session_1.Session(context); // Initialize session management
         // Initialize marketplace services
         (0, SkillsStorageService_1.initializeStorageService)(context.globalState);
-        // Register the Skills Marketplace as a webview view
+        // Register the AI Skills Marketplace as a webview view
         const skillsViewProvider = new SkillsPanel_1.SkillsPanel(context.extensionUri);
         context.subscriptions.push(vscode.window.registerWebviewViewProvider(SkillsPanel_1.SkillsPanel.viewType, skillsViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
         context.subscriptions.push(vscode.commands.registerCommand('Skills.Refresh', () => {
@@ -29,11 +29,11 @@ function activate(context) {
         context.subscriptions.push(vscode.commands.registerCommand('Skills.BugAndNewFeatureRequest', () => {
             vscode.env.openExternal(vscode.Uri.parse('https://github.com/necatiarslan/skills-vscode-extension/issues'));
         }));
-        ui.logToOutput('Skills activated successfully.');
+        ui.logToOutput('AI Skills activated successfully.');
     }
     catch (error) {
-        ui.logToOutput('Fatal error activating Skills:', error);
-        ui.showInfoMessage('Skills failed to activate. Check debug console for details.');
+        ui.logToOutput('Fatal error activating AI Skills:', error);
+        ui.showInfoMessage('AI Skills failed to activate. Check debug console for details.');
     }
 }
 function deactivate() {

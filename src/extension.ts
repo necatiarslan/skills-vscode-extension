@@ -5,11 +5,11 @@ import { initializeStorageService } from './services/SkillsStorageService';
 import { SkillsPanel } from './webview/SkillsPanel';
 
 /**
- * Activates the Skills extension.
+ * Activates the AI Skills extension.
  * This is the entry point for the extension.
  */
 export function activate(context: vscode.ExtensionContext): void {
-    ui.logToOutput('Activating Skills...');
+    ui.logToOutput('Activating AI Skills...');
 
     try {
         const session = new Session(context); // Initialize session management
@@ -17,7 +17,7 @@ export function activate(context: vscode.ExtensionContext): void {
         // Initialize marketplace services
         initializeStorageService(context.globalState);
         
-        // Register the Skills Marketplace as a webview view
+        // Register the AI Skills Marketplace as a webview view
         const skillsViewProvider = new SkillsPanel(context.extensionUri);
         context.subscriptions.push(
             vscode.window.registerWebviewViewProvider(
@@ -45,10 +45,10 @@ export function activate(context: vscode.ExtensionContext): void {
             })
         );
 
-        ui.logToOutput('Skills activated successfully.');
+        ui.logToOutput('AI Skills activated successfully.');
     } catch (error) {
-        ui.logToOutput('Fatal error activating Skills:', error as Error);
-        ui.showInfoMessage('Skills failed to activate. Check debug console for details.');
+        ui.logToOutput('Fatal error activating AI Skills:', error as Error);
+        ui.showInfoMessage('AI Skills failed to activate. Check debug console for details.');
     }
 }
 
