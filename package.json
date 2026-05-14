@@ -93,43 +93,31 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/archiver": "^7.0.0",
     "@types/glob": "^9.0.0",
     "@types/js-yaml": "^4.0.9",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.8.0",
     "@types/tmp": "^0.2.6",
-    "@types/vscode": "^1.106.0",
-    "@typescript-eslint/eslint-plugin": "^8.57.2",
-    "@typescript-eslint/parser": "^8.57.2",
+    "@types/vscode": "^1.120.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.3",
+    "@typescript-eslint/parser": "^8.59.3",
     "@vscode/test-electron": "^2.5.2",
-    "eslint": "^10.1.0",
+    "eslint": "^10.3.0",
     "glob": "^13.0.6",
     "mocha": "^11.7.5",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@types/uuid": "^11.0.0",
     "@vscode-elements/elements": "^2.5.1",
     "@vscode/codicons": "^0.0.45",
-    "archiver": "^7.0.1",
     "js-tiktoken": "^1.0.21",
     "js-yaml": "^4.1.1",
     "markdown-it": "^14.1.1",
     "reflect-metadata": "^0.2.2",
     "tmp": "^0.2.5",
-    "uuid": "^13.0.0",
-    "yauzl": "^3.2.1"
+    "yauzl": "^3.3.0"
   },
   "overrides": {
-    "archiver": {
-      "readdir-glob": "3.0.0"
-    },
-    "archiver-utils": {
-      "glob": {
-        "minimatch": "9.0.9"
-      }
-    },
     "mocha": {
       "diff": "8.0.3",
       "glob": {
