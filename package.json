@@ -94,10 +94,8 @@
   },
   "devDependencies": {
     "@types/glob": "^9.0.0",
-    "@types/js-yaml": "^4.0.9",
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.8.0",
-    "@types/tmp": "^0.2.6",
     "@types/vscode": "^1.120.0",
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
@@ -110,12 +108,8 @@
   "dependencies": {
     "@vscode-elements/elements": "^2.5.1",
     "@vscode/codicons": "^0.0.45",
-    "js-tiktoken": "^1.0.21",
-    "js-yaml": "^4.1.1",
     "markdown-it": "^14.1.1",
-    "reflect-metadata": "^0.2.2",
-    "tmp": "^0.2.5",
-    "yauzl": "^3.3.0"
+    "reflect-metadata": "^0.2.2"
   },
   "overrides": {
     "mocha": {
