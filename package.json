@@ -37,21 +37,6 @@
         "command": "Skills.BugAndNewFeatureRequest",
         "title": "Bug and New Feature Request",
         "icon": "$(bug)"
-      },
-      {
-        "command": "Skills.ExportConfig",
-        "title": "Export Config",
-        "icon": "$(arrow-down)"
-      },
-      {
-        "command": "Skills.ImportConfig",
-        "title": "Import Config",
-        "icon": "$(arrow-up)"
-      },
-      {
-        "command": "Skills.OpenMarketplace",
-        "title": "Open AI Skills Marketplace",
-        "icon": "$(extensions)"
       }
     ],
     "menus": {

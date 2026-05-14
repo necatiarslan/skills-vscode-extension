@@ -149,12 +149,12 @@ function render() {
         <div class="extension-icon">${skillEmoji}</div>
         <div class="extension-summary">
           <h1 class="extension-title">${escapeHtml(skill.name)}</h1>
-          <p class="extension-publisher">${escapeHtml(skill.author || 'Unknown')}</p>
-          <p class="extension-description">${escapeHtml(skill.description || 'Unmanaged skill')}</p>
+          <p class="extension-publisher"></p>
+          <p class="extension-description">Unmanaged Skill</p>
           <div class="extension-meta-inline"></div>
         </div>
         <div class="extension-actions">
-          <vscode-button class="btn-primary" secondary data-action="uninstall" ${folderExists && installedLocalPath ? '' : 'disabled'}>Uninstall</vscode-button>
+          <vscode-button class="btn-primary" data-action="uninstall" ${folderExists && installedLocalPath ? '' : 'disabled'}>Uninstall</vscode-button>
 
         </div>
       </header>
@@ -285,8 +285,8 @@ function renderLocalPanel() {
       <div class="files-toolbar">
         <div class="files-breadcrumbs">${renderLocalBreadcrumbs(currentDirectory ? currentDirectory.currentPath : '')}</div>
         <div class="files-toolbar-actions">
-          <vscode-button class="btn-secondary" appearance="secondary" data-action="open-installed-folder" ${folderExists && installedLocalPath ? '' : 'disabled'}>Open</vscode-button>
-          <vscode-button class="btn-secondary" appearance="secondary" data-action="refresh-local-dir">Refresh</vscode-button>
+          <vscode-button class="btn-secondary" data-action="open-installed-folder" ${folderExists && installedLocalPath ? '' : 'disabled'}>Open</vscode-button>
+          <vscode-button class="btn-secondary" data-action="refresh-local-dir">Refresh</vscode-button>
         </div>
       </div>
       <div class="files-layout">
@@ -373,7 +373,7 @@ function renderMetaRow(label, value) {
   return `
     <div class="meta-row">
       <span class="meta-label">${escapeHtml(label)}</span>
-      <span class="meta-value">${escapeHtml(value || 'Unknown')}</span>
+      <span class="meta-value">${escapeHtml(value || '')}</span>
     </div>
   `;
 }

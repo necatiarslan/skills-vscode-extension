@@ -253,12 +253,12 @@ function render() {
         </div>
         <div class="extension-actions">
           ${isInstalled
-            ? `<vscode-button class="btn-primary" secondary data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>`
+            ? `<vscode-button class="btn-primary" data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>`
             : `
-              <vscode-button class="btn-primary" secondary data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Global</vscode-button>
-              <vscode-button class="btn-secondary" secondary data-action="install-workspace" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Workspace</vscode-button>
+              <vscode-button class="btn-primary" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Global</vscode-button>
+              <vscode-button class="btn-secondary" data-action="install-workspace" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Workspace</vscode-button>
             `}
-          ${isInstalled ? `<vscode-button class="btn-secondary" secondary data-action="update" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Update</vscode-button>` : ''}
+          ${isInstalled ? `<vscode-button class="btn-secondary" data-action="update" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Update</vscode-button>` : ''}
         </div>
       </header>
 
@@ -395,8 +395,8 @@ function renderFilesPanel() {
       <div class="files-toolbar">
         <div class="files-breadcrumbs">${renderBreadcrumbs(currentDirectory ? currentDirectory.currentPath : '')}</div>
         <div class="files-toolbar-actions">
-          ${detail.skill.githubUrl ? `<vscode-button class="btn-secondary" appearance="secondary" data-action="open-external" data-value="${escapeAttr(detail.skill.githubUrl)}">Open</vscode-button>` : ''}
-          <vscode-button class="btn-secondary" appearance="secondary" data-action="refresh-dir">Refresh</vscode-button>
+          ${detail.skill.githubUrl ? `<vscode-button class="btn-secondary"  data-action="open-external" data-value="${escapeAttr(detail.skill.githubUrl)}">Open</vscode-button>` : ''}
+          <vscode-button class="btn-secondary"  data-action="refresh-dir">Refresh</vscode-button>
         </div>
       </div>
       <div class="files-layout">
@@ -423,8 +423,8 @@ function renderLocalPanel() {
       <div class="files-toolbar">
         <div class="files-breadcrumbs">${renderLocalBreadcrumbs(localDirectory ? localDirectory.currentPath : '', detail.skill.id)}</div>
         <div class="files-toolbar-actions">
-          <vscode-button class="btn-secondary" appearance="secondary" data-action="open-installed-folder" data-skill-id="${escapeAttr(detail.skill.id)}" data-value="${escapeAttr(installedLocalPath)}">Open</vscode-button>
-          <vscode-button class="btn-secondary" appearance="secondary" data-action="refresh-local-dir" data-skill-id="${escapeAttr(detail.skill.id)}">Refresh</vscode-button>
+          <vscode-button class="btn-secondary"  data-action="open-installed-folder" data-skill-id="${escapeAttr(detail.skill.id)}" data-value="${escapeAttr(installedLocalPath)}">Open</vscode-button>
+          <vscode-button class="btn-secondary"  data-action="refresh-local-dir" data-skill-id="${escapeAttr(detail.skill.id)}">Refresh</vscode-button>
         </div>
       </div>
       <div class="files-layout">
@@ -497,7 +497,7 @@ function renderPreviewPanel() {
       <div class="preview-empty">
         <h3>${escapeHtml(currentPreview.name)}</h3>
         <p>This file is too large to preview inline.</p>
-        <vscode-button class="btn-secondary" appearance="secondary" data-action="open-external" data-value="${escapeAttr(currentPreview.htmlUrl)}">Open on GitHub</vscode-button>
+        <vscode-button class="btn-secondary"  data-action="open-external" data-value="${escapeAttr(currentPreview.htmlUrl)}">Open on GitHub</vscode-button>
       </div>
     `;
   }
@@ -507,7 +507,7 @@ function renderPreviewPanel() {
       <div class="preview-empty">
         <h3>${escapeHtml(currentPreview.name)}</h3>
         <p>This file appears to be binary and cannot be previewed inline.</p>
-        <vscode-button class="btn-secondary" appearance="secondary" data-action="open-external" data-value="${escapeAttr(currentPreview.htmlUrl)}">Open on GitHub</vscode-button>
+        <vscode-button class="btn-secondary"  data-action="open-external" data-value="${escapeAttr(currentPreview.htmlUrl)}">Open on GitHub</vscode-button>
       </div>
     `;
   }
@@ -518,7 +518,7 @@ function renderPreviewPanel() {
         <h3>${escapeHtml(currentPreview.name)}</h3>
         <p>${escapeHtml(currentPreview.path)}</p>
       </div>
-      <vscode-button class="btn-secondary" appearance="secondary" data-action="open-external" data-value="${escapeAttr(currentPreview.htmlUrl)}">Open on GitHub</vscode-button>
+      <vscode-button class="btn-secondary"  data-action="open-external" data-value="${escapeAttr(currentPreview.htmlUrl)}">Open on GitHub</vscode-button>
     </div>
     <pre class="code-preview"><code>${escapeHtml(currentPreview.content)}</code></pre>
   `;
