@@ -339,7 +339,7 @@ function renderSkillItem(skill, options) {
     `;
   }
 
-  const skillEmoji = getSkillEmoji(skill.id);
+  const skillEmoji = getSkillEmoji(skill.id || skill.name);
   const canOpenDetails = !isOtherInstalledSection;
   const cardActionAttr = canOpenDetails ? `data-action="open" data-skill-id="${escapeAttr(skill.id)}"` : '';
   const iconWrapClass = isOtherInstalledSection ? 'skill-icon-wrap skill-icon-wrap--muted' : 'skill-icon-wrap';
