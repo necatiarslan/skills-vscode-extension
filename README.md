@@ -15,12 +15,14 @@ Skills is a VS Code extension focused on discovering, inspecting, and managing A
 
 ## Current UI Behavior
 
-The sidebar contains three main sections:
+The sidebar contains four main sections:
 
 - **Search**: Discover skills from the [Skills Marketplace](https://skillsmp.com/)
-- **Installed**: View managed and unmanaged skills installed in various locations
+- **Global**: Installed skills found in global locations for the current host editor
   - *Managed skills* show colorful emojis, metadata, and uninstall options
   - *Unmanaged skills* appear with muted emojis and are discovered from non-standard installation paths
+- **Workspace**: Installed skills found in workspace-scoped locations
+  - Includes both managed and unmanaged skills for the current workspace
 - **Recommended**: Featured skills from the marketplace
 
 
@@ -62,7 +64,7 @@ Skills can be installed in two ways:
 **Unmanaged Skills** are discovered from alternative installation locations:
 - Not tracked in the official marketplace
 - Displayed with muted styling for visual distinction
-- Shown in the Installed section with basic metadata
+- Shown in the Global or Workspace section based on installation scope, with basic metadata
 - Useful for locally developed, team-shared, or experimental skills
 
 ## Support & Feedback
