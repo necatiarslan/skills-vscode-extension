@@ -1,5 +1,5 @@
 :root {
-  --panel-bg: var(--vscode-editor-background);
+  --panel-bg: var(--vscode-sideBar-background);
   --panel-border: var(--vscode-panel-border);
   --muted-fg: var(--vscode-descriptionForeground);
   --error-fg: var(--vscode-errorForeground);

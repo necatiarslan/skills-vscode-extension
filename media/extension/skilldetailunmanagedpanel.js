@@ -6,7 +6,7 @@ let folderExists = initialState.folderExists !== false;
 let installedLocalPath = initialState.installedLocalPath || '';
 let currentDirectory = detail ? (detail.localInitialDirectory || detail.localRootDirectory || null) : null;
 let currentPreview = detail ? (detail.localInitialPreview || null) : null;
-let activeTab = 'details';
+let activeTab = 'skill';
 
 let markdownIt = null;
 
