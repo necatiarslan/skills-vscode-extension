@@ -1,6 +1,6 @@
 const vscode = acquireVsCodeApi();
 
-const RECOMMENDED_QUERY = 'vscode';
+let RECOMMENDED_QUERY = '';
 
 /**
  * Get a consistent emoji for a skill based on its ID.
@@ -59,7 +59,6 @@ const recommendedCount = document.getElementById('recommendedCount');
 
 function initialize() {
   vscode.postMessage({ type: 'getInstalledSkills' });
-  vscode.postMessage({ type: 'search', query: RECOMMENDED_QUERY });
 
   searchInput.addEventListener('input', (event) => {
     handleSearchInput(String(event.target?.value || ''));
@@ -97,11 +96,15 @@ function handleExtensionMessage(message) {
       handleSearchResults(message);
       break;
     case 'installedSkills':
+      RECOMMENDED_QUERY = String(message.toolName || message.toolDisplayName || '').trim().toLowerCase();
       installedGroups = normalizeInstalledGroups(message.groups);
       installedSkills = [
         ...installedGroups.installedGlobal,
         ...installedGroups.installedWorkspace
       ];
+      if (RECOMMENDED_QUERY) {
+        vscode.postMessage({ type: 'search', query: RECOMMENDED_QUERY });
+      }
       renderSections();
       break;
     case 'installResult':
