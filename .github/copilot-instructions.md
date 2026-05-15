@@ -10,7 +10,7 @@ Current feature set:
 - bash scripts
 - bash file shortcuts
 - VS Code command shortcuts
-- AI Skills Marketplace (search, inspect, and install skills from skillsmp.com)
+- Agent Skills Marketplace (search, inspect, and install skills from skillsmp.com)
 
 The extension no longer contains AWS service integrations. Any guidance that assumes AWS resources, credentials, SDK clients, or service-specific node trees is stale and should not be reintroduced unless explicitly requested.
 
@@ -64,7 +64,7 @@ The dock tree is persisted to VS Code `globalState`.
 6. Refresh the tree
 
 ### 4. Marketplace Services Architecture
-The Skills Marketplace provides a secondary feature set for discovering and installing AI skills:
+The Skills Marketplace provides a secondary feature set for discovering and installing Agent Skills:
 
 **Core Services** (in `src/services/`):
 - **SkillsApiService** — HTTP client for skillsmp.com API

@@ -1,7 +1,7 @@
 {
-  "name": "ai-skills",
-  "displayName": "AI Skills",
-  "description": "Discover and integrate AI Skills to supercharge your productivity. Search, install, and manage AI-powered tools and extensions directly from the Skills Marketplace within Visual Studio Code.",
+  "name": "agent-skills",
+  "displayName": "Agent Skills",
+  "description": "Discover and Install Agent Skills to enhance your AI agents' capabilities. Browse the Skills Marketplace, inspect skill details, and manage your installed skills directly from the sidebar.",
   "version": "1.0.0",
   "publisher": "NecatiARSLAN",
   "repository": {
@@ -62,7 +62,7 @@
       "activitybar": [
         {
           "id": "Skills",
-          "title": "AI Skills",
+          "title": "Agent Skills",
           "icon": "media/skills-logo-activitybar.png"
         }
       ]
@@ -80,7 +80,7 @@
     "viewsWelcome": [
       {
         "view": "SkillsView",
-        "contents": "Search and discover AI Skills from the marketplace. Start typing in the search box to explore available tools and extensions."
+        "contents": "Search and discover Agent Skills from the marketplace. Start typing in the search box to explore available tools and extensions."
       }
     ]
   },
