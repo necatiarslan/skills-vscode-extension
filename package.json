@@ -1,8 +1,8 @@
 {
   "name": "ai-agent-skills",
   "displayName": "AI Agent Skills",
-  "description": "Discover and Install Agent Skills to enhance your AI agents' capabilities. Browse the Skills Marketplace, inspect skill details, and manage your installed skills directly from the sidebar.",
-  "version": "1.0.0",
+  "description": "Discover and Install AI Agent Skills to enhance your AI agents' capabilities. Browse the Skills Marketplace, inspect skill details, and manage your installed skills directly from the sidebar.",
+  "version": "1.0.1",
   "publisher": "NecatiARSLAN",
   "repository": {
     "type": "git",
@@ -62,7 +62,7 @@
       "activitybar": [
         {
           "id": "Skills",
-          "title": "Agent Skills",
+          "title": "AI Agent Skills",
           "icon": "media/skills-logo-activitybar.png"
         }
       ]
@@ -80,7 +80,7 @@
     "viewsWelcome": [
       {
         "view": "SkillsView",
-        "contents": "Search and discover Agent Skills from the marketplace. Start typing in the search box to explore available tools and extensions."
+        "contents": "Search and discover AI Agent Skills from the marketplace. Start typing in the search box to explore available tools and extensions."
       }
     ]
   },

@@ -580,7 +580,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agent Skills Marketplace</title>
+    <title>AI Agent Skills Marketplace</title>
     <link rel="stylesheet" href="${skillspanelCss}">
     <link
       rel="stylesheet"
@@ -595,7 +595,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
   <div id="app">
     <div class="marketplace-container">
       <div class="search-section">
-        <vscode-textfield id="searchInput" class="search-input" placeholder="Search Agent Skills..." aria-label="Search Agent Skills" autocomplete="off">
+        <vscode-textfield id="searchInput" class="search-input" placeholder="Search AI Agent Skills..." aria-label="Search AI Agent Skills" autocomplete="off">
           <vscode-icon slot="content-before" name="search" title="search"></vscode-icon>
         </vscode-textfield>
       </div>

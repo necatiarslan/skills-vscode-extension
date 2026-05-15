@@ -1,8 +1,8 @@
-# Agent Skills Marketplace
+# AI Agent Skills
 
-![Agent Skills](media/readme/main.png)
+![AI Agent Skills](media/readme/main.png)
 
-A Visual Studio Code extension to discover, inspect, install, and manage Agent Skills from [Skills Marketplace](https://skillsmp.com/) directly from the sidebar.
+A Visual Studio Code extension to discover, inspect, install, and manage AI Agent Skills from [Skills Marketplace](https://skillsmp.com/) directly from the sidebar.
 
 Supports Visual Studio Code and VS Code forks, including Antigravity, Windsurf, and Cursor.
 
@@ -30,7 +30,7 @@ Supports Visual Studio Code and VS Code forks, including Antigravity, Windsurf, 
 
 ## 📂 Sidebar Layout
 
-The Agent Skills view includes four main sections:
+The AI Agent Skills view includes four main sections:
 
 - **Search**: Discover skills from the marketplace
 - **Global**: Skills installed in global locations for the current host editor
@@ -75,7 +75,7 @@ Skills can be installed in two modes.
 
 ### Managed Skills
 
-- Installed through Agent Skills marketplace flows
+- Installed through AI Agent Skills marketplace flows
 - Tracked in VS Code global storage
 - Include marketplace metadata (author, version, stars)
 - Uninstallable from the extension UI

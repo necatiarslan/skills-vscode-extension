@@ -5,11 +5,11 @@ import { initializeStorageService } from './services/SkillsStorageService';
 import { SkillsPanel } from './webview/SkillsPanel';
 
 /**
- * Activates the Agent Skills extension.
+ * Activates the AI Agent Skills extension.
  * This is the entry point for the extension.
  */
 export function activate(context: vscode.ExtensionContext): void {
-     ui.logToOutput('Activating Agent Skills...');
+    ui.logToOutput('Activating AI Agent Skills...');
 
     try {
         const session = new Session(context); // Initialize session management
@@ -17,7 +17,7 @@ export function activate(context: vscode.ExtensionContext): void {
         // Initialize marketplace services
         initializeStorageService(context.globalState);
         
-        // Register the Agent Skills Marketplace as a webview view
+        // Register the AI Agent Skills Marketplace as a webview view
         const skillsViewProvider = new SkillsPanel(context.extensionUri);
         context.subscriptions.push(
             vscode.window.registerWebviewViewProvider(
@@ -45,10 +45,10 @@ export function activate(context: vscode.ExtensionContext): void {
             })
         );
 
-        ui.logToOutput('Agent Skills activated successfully.');
+        ui.logToOutput('AI Agent Skills activated successfully.');
     } catch (error) {
-        ui.logToOutput('Fatal error activating Agent Skills:', error as Error);
-        ui.showInfoMessage('Agent Skills failed to activate. Check debug console for details.');
+        ui.logToOutput('Fatal error activating AI Agent Skills:', error as Error);
+        ui.showInfoMessage('AI Agent Skills failed to activate. Check debug console for details.');
     }
 }
 
