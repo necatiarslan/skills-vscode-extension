@@ -94,10 +94,8 @@ Skills can be installed in two modes.
 
 ## 🚀 Roadmap
 
-- Full repository download and extraction for installs
-- Better unmanaged skill operations (organize, clean, convert workflows)
 - Workspace-aware recommendations
-- Skill tagging and custom organization
+
 
 
 ## 📬 Stay in Touch

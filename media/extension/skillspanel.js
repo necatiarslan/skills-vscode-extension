@@ -227,6 +227,13 @@ function handleSectionClick(event) {
     return;
   }
 
+  if (action === 'uninstall') {
+    event.stopPropagation();
+    const localPath = actionEl.getAttribute('data-local-path') || '';
+    vscode.postMessage({ type: 'uninstall', skillId, localPath });
+    return;
+  }
+
   if (!skillId) {
     return;
   }
@@ -241,12 +248,6 @@ function handleSectionClick(event) {
       skillName,
       githubUrl
     });
-    return;
-  }
-
-  if (action === 'uninstall') {
-    event.stopPropagation();
-    vscode.postMessage({ type: 'uninstall', skillId });
     return;
   }
 
@@ -344,7 +345,7 @@ function renderSkillItem(skill, options) {
     `;
   } else if (isOtherInstalled) {
     actionButtons = `
-      <vscode-button appearance="secondary" class="skill-action-btn" data-action="open-unmanaged" data-skill-id="${escapeAttr(skill.skillId || '')}" data-skill-name="${escapeAttr(skill.name)}" data-skill-author="${escapeAttr(skill.author || 'Unknown')}" data-skill-description="${escapeAttr(skill.description || 'Unmanaged skill')}" data-local-path="${escapeAttr(skill.localPath || '')}" data-scope="${escapeAttr(skill.scope || 'global')}" data-kind="${escapeAttr(skill.kind || 'other')}">Open</vscode-button>
+      <vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(skill.skillId || '')}" data-local-path="${escapeAttr(skill.localPath || '')}">Uninstall</vscode-button>
     `;
   }
 

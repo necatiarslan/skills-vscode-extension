@@ -104,7 +104,7 @@ class SkillsPanel {
                 await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
                 break;
             case 'uninstall':
-                await this.handleUninstall(message.skillId);
+                await this.handleUninstall(message.skillId, message.localPath);
                 break;
             case 'openInstalledFolder':
                 await this.handleOpenInstalledFolder(message.skillId, message.localPath);
@@ -263,26 +263,31 @@ class SkillsPanel {
     /**
      * Handle skill uninstallation
      */
-    async handleUninstall(skillId) {
+    async handleUninstall(skillId, localPath) {
         try {
-            (0, UI_1.logToOutput)(`[Webview] Uninstalling ${skillId} from ${this.currentToolName}`);
+            const uninstallLabel = skillId || localPath || 'unknown';
+            (0, UI_1.logToOutput)(`[Webview] Uninstalling ${uninstallLabel} from ${this.currentToolName}`);
             const storage = (0, SkillsStorageService_1.getStorageService)();
-            const installed = storage.getInstalledSkill(this.currentToolName, skillId);
-            if (!installed) {
-                throw new Error('Skill not found in storage');
+            const installed = skillId ? storage.getInstalledSkill(this.currentToolName, skillId) : null;
+            const resolvedPath = installed?.localPath || localPath;
+            const resolvedSkillId = skillId || path.basename(resolvedPath || '');
+            if (!resolvedPath) {
+                throw new Error('Skill not found in storage and no local path was provided.');
             }
-            await services_2.toolInstallService.uninstallSkill(this.currentToolName, skillId, installed.localPath);
-            await storage.removeInstalled(this.currentToolName, skillId);
+            await services_2.toolInstallService.uninstallSkill(this.currentToolName, resolvedSkillId, resolvedPath);
+            if (installed && skillId) {
+                await storage.removeInstalled(this.currentToolName, skillId);
+            }
             this.postMessage({
                 type: 'uninstallResult',
-                skillId,
+                skillId: resolvedSkillId,
                 toolName: this.currentToolName,
                 toolDisplayName: this.currentToolDisplayName,
                 success: true,
                 message: 'Successfully uninstalled skill',
                 error: null
             });
-            (0, UI_1.logToOutput)(`[Webview] Uninstallation completed: ${skillId}`);
+            (0, UI_1.logToOutput)(`[Webview] Uninstallation completed: ${resolvedSkillId}`);
         }
         catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
