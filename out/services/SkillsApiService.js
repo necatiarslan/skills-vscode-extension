@@ -47,6 +47,7 @@ class SkillsApiService {
     static CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
     searchCache = new Map();
     detailCache = new Map();
+    detailEndpointAvailable = true;
     /**
      * Search for skills by query string
      * Results are cached for 5 minutes
@@ -91,12 +92,15 @@ class SkillsApiService {
             }
         }
         try {
+            if (!this.detailEndpointAvailable) {
+                return this.fetchDetailViaSearch(skillId);
+            }
             (0, UI_1.logToOutput)(`[API] Fetching skill detail: ${skillId}`);
-            const response = await this.makeRequest(`/skills/${skillId}`);
+            const response = await this.makeRequest(`/skills/${encodeURIComponent(skillId)}`);
             const parsed = JSON.parse(response);
             const skill = this.extractSkillFromDetailResponse(parsed);
             if (!skill) {
-                return null;
+                return this.fetchDetailViaSearch(skillId);
             }
             // Cache the result
             this.detailCache.set(skillId, { skill, timestamp: Date.now() });
@@ -104,7 +108,32 @@ class SkillsApiService {
         }
         catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
+            // The API may not expose /skills/{id}. If so, fallback to search for exact id.
+            if (errorMsg.includes('ENDPOINT_NOT_FOUND') || errorMsg.includes('/api/v1/skills/')) {
+                this.detailEndpointAvailable = false;
+                (0, UI_1.logToOutput)('[API] Skill detail endpoint is unavailable. Using search fallback for detail fetches.');
+                return this.fetchDetailViaSearch(skillId);
+            }
             (0, UI_1.logToOutput)(`[ERROR] Fetch detail failed: ${errorMsg}`);
+            return this.fetchDetailViaSearch(skillId);
+        }
+    }
+    async fetchDetailViaSearch(skillId) {
+        try {
+            (0, UI_1.logToOutput)(`[API] Fetching skill detail via search fallback: ${skillId}`);
+            const response = await this.makeRequest(`/skills/search?q=${encodeURIComponent(skillId)}&page=1&limit=50&sortBy=stars`);
+            const parsed = JSON.parse(response);
+            const skills = this.extractSkillsFromSearchResponse(parsed);
+            const exactMatch = skills.find((skill) => skill.id === skillId ||
+                skill.skillUrl?.endsWith(`/skills/${skillId}`)) || null;
+            if (exactMatch) {
+                this.detailCache.set(skillId, { skill: exactMatch, timestamp: Date.now() });
+            }
+            return exactMatch;
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[ERROR] Fetch detail fallback failed: ${errorMsg}`);
             return null;
         }
     }
@@ -143,7 +172,17 @@ class SkillsApiService {
                         resolve(data);
                     }
                     else {
-                        reject(new Error(`API Error: ${res.statusCode} ${res.statusMessage}`));
+                        let endpointMessage = '';
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (parsed.error?.code || parsed.error?.message) {
+                                endpointMessage = ` (${parsed.error.code || 'UNKNOWN'}: ${parsed.error.message || 'No message'})`;
+                            }
+                        }
+                        catch {
+                            // Keep default status-only error when body is not JSON.
+                        }
+                        reject(new Error(`API Error: ${res.statusCode} ${res.statusMessage}${endpointMessage}`));
                     }
                 });
             });

@@ -14,6 +14,7 @@ export class SkillsApiService {
 
   private searchCache: Map<string, CachedSearchResult> = new Map();
   private detailCache: Map<string, CachedSkillDetail> = new Map();
+  private detailEndpointAvailable: boolean = true;
 
   /**
    * Search for skills by query string
@@ -67,13 +68,17 @@ export class SkillsApiService {
     }
 
     try {
+      if (!this.detailEndpointAvailable) {
+        return this.fetchDetailViaSearch(skillId);
+      }
+
       logToOutput(`[API] Fetching skill detail: ${skillId}`);
-      const response = await this.makeRequest(`/skills/${skillId}`);
+      const response = await this.makeRequest(`/skills/${encodeURIComponent(skillId)}`);
       const parsed = JSON.parse(response) as unknown;
       const skill = this.extractSkillFromDetailResponse(parsed);
 
       if (!skill) {
-        return null;
+        return this.fetchDetailViaSearch(skillId);
       }
 
       // Cache the result
@@ -82,7 +87,41 @@ export class SkillsApiService {
       return skill;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+
+      // The API may not expose /skills/{id}. If so, fallback to search for exact id.
+      if (errorMsg.includes('ENDPOINT_NOT_FOUND') || errorMsg.includes('/api/v1/skills/')) {
+        this.detailEndpointAvailable = false;
+        logToOutput('[API] Skill detail endpoint is unavailable. Using search fallback for detail fetches.');
+        return this.fetchDetailViaSearch(skillId);
+      }
+
       logToOutput(`[ERROR] Fetch detail failed: ${errorMsg}`);
+      return this.fetchDetailViaSearch(skillId);
+    }
+  }
+
+  private async fetchDetailViaSearch(skillId: string): Promise<Skill | null> {
+    try {
+      logToOutput(`[API] Fetching skill detail via search fallback: ${skillId}`);
+      const response = await this.makeRequest(
+        `/skills/search?q=${encodeURIComponent(skillId)}&page=1&limit=50&sortBy=stars`
+      );
+      const parsed = JSON.parse(response) as unknown;
+      const skills = this.extractSkillsFromSearchResponse(parsed);
+
+      const exactMatch = skills.find((skill) =>
+        skill.id === skillId ||
+        skill.skillUrl?.endsWith(`/skills/${skillId}`)
+      ) || null;
+
+      if (exactMatch) {
+        this.detailCache.set(skillId, { skill: exactMatch, timestamp: Date.now() });
+      }
+
+      return exactMatch;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] Fetch detail fallback failed: ${errorMsg}`);
       return null;
     }
   }
@@ -126,7 +165,23 @@ export class SkillsApiService {
           if (res.statusCode === 200) {
             resolve(data);
           } else {
-            reject(new Error(`API Error: ${res.statusCode} ${res.statusMessage}`));
+            let endpointMessage = '';
+            try {
+              const parsed = JSON.parse(data) as {
+                error?: {
+                  code?: string;
+                  message?: string;
+                };
+              };
+
+              if (parsed.error?.code || parsed.error?.message) {
+                endpointMessage = ` (${parsed.error.code || 'UNKNOWN'}: ${parsed.error.message || 'No message'})`;
+              }
+            } catch {
+              // Keep default status-only error when body is not JSON.
+            }
+
+            reject(new Error(`API Error: ${res.statusCode} ${res.statusMessage}${endpointMessage}`));
           }
         });
       });
