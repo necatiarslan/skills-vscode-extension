@@ -136,6 +136,25 @@ body {
   align-items: center;
 }
 
+.workspace-install-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.source-link {
+  color: var(--muted-fg);
+  white-space: nowrap;
+}
+
+.source-link a {
+  color: var(--vscode-textLink-foreground);
+}
+
+.source-link a:hover {
+  color: var(--vscode-textLink-activeForeground);
+}
+
 
 .detail-tabs-shell {
   width: 100%;
@@ -583,6 +602,11 @@ a {
 
   .extension-actions {
     grid-column: 1 / -1;
+    flex-wrap: wrap;
+  }
+
+  .workspace-install-row {
+    flex-wrap: wrap;
   }
 
   .detail-main,

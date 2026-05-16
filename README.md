@@ -95,7 +95,7 @@ Skills can be installed in two modes.
 ## 🚀 Roadmap
 
 - Workspace-aware recommendations
-
+- Usage video
 
 
 ## 📬 Stay in Touch

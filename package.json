@@ -2,7 +2,7 @@
   "name": "ai-agent-skills",
   "displayName": "AI Agent Skills",
   "description": "Discover and Install AI Agent Skills to enhance your AI agents' capabilities. Browse the Skills Marketplace, inspect skill details, and manage your installed skills directly from the sidebar.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "NecatiARSLAN",
   "repository": {
     "type": "git",
