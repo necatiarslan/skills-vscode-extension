@@ -341,6 +341,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       }
 
       await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(folderPath));
+      logToOutput(`[Webview] Opened installed folder for ${skillId || 'unknown'}: ${folderPath}`);
       this.postMessage({
         type: 'openFolderResult',
         skillId,
@@ -446,11 +447,32 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
     const seen = new Set<string>();
 
     for (const root of roots) {
-      if (!root || !fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
+      if (!root || !fs.existsSync(root)) {
         continue;
       }
 
-      const entries = fs.readdirSync(root, { withFileTypes: true });
+      let rootStat: fs.Stats;
+      try {
+        rootStat = fs.statSync(root);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        logToOutput(`[ERROR] [Webview] Failed reading skill root ${root}: ${errorMsg}`);
+        continue;
+      }
+
+      if (!rootStat.isDirectory()) {
+        continue;
+      }
+
+      let entries: fs.Dirent[];
+      try {
+        entries = fs.readdirSync(root, { withFileTypes: true });
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        logToOutput(`[ERROR] [Webview] Failed listing skill root ${root}: ${errorMsg}`);
+        continue;
+      }
+
       for (const entry of entries) {
         if (!entry.isDirectory()) {
           continue;

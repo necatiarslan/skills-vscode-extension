@@ -109,46 +109,61 @@ class SkillDetailUnManagedPanel {
         }
     }
     async handleLoadLocalPath(localPath) {
+        const skillId = this.skill.skillId || this.skill.name;
+        (0, UI_1.logToOutput)(`[UnmanagedSkillDetail] Loading local path: ${localPath || '/'} for ${skillId}`);
         try {
             const rootPath = this.getLocalRootPath();
             const directory = await this.listLocalDirectory(rootPath, localPath || '');
+            (0, UI_1.logToOutput)(`[UnmanagedSkillDetail] Loaded local path: ${localPath || '/'} (${directory.entries.length} entries)`);
             this.postMessage({ type: 'localDirectory', directory, error: null });
         }
         catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[ERROR] [UnmanagedSkillDetail] Failed loading local path ${localPath || '/'}: ${errorMsg}`);
             this.postMessage({ type: 'localDirectory', directory: null, error: errorMsg });
         }
     }
     async handleOpenLocalFile(localPath) {
+        const skillId = this.skill.skillId || this.skill.name;
+        (0, UI_1.logToOutput)(`[UnmanagedSkillDetail] Opening local file: ${localPath || '(unknown)'} for ${skillId}`);
         try {
             const rootPath = this.getLocalRootPath();
             const preview = await this.getLocalFilePreview(rootPath, localPath || '');
+            (0, UI_1.logToOutput)(`[UnmanagedSkillDetail] Opened local file: ${preview.path}`);
             this.postMessage({ type: 'localFilePreview', preview, error: null });
         }
         catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[ERROR] [UnmanagedSkillDetail] Failed opening local file ${localPath || '(unknown)'}: ${errorMsg}`);
             this.postMessage({ type: 'localFilePreview', preview: null, error: errorMsg });
         }
     }
     async handleOpenInstalledFolder() {
+        const skillId = this.skill.skillId || this.skill.name;
+        (0, UI_1.logToOutput)(`[UnmanagedSkillDetail] Opening installed folder for ${skillId}`);
         try {
             const folderPath = this.getLocalRootPath();
             await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(folderPath));
+            (0, UI_1.logToOutput)(`[UnmanagedSkillDetail] Opened installed folder for ${skillId}: ${folderPath}`);
             this.postMessage({ type: 'openFolderResult', success: true, error: null });
         }
         catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[ERROR] [UnmanagedSkillDetail] Failed opening installed folder for ${skillId}: ${errorMsg}`);
             this.postMessage({ type: 'openFolderResult', success: false, error: errorMsg });
         }
     }
     async handleUninstall() {
+        const skillId = this.skill.skillId || this.skill.name;
+        (0, UI_1.logToOutput)(`[UnmanagedSkillDetail] Uninstalling ${skillId} from ${this.currentToolName}`);
         try {
             const rootPath = this.getLocalRootPath();
-            await services_1.toolInstallService.uninstallSkill(this.currentToolName, this.skill.skillId || this.skill.name, rootPath);
+            await services_1.toolInstallService.uninstallSkill(this.currentToolName, skillId, rootPath);
             SkillsPanel_1.SkillsPanel.Current?.refreshInstalledSkills();
+            (0, UI_1.logToOutput)(`[UnmanagedSkillDetail] Uninstall completed for ${skillId}`);
             this.postMessage({
                 type: 'uninstallResult',
-                skillId: this.skill.skillId || this.skill.name,
+                skillId,
                 toolName: this.currentToolName,
                 toolDisplayName: this.currentToolDisplayName,
                 success: true,
@@ -157,9 +172,10 @@ class SkillDetailUnManagedPanel {
         }
         catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[ERROR] [UnmanagedSkillDetail] Uninstall failed for ${skillId}: ${errorMsg}`);
             this.postMessage({
                 type: 'uninstallResult',
-                skillId: this.skill.skillId || this.skill.name,
+                skillId,
                 toolName: this.currentToolName,
                 toolDisplayName: this.currentToolDisplayName,
                 success: false,

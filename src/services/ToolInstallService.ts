@@ -312,13 +312,16 @@ export class ToolInstallService {
     skillName: string
   ): Promise<string> {
     if (skillPath && skillPath.trim().length > 0) {
+      logToOutput(`[Install] Using explicit skill path: ${skillPath}`);
       return skillPath.trim().replace(/^\/+|\/+$/g, '');
     }
 
+    logToOutput(`[Install] Resolving skill path from repository tree for ${owner}/${repo} (${branch})`);
     return this.findSkillDirectory(owner, repo, branch, skillName);
   }
 
   private async findSkillDirectory(owner: string, repo: string, branch: string, skillName: string): Promise<string> {
+    logToOutput(`[Install] Searching for SKILL.md in ${owner}/${repo} (${branch})`);
     const endpoint = `https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
     const payload = await this.getJson(endpoint);
 
@@ -357,15 +360,18 @@ export class ToolInstallService {
     });
 
     if (exactNameMatch !== undefined) {
+      logToOutput(`[Install] Resolved skill directory by exact name: ${exactNameMatch || '/'}`);
       return exactNameMatch;
     }
 
     if (skillDirectories.length === 1) {
+      logToOutput(`[Install] Resolved single skill directory: ${skillDirectories[0] || '/'}`);
       return skillDirectories[0];
     }
 
     const skillsFolderMatch = skillDirectories.find((candidate) => candidate.includes('/skills/') || candidate.startsWith('skills/'));
     if (skillsFolderMatch !== undefined) {
+      logToOutput(`[Install] Resolved skill directory by skills-folder heuristic: ${skillsFolderMatch}`);
       return skillsFolderMatch;
     }
 
@@ -393,6 +399,7 @@ export class ToolInstallService {
     remotePath: string,
     localPath: string
   ): Promise<void> {
+    logToOutput(`[Install] Downloading directory ${remotePath || '/'} from ${owner}/${repo}@${branch}`);
     const entries = await this.fetchDirectoryEntries(owner, repo, branch, remotePath);
 
     if (entries.length === 0) {
@@ -421,7 +428,14 @@ export class ToolInstallService {
       .map((segment) => encodeURIComponent(segment))
       .join('/');
     const endpoint = `https://api.github.com/repos/${owner}/${repo}/contents/${endpointPath}?ref=${encodeURIComponent(branch)}`;
-    const payload = await this.getJson(endpoint);
+    let payload: unknown;
+    try {
+      payload = await this.getJson(endpoint);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [Install] Failed fetching directory entries for ${owner}/${repo}:${remotePath || '/'} (${branch}): ${errorMsg}`);
+      throw error;
+    }
 
     if (!Array.isArray(payload)) {
       throw new Error(`Expected GitHub directory listing for ${remotePath}`);
@@ -450,6 +464,7 @@ export class ToolInstallService {
       })
       .filter((entry) => entry !== null);
 
+    logToOutput(`[Install] Listed ${entries.length} entries for ${remotePath || '/'} in ${owner}/${repo}@${branch}`);
     return entries;
   }
 

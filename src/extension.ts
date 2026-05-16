@@ -13,9 +13,11 @@ export function activate(context: vscode.ExtensionContext): void {
 
     try {
         const session = new Session(context); // Initialize session management
+        ui.logToOutput('[Activation] Session initialized');
         
         // Initialize marketplace services
         initializeStorageService(context.globalState);
+        ui.logToOutput('[Activation] Storage initialized');
         
         // Register the AI Agent Skills Marketplace as a webview view
         const skillsViewProvider = new SkillsPanel(context.extensionUri);
@@ -26,24 +28,28 @@ export function activate(context: vscode.ExtensionContext): void {
                 { webviewOptions: { retainContextWhenHidden: true } }
             )
         );
+        ui.logToOutput('[Activation] Skills webview provider registered');
 
         context.subscriptions.push(
             vscode.commands.registerCommand('Skills.Refresh', () => {
                 SkillsPanel.Current?.refreshInstalledSkills();
             })
         );
+        ui.logToOutput('[Activation] Command registered: Skills.Refresh');
 
         context.subscriptions.push(
             vscode.commands.registerCommand('Skills.Donate', () => {
                 vscode.env.openExternal(vscode.Uri.parse('https://github.com/sponsors/necatiarslan'));
             })
         );
+        ui.logToOutput('[Activation] Command registered: Skills.Donate');
 
         context.subscriptions.push(
             vscode.commands.registerCommand('Skills.BugAndNewFeatureRequest', () => {
                 vscode.env.openExternal(vscode.Uri.parse('https://github.com/necatiarslan/skills-vscode-extension/issues'));
             })
         );
+        ui.logToOutput('[Activation] Command registered: Skills.BugAndNewFeatureRequest');
 
         ui.logToOutput('AI Agent Skills activated successfully.');
     } catch (error) {
@@ -55,5 +61,5 @@ export function activate(context: vscode.ExtensionContext): void {
 
 
 export function deactivate(): void {
-    // Nothing to clean up for webview views
+    ui.logToOutput('AI Agent Skills deactivated.');
 }

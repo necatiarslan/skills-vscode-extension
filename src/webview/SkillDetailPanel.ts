@@ -142,43 +142,55 @@ export class SkillDetailPanel {
   }
 
   private async handleLoadRepoPath(context: GitHubRepoContext, path: string) {
+    logToOutput(`[SkillDetail] Loading repository path: ${path || '/'} for ${context.owner}/${context.repo}`);
     try {
       const directory = await gitHubContentService.listDirectory(context, path);
+      logToOutput(`[SkillDetail] Loaded repository path: ${path || '/'} (${directory.entries.length} entries)`);
       this.postMessage({ type: 'repoDirectory', directory, error: null });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [SkillDetail] Failed loading repository path ${path || '/'}: ${errorMsg}`);
       this.postMessage({ type: 'repoDirectory', directory: null, error: errorMsg });
     }
   }
 
   private async handleOpenRepoFile(context: GitHubRepoContext, path: string) {
+    logToOutput(`[SkillDetail] Opening repository file: ${path || '(unknown)'}`);
     try {
       const preview = await gitHubContentService.getFilePreview(context, path);
+      logToOutput(`[SkillDetail] Opened repository file: ${preview.path}`);
       this.postMessage({ type: 'filePreview', preview, error: null });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [SkillDetail] Failed opening repository file ${path || '(unknown)'}: ${errorMsg}`);
       this.postMessage({ type: 'filePreview', preview: null, error: errorMsg });
     }
   }
 
   private async handleLoadLocalPath(skillId: string, localPath: string) {
+    logToOutput(`[SkillDetail] Loading local path: ${localPath || '/'} for ${skillId}`);
     try {
       const rootPath = this.getInstalledSkillRoot(skillId);
       const directory = await this.listLocalDirectory(rootPath, localPath || '');
+      logToOutput(`[SkillDetail] Loaded local path: ${localPath || '/'} (${directory.entries.length} entries)`);
       this.postMessage({ type: 'localDirectory', directory, error: null });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [SkillDetail] Failed loading local path ${localPath || '/'} for ${skillId}: ${errorMsg}`);
       this.postMessage({ type: 'localDirectory', directory: null, error: errorMsg });
     }
   }
 
   private async handleOpenLocalFile(skillId: string, localPath: string) {
+    logToOutput(`[SkillDetail] Opening local file: ${localPath || '(unknown)'} for ${skillId}`);
     try {
       const rootPath = this.getInstalledSkillRoot(skillId);
       const preview = await this.getLocalFilePreview(rootPath, localPath || '');
+      logToOutput(`[SkillDetail] Opened local file: ${preview.path}`);
       this.postMessage({ type: 'localFilePreview', preview, error: null });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [SkillDetail] Failed opening local file ${localPath || '(unknown)'} for ${skillId}: ${errorMsg}`);
       this.postMessage({ type: 'localFilePreview', preview: null, error: errorMsg });
     }
   }
@@ -189,14 +201,18 @@ export class SkillDetailPanel {
     }
 
     try {
+      logToOutput(`[SkillDetail] Opening external URL: ${url}`);
       await vscode.env.openExternal(vscode.Uri.parse(url));
+      logToOutput(`[SkillDetail] Opened external URL: ${url}`);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [SkillDetail] Failed opening external URL ${url}: ${errorMsg}`);
       this.postMessage({ type: 'externalOpenResult', success: false, error: errorMsg });
     }
   }
 
   private async handleInstall(skillId: string, skillName: string, githubUrl: string) {
+    logToOutput(`[SkillDetail] Installing skill ${skillId} (${skillName}) to ${this.currentToolName}`);
     try {
       const installResult = await toolInstallService.installSkill(this.currentToolName, skillId, skillName, githubUrl);
       await getStorageService().addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installResult);
@@ -205,6 +221,7 @@ export class SkillDetailPanel {
       const localRootDirectory = await this.listLocalDirectory(installResult.installPath, '');
 
       SkillsPanel.Current?.refreshInstalledSkills();
+      logToOutput(`[SkillDetail] Install completed for ${skillId} at ${installResult.installPath}`);
 
       this.postMessage({
         type: 'installResult',
@@ -219,6 +236,7 @@ export class SkillDetailPanel {
       });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [SkillDetail] Install failed for ${skillId}: ${errorMsg}`);
       this.postMessage({
         type: 'installResult',
         skillId,
@@ -231,6 +249,7 @@ export class SkillDetailPanel {
   }
 
   private async handleInstallWorkspace(skillId: string, skillName: string, githubUrl: string) {
+    logToOutput(`[SkillDetail] Installing skill ${skillId} (${skillName}) to workspace`);
     try {
       const workspaceInstallDir = this.getWorkspaceInstallDirectory();
       const installResult = await toolInstallService.installSkillToDirectory(
@@ -247,6 +266,7 @@ export class SkillDetailPanel {
       const localRootDirectory = await this.listLocalDirectory(installResult.installPath, '');
 
       SkillsPanel.Current?.refreshInstalledSkills();
+      logToOutput(`[SkillDetail] Workspace install completed for ${skillId} at ${installResult.installPath}`);
 
       this.postMessage({
         type: 'installResult',
@@ -261,6 +281,7 @@ export class SkillDetailPanel {
       });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [SkillDetail] Workspace install failed for ${skillId}: ${errorMsg}`);
       this.postMessage({
         type: 'installResult',
         skillId,
@@ -273,6 +294,7 @@ export class SkillDetailPanel {
   }
 
   private async handleUninstall(skillId: string) {
+    logToOutput(`[SkillDetail] Uninstalling skill ${skillId} from ${this.currentToolName}`);
     try {
       const installed = getStorageService().getInstalledSkill(this.currentToolName, skillId);
       if (!installed) {
@@ -282,6 +304,7 @@ export class SkillDetailPanel {
       await toolInstallService.uninstallSkill(this.currentToolName, skillId, installed.localPath);
       await getStorageService().removeInstalled(this.currentToolName, skillId);
       SkillsPanel.Current?.refreshInstalledSkills();
+      logToOutput(`[SkillDetail] Uninstall completed for ${skillId}`);
       this.postMessage({
         type: 'uninstallResult',
         skillId,
@@ -292,6 +315,7 @@ export class SkillDetailPanel {
       });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [SkillDetail] Uninstall failed for ${skillId}: ${errorMsg}`);
       this.postMessage({
         type: 'uninstallResult',
         skillId,
@@ -304,6 +328,7 @@ export class SkillDetailPanel {
   }
 
   private async handleUpdate(skillId: string, skillName: string, githubUrl: string) {
+    logToOutput(`[SkillDetail] Updating skill ${skillId} (${skillName}) on ${this.currentToolName}`);
     try {
       // Get current installed skill
       const installed = getStorageService().getInstalledSkill(this.currentToolName, skillId);
@@ -323,6 +348,7 @@ export class SkillDetailPanel {
       const localRootDirectory = await this.listLocalDirectory(installResult.installPath, '');
 
       SkillsPanel.Current?.refreshInstalledSkills();
+      logToOutput(`[SkillDetail] Update completed for ${skillId} at ${installResult.installPath}`);
 
       this.postMessage({
         type: 'updateResult',
@@ -337,6 +363,7 @@ export class SkillDetailPanel {
       });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [SkillDetail] Update failed for ${skillId}: ${errorMsg}`);
       this.postMessage({
         type: 'updateResult',
         skillId,
@@ -349,6 +376,7 @@ export class SkillDetailPanel {
   }
 
   private async handleOpenInstalledFolder(skillId: string, localPath: string) {
+    logToOutput(`[SkillDetail] Opening installed folder for ${skillId}`);
     try {
       const installed = getStorageService().getInstalledSkill(this.currentToolName, skillId);
       const folderPath = installed?.localPath || localPath;
@@ -358,9 +386,11 @@ export class SkillDetailPanel {
       }
 
       await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(folderPath));
+      logToOutput(`[SkillDetail] Opened installed folder for ${skillId}: ${folderPath}`);
       this.postMessage({ type: 'openFolderResult', skillId, success: true, error: null });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [SkillDetail] Failed opening installed folder for ${skillId}: ${errorMsg}`);
       this.postMessage({ type: 'openFolderResult', skillId, success: false, error: errorMsg });
     }
   }

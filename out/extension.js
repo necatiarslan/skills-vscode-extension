@@ -48,20 +48,26 @@ function activate(context) {
     ui.logToOutput('Activating AI Agent Skills...');
     try {
         const session = new Session_1.Session(context); // Initialize session management
+        ui.logToOutput('[Activation] Session initialized');
         // Initialize marketplace services
         (0, SkillsStorageService_1.initializeStorageService)(context.globalState);
+        ui.logToOutput('[Activation] Storage initialized');
         // Register the AI Agent Skills Marketplace as a webview view
         const skillsViewProvider = new SkillsPanel_1.SkillsPanel(context.extensionUri);
         context.subscriptions.push(vscode.window.registerWebviewViewProvider(SkillsPanel_1.SkillsPanel.viewType, skillsViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
+        ui.logToOutput('[Activation] Skills webview provider registered');
         context.subscriptions.push(vscode.commands.registerCommand('Skills.Refresh', () => {
             SkillsPanel_1.SkillsPanel.Current?.refreshInstalledSkills();
         }));
+        ui.logToOutput('[Activation] Command registered: Skills.Refresh');
         context.subscriptions.push(vscode.commands.registerCommand('Skills.Donate', () => {
             vscode.env.openExternal(vscode.Uri.parse('https://github.com/sponsors/necatiarslan'));
         }));
+        ui.logToOutput('[Activation] Command registered: Skills.Donate');
         context.subscriptions.push(vscode.commands.registerCommand('Skills.BugAndNewFeatureRequest', () => {
             vscode.env.openExternal(vscode.Uri.parse('https://github.com/necatiarslan/skills-vscode-extension/issues'));
         }));
+        ui.logToOutput('[Activation] Command registered: Skills.BugAndNewFeatureRequest');
         ui.logToOutput('AI Agent Skills activated successfully.');
     }
     catch (error) {
@@ -70,6 +76,6 @@ function activate(context) {
     }
 }
 function deactivate() {
-    // Nothing to clean up for webview views
+    ui.logToOutput('AI Agent Skills deactivated.');
 }
 //# sourceMappingURL=extension.js.map

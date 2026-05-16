@@ -284,11 +284,14 @@ class ToolInstallService {
     }
     async resolveSkillPath(owner, repo, branch, skillPath, skillName) {
         if (skillPath && skillPath.trim().length > 0) {
+            (0, UI_1.logToOutput)(`[Install] Using explicit skill path: ${skillPath}`);
             return skillPath.trim().replace(/^\/+|\/+$/g, '');
         }
+        (0, UI_1.logToOutput)(`[Install] Resolving skill path from repository tree for ${owner}/${repo} (${branch})`);
         return this.findSkillDirectory(owner, repo, branch, skillName);
     }
     async findSkillDirectory(owner, repo, branch, skillName) {
+        (0, UI_1.logToOutput)(`[Install] Searching for SKILL.md in ${owner}/${repo} (${branch})`);
         const endpoint = `https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
         const payload = await this.getJson(endpoint);
         if (!payload || typeof payload !== 'object') {
@@ -319,13 +322,16 @@ class ToolInstallService {
             return this.sanitizeSegment(baseName) === normalizedName;
         });
         if (exactNameMatch !== undefined) {
+            (0, UI_1.logToOutput)(`[Install] Resolved skill directory by exact name: ${exactNameMatch || '/'}`);
             return exactNameMatch;
         }
         if (skillDirectories.length === 1) {
+            (0, UI_1.logToOutput)(`[Install] Resolved single skill directory: ${skillDirectories[0] || '/'}`);
             return skillDirectories[0];
         }
         const skillsFolderMatch = skillDirectories.find((candidate) => candidate.includes('/skills/') || candidate.startsWith('skills/'));
         if (skillsFolderMatch !== undefined) {
+            (0, UI_1.logToOutput)(`[Install] Resolved skill directory by skills-folder heuristic: ${skillsFolderMatch}`);
             return skillsFolderMatch;
         }
         throw new Error('Could not determine which skill directory to install from this repository URL.');
@@ -342,6 +348,7 @@ class ToolInstallService {
         return 'copy';
     }
     async downloadDirectory(owner, repo, branch, remotePath, localPath) {
+        (0, UI_1.logToOutput)(`[Install] Downloading directory ${remotePath || '/'} from ${owner}/${repo}@${branch}`);
         const entries = await this.fetchDirectoryEntries(owner, repo, branch, remotePath);
         if (entries.length === 0) {
             throw new Error(`No files found at GitHub path ${remotePath}`);
@@ -365,7 +372,15 @@ class ToolInstallService {
             .map((segment) => encodeURIComponent(segment))
             .join('/');
         const endpoint = `https://api.github.com/repos/${owner}/${repo}/contents/${endpointPath}?ref=${encodeURIComponent(branch)}`;
-        const payload = await this.getJson(endpoint);
+        let payload;
+        try {
+            payload = await this.getJson(endpoint);
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[ERROR] [Install] Failed fetching directory entries for ${owner}/${repo}:${remotePath || '/'} (${branch}): ${errorMsg}`);
+            throw error;
+        }
         if (!Array.isArray(payload)) {
             throw new Error(`Expected GitHub directory listing for ${remotePath}`);
         }
@@ -388,6 +403,7 @@ class ToolInstallService {
             };
         })
             .filter((entry) => entry !== null);
+        (0, UI_1.logToOutput)(`[Install] Listed ${entries.length} entries for ${remotePath || '/'} in ${owner}/${repo}@${branch}`);
         return entries;
     }
     downloadFile(downloadUrl, destinationPath) {

@@ -314,6 +314,7 @@ class SkillsPanel {
                 throw new Error('Installed skill folder was not found.');
             }
             await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(folderPath));
+            (0, UI_1.logToOutput)(`[Webview] Opened installed folder for ${skillId || 'unknown'}: ${folderPath}`);
             this.postMessage({
                 type: 'openFolderResult',
                 skillId,
@@ -403,10 +404,30 @@ class SkillsPanel {
         const items = [];
         const seen = new Set();
         for (const root of roots) {
-            if (!root || !fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
+            if (!root || !fs.existsSync(root)) {
                 continue;
             }
-            const entries = fs.readdirSync(root, { withFileTypes: true });
+            let rootStat;
+            try {
+                rootStat = fs.statSync(root);
+            }
+            catch (error) {
+                const errorMsg = error instanceof Error ? error.message : String(error);
+                (0, UI_1.logToOutput)(`[ERROR] [Webview] Failed reading skill root ${root}: ${errorMsg}`);
+                continue;
+            }
+            if (!rootStat.isDirectory()) {
+                continue;
+            }
+            let entries;
+            try {
+                entries = fs.readdirSync(root, { withFileTypes: true });
+            }
+            catch (error) {
+                const errorMsg = error instanceof Error ? error.message : String(error);
+                (0, UI_1.logToOutput)(`[ERROR] [Webview] Failed listing skill root ${root}: ${errorMsg}`);
+                continue;
+            }
             for (const entry of entries) {
                 if (!entry.isDirectory()) {
                     continue;
