@@ -237,6 +237,10 @@ function render() {
   const tagList = Array.isArray(skill.tags) ? skill.tags : [];
   const stars = repoMetadata.stargazersCount || skill.stars || 0;
   const skillEmoji = detail.skillEmoji || '✨';
+  const repositoryRoot = skill.githubUrl ? skill.githubUrl.split('/').slice(0, 5).join('/') : '';
+  const sourceLinkMarkup = skill.githubUrl
+    ? `<span class="source-link">Source : <a href="#" data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">${escapeHtml(repositoryRoot)}</a></span>`
+    : '';
   const tabOrder = getTabOrder();
   const selectedTabIndex = getSelectedTabIndex(tabOrder);
 
@@ -253,17 +257,18 @@ function render() {
         </div>
         <div class="extension-actions">
           ${isInstalled
-            ? `<vscode-button class="btn-primary" data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>`
+            ? `
+              <vscode-button class="btn-primary" data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>
+              <vscode-button class="btn-secondary" data-action="update" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Update</vscode-button>
+              ${sourceLinkMarkup}
+            `
             : `
               <vscode-button class="btn-primary" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Global</vscode-button>
               <div class="workspace-install-row">
                 <vscode-button class="btn-secondary" data-action="install-workspace" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Workspace</vscode-button>
-                ${skill.githubUrl
-                  ? `<span class="source-link">Source : <a href="#" data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">${escapeHtml(skill.githubUrl.split('/').slice(0, 5).join('/'))}</a></span>`
-                  : ''}
               </div>
+              ${sourceLinkMarkup}
             `}
-          ${isInstalled ? `<vscode-button class="btn-secondary" data-action="update" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Update</vscode-button>` : ''}
         </div>
       </header>
 
