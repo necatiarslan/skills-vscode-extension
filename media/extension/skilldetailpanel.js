@@ -259,7 +259,7 @@ function render() {
               <div class="workspace-install-row">
                 <vscode-button class="btn-secondary" data-action="install-workspace" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Workspace</vscode-button>
                 ${skill.githubUrl
-                  ? `<span class="source-link">Source : <a href="#" data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">${escapeHtml(skill.githubUrl)}</a></span>`
+                  ? `<span class="source-link">Source : <a href="#" data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">${escapeHtml(skill.githubUrl.split('/').slice(0, 5).join('/'))}</a></span>`
                   : ''}
               </div>
             `}
@@ -350,8 +350,9 @@ function renderSkillMarkdown() {
 function renderDetailOverview() {
   const skill = detail.skill;
   const repoMetadata = detail.repoMetadata;
-  const repositoryLink = skill.githubUrl
-    ? `<a href="#" data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">${escapeHtml(skill.githubUrl)}</a>`
+  const repositoryRoot = skill.githubUrl ? skill.githubUrl.split('/').slice(0, 5).join('/') : null;
+  const repositoryLink = repositoryRoot
+    ? `<a href="#" data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">${escapeHtml(repositoryRoot)}</a>`
     : 'Unavailable';
   const marketplaceLink = skill.skillUrl
     ? `<a href="#" data-action="open-external" data-value="${escapeAttr(skill.skillUrl)}">${escapeHtml(skill.skillUrl)}</a>`

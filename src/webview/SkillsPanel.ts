@@ -247,7 +247,6 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       // Update storage
       const storage = getStorageService();
       await storage.addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installResult);
-      await this.showInstallSuccess(skillName, installResult.installPath);
 
       this.postMessage({
         type: 'installResult',
@@ -258,6 +257,9 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         message: `Successfully installed ${skillName} to ${installResult.installPath}`,
         error: null
       });
+
+      await this.handleGetInstalledSkills();
+      this.showInstallSuccess(skillName, installResult.installPath).catch(() => undefined);
 
       logToOutput(`[Webview] Installation completed: ${skillId}`);
     } catch (error) {
@@ -308,6 +310,8 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         message: 'Successfully uninstalled skill',
         error: null
       });
+
+      await this.handleGetInstalledSkills();
 
       logToOutput(`[Webview] Uninstallation completed: ${resolvedSkillId}`);
     } catch (error) {

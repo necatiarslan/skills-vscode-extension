@@ -337,6 +337,7 @@ function renderSkillItem(skill, options) {
   const isInstalledSection = options.section === 'installedGlobal' || options.section === 'installedWorkspace';
   const isManagedInstalled = isInstalledSection && skill.kind === 'managed';
   const isOtherInstalled = isInstalledSection && skill.kind === 'other';
+  const installedEntry = !isInstalledSection ? getInstalledEntry(skill.id) : null;
 
   let actionButtons = `<vscode-button appearance="primary" class="skill-action-btn" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl || '')}">Install</vscode-button>`;
   if (isManagedInstalled) {
@@ -346,6 +347,10 @@ function renderSkillItem(skill, options) {
   } else if (isOtherInstalled) {
     actionButtons = `
       <vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(skill.skillId || '')}" data-local-path="${escapeAttr(skill.localPath || '')}">Uninstall</vscode-button>
+    `;
+  } else if (installedEntry) {
+    actionButtons = `
+      <vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(installedEntry.skillId || skill.id)}" data-local-path="${escapeAttr(installedEntry.localPath || '')}">Uninstall</vscode-button>
     `;
   }
 
@@ -466,6 +471,14 @@ function updateKnownSkills(skills) {
 
 function isSkillInstalled(skillId) {
   return installedSkills.some((entry) => entry.skillId === skillId);
+}
+
+function getInstalledEntry(skillId) {
+  if (!skillId) {
+    return null;
+  }
+
+  return installedSkills.find((entry) => entry.skillId === skillId) || null;
 }
 
 function setLoading(isLoading) {

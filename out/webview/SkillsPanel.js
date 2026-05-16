@@ -234,7 +234,6 @@ class SkillsPanel {
             // Update storage
             const storage = (0, SkillsStorageService_1.getStorageService)();
             await storage.addInstalled(this.currentToolName, skillId, skillName, 'unknown', '1.0.0', installResult);
-            await this.showInstallSuccess(skillName, installResult.installPath);
             this.postMessage({
                 type: 'installResult',
                 skillId,
@@ -244,6 +243,8 @@ class SkillsPanel {
                 message: `Successfully installed ${skillName} to ${installResult.installPath}`,
                 error: null
             });
+            await this.handleGetInstalledSkills();
+            this.showInstallSuccess(skillName, installResult.installPath).catch(() => undefined);
             (0, UI_1.logToOutput)(`[Webview] Installation completed: ${skillId}`);
         }
         catch (error) {
@@ -287,6 +288,7 @@ class SkillsPanel {
                 message: 'Successfully uninstalled skill',
                 error: null
             });
+            await this.handleGetInstalledSkills();
             (0, UI_1.logToOutput)(`[Webview] Uninstallation completed: ${resolvedSkillId}`);
         }
         catch (error) {
