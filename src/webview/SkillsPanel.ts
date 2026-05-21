@@ -49,7 +49,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
     webviewView.webview.options = {
       enableScripts: true,
       enableForms: true,
-      localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'media', 'extension')]
+      localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'media', 'dist')]
     };
 
     webviewView.webview.html = this.getHtmlContent(webviewView.webview);
@@ -600,12 +600,15 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
    * Get the HTML content for the webview
    */
   private getHtmlContent(webview: vscode.Webview): string {
-    const skillspanelCss = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillsPanel.css')
+    const stylesheetUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'dist', 'assets', 'index.css')
     );
-    const skillspanelJs = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillsPanel.js')
+    const scriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'dist', 'assets', 'index.js')
     );
+    const bootstrapState = JSON.stringify({
+      viewType: 'marketplace'
+    }).replace(/</g, '\\u003c');
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -613,53 +616,12 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Agent Skills Marketplace</title>
-    <link rel="stylesheet" href="${skillspanelCss}">
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@vscode/codicons@0.0.36/dist/codicon.css"
-      id="vscode-codicon-stylesheet"
-    >
-    <script type="module">
-      import 'https://esm.sh/@vscode-elements/elements';
-    </script>
+    <link rel="stylesheet" href="${stylesheetUri}">
 </head>
 <body>
-  <div id="app">
-    <div class="marketplace-container">
-      <div class="search-section">
-        <vscode-textfield id="searchInput" class="search-input" placeholder="Search AI Agent Skills..." aria-label="Search AI Agent Skills" autocomplete="off">
-          <vscode-icon slot="content-before" name="search" title="search"></vscode-icon>
-        </vscode-textfield>
-      </div>
-
-      <div class="content-section" id="contentSection">
-        <div id="errorMessage" class="error-message hidden"></div>
-
-        <vscode-collapsible id="searchCollapsible" heading="Search" class="collapsible" open>
-          <vscode-badge id="searchCount" variant="counter" slot="decorations">0</vscode-badge>
-          <div id="searchTable" class="section-table"></div>
-        </vscode-collapsible>
-
-        <vscode-collapsible id="installedGlobalCollapsible" heading="Global" class="collapsible">
-          <vscode-badge id="installedGlobalCount" variant="counter" slot="decorations">0</vscode-badge>
-          <div id="installedGlobalTable" class="section-table"></div>
-        </vscode-collapsible>
-
-        <vscode-collapsible id="installedWorkspaceCollapsible" heading="Workspace" class="collapsible">
-          <vscode-badge id="installedWorkspaceCount" variant="counter" slot="decorations">0</vscode-badge>
-          <div id="installedWorkspaceTable" class="section-table"></div>
-        </vscode-collapsible>
-
-        <vscode-collapsible id="recommendedCollapsible" heading="Recommended" class="collapsible">
-          <vscode-badge id="recommendedCount" variant="counter" slot="decorations">0</vscode-badge>
-          <div id="recommendedTable" class="section-table"></div>
-        </vscode-collapsible>
-
-        <div id="emptyState" class="empty-state">Search for skills to populate results.</div>
-      </div>
-    </div>
-  </div>
-    <script src="${skillspanelJs}"></script>
+    <div id="app"></div>
+    <script>window.__SKILLS_WEBVIEW_BOOTSTRAP__ = ${bootstrapState};</script>
+    <script type="module" src="${scriptUri}"></script>
 </body>
 </html>`;
   }

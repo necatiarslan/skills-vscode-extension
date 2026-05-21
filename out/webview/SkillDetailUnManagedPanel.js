@@ -72,7 +72,7 @@ class SkillDetailUnManagedPanel {
             enableScripts: true,
             enableForms: true,
             retainContextWhenHidden: true,
-            localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media', 'extension')]
+            localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media', 'dist')]
         });
         SkillDetailUnManagedPanel.currentPanel = new SkillDetailUnManagedPanel(panel, extensionUri, skill, currentToolName, currentToolDisplayName);
         await SkillDetailUnManagedPanel.currentPanel.render();
@@ -356,54 +356,32 @@ class SkillDetailUnManagedPanel {
         this.panel.webview.postMessage(message);
     }
     getHtmlContent(detailPayload) {
-        const styleUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailUnManagedPanel.css'));
-        const scriptUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailUnManagedPanel.js'));
-        const nonce = this.getNonce();
-        const initialState = JSON.stringify({
-            detail: detailPayload,
-            installedLocalPath: detailPayload.skill.localPath,
-            folderExists: detailPayload.folderExists,
-            currentToolDisplayName: this.currentToolDisplayName,
-            installDate: detailPayload.installDate || null
+        const styleUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'dist', 'assets', 'index.css'));
+        const scriptUri = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'dist', 'assets', 'index.js'));
+        const bootstrapState = JSON.stringify({
+            viewType: 'unmanaged-detail',
+            initialState: {
+                detail: detailPayload,
+                installedLocalPath: detailPayload.skill.localPath,
+                folderExists: detailPayload.folderExists,
+                currentToolDisplayName: this.currentToolDisplayName,
+                installDate: detailPayload.installDate || null
+            }
         }).replace(/</g, '\u003c');
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Unmanaged Skill: ${this.escapeHtml(detailPayload.skill.name)}</title>
+  <title>Unmanaged Skill: ${detailPayload.skill.name}</title>
   <link rel="stylesheet" href="${styleUri}">
-  <script type="module">
-    import 'https://esm.sh/@vscode-elements/elements';
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.50.0/min/vs/loader.min.js"></script>
 </head>
 <body>
-  <div id="app" class="detail-root">
-    <div id="loadingIndicator" class="loading hidden"><span class="spinner"></span> Loading...</div>
-    <div id="errorMessage" class="error-message hidden"></div>
-    <div id="detailContainer"></div>
-  </div>
-  <script nonce="${nonce}">window.__SKILL_DETAIL_UNMANAGED_INITIAL_STATE__ = ${initialState};</script>
-  <script nonce="${nonce}" src="${scriptUri}"></script>
+  <div id="app"></div>
+  <script>window.__SKILLS_WEBVIEW_BOOTSTRAP__ = ${bootstrapState};</script>
+  <script type="module" src="${scriptUri}"></script>
 </body>
 </html>`;
-    }
-    getNonce() {
-        let text = '';
-        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (let index = 0; index < 32; index += 1) {
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
-        }
-        return text;
-    }
-    escapeHtml(text) {
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
     }
 }
 exports.SkillDetailUnManagedPanel = SkillDetailUnManagedPanel;

@@ -13,7 +13,7 @@
     "vscode": "^1.106.0"
   },
   "categories": [
-    "Other"
+    "AI"
   ],
   "keywords": [
     "skills",
@@ -86,8 +86,10 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "compile": "tsc -p ./ && npm run build:webview",
+    "watch": "concurrently \"tsc -watch -p ./\" \"npm run watch:webview\"",
+    "build:webview": "npm run --prefix webview-ui build",
+    "watch:webview": "npm run --prefix webview-ui dev",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint \"src/**/*.ts\""
   },
@@ -96,6 +98,7 @@
     "@types/vscode": "^1.106.0",
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
+    "concurrently": "^9.2.1",
     "eslint": "^10.3.0",
     "typescript": "^6.0.3"
   },

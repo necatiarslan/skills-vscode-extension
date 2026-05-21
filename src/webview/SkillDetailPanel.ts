@@ -72,7 +72,7 @@ export class SkillDetailPanel {
         enableScripts: true,
         enableForms: true,
         retainContextWhenHidden: true,
-        localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media', 'extension')]
+        localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media', 'dist')]
       }
     );
 
@@ -667,19 +667,21 @@ export class SkillDetailPanel {
 
   private getHtmlContent(detailPayload: SkillDetailPayload & { installDate?: string }, isInstalled: boolean): string {
     const styleUri = this.panel.webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailPanel.css')
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'dist', 'assets', 'index.css')
     );
     const scriptUri = this.panel.webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'extension', 'skillDetailPanel.js')
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'dist', 'assets', 'index.js')
     );
-    const nonce = this.getNonce();
     const installedSkill = getStorageService().getInstalledSkill(this.currentToolName, detailPayload.skill.id);
-    const initialState = JSON.stringify({
-      detail: detailPayload,
-      isInstalled,
-      installedLocalPath: installedSkill?.localPath || '',
-      currentToolDisplayName: this.currentToolDisplayName,
-      installDate: detailPayload.installDate || null
+    const bootstrapState = JSON.stringify({
+      viewType: 'detail',
+      initialState: {
+        detail: detailPayload,
+        isInstalled,
+        installedLocalPath: installedSkill?.localPath || '',
+        currentToolDisplayName: this.currentToolDisplayName,
+        installDate: detailPayload.installDate || null
+      }
     }).replace(/</g, '\u003c');
 
     return `<!DOCTYPE html>
@@ -687,41 +689,14 @@ export class SkillDetailPanel {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Skill: ${this.escapeHtml(detailPayload.skill.name)}</title>
+  <title>Skill: ${detailPayload.skill.name}</title>
   <link rel="stylesheet" href="${styleUri}">
-  <script type="module">
-    import 'https://esm.sh/@vscode-elements/elements';
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.50.0/min/vs/loader.min.js"></script>
 </head>
 <body>
-  <div id="app" class="detail-root">
-    <div id="loadingIndicator" class="loading hidden"><span class="spinner"></span> Loading...</div>
-    <div id="errorMessage" class="error-message hidden"></div>
-    <div id="detailContainer"></div>
-    <div id="monacoEditor" style="display: none; width: 100%; height: 600px;"></div>
-  </div>
-  <script nonce="${nonce}">window.__SKILL_DETAIL_INITIAL_STATE__ = ${initialState};</script>
-  <script nonce="${nonce}" src="${scriptUri}"></script>
+  <div id="app"></div>
+  <script>window.__SKILLS_WEBVIEW_BOOTSTRAP__ = ${bootstrapState};</script>
+  <script type="module" src="${scriptUri}"></script>
 </body>
 </html>`;
-  }
-
-  private getNonce(): string {
-    let text = '';
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let index = 0; index < 32; index += 1) {
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
-  }
-
-  private escapeHtml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
   }
 }
