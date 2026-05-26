@@ -91,9 +91,8 @@ class SkillsPanel {
             await vscode.window.showInformationMessage('No managed skills found to check for updates.');
             return;
         }
-        const workspaceRoots = this.getWorkspaceRoots();
         let checkedCount = 0;
-        let updatedCount = 0;
+        let outdatedCount = 0;
         let failedCount = 0;
         let skippedCount = 0;
         for (const managedSkill of managedSkills) {
@@ -121,14 +120,11 @@ class SkillsPanel {
                 const localNormalized = this.normalizeMarkdown(localSkillMarkdown);
                 const remoteNormalized = this.normalizeMarkdown(repoSkillMarkdown);
                 if (localNormalized === remoteNormalized) {
+                    await storage.clearOutdated(this.currentToolName, managedSkill.skillId);
                     continue;
                 }
-                const userChoice = await vscode.window.showInformationMessage(`${source.skillName} has an update available. Update now?`, 'Update', 'Skip');
-                if (userChoice !== 'Update') {
-                    continue;
-                }
-                await this.updateManagedSkill(managedSkill, source, workspaceRoots);
-                updatedCount += 1;
+                await storage.markOutdated(this.currentToolName, managedSkill.skillId);
+                outdatedCount += 1;
             }
             catch (error) {
                 failedCount += 1;
@@ -137,7 +133,13 @@ class SkillsPanel {
             }
         }
         this.refreshInstalledSkills();
-        const summary = `Checked ${checkedCount} managed skills, updated ${updatedCount}.`
+        if (outdatedCount > 0) {
+            this.postMessage({
+                type: 'applySearchQuery',
+                query: 'outdated'
+            });
+        }
+        const summary = `Checked ${checkedCount} managed skills. Outdated ${outdatedCount}.`
             + (skippedCount > 0 ? ` Skipped ${skippedCount}.` : '')
             + (failedCount > 0 ? ` Failed ${failedCount}.` : '');
         await vscode.window.showInformationMessage(summary);
@@ -162,6 +164,9 @@ class SkillsPanel {
                 break;
             case 'install':
                 await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
+                break;
+            case 'update':
+                await this.handleUpdate(message.skillId, message.skillName, message.githubUrl, message.localPath);
                 break;
             case 'uninstall':
                 await this.handleUninstall(message.skillId, message.localPath);
@@ -321,6 +326,68 @@ class SkillsPanel {
             });
         }
     }
+    async handleUpdate(skillId, skillName, githubUrl, localPath) {
+        try {
+            (0, UI_1.logToOutput)(`[Webview] Updating ${skillName || skillId} on ${this.currentToolName}`);
+            const workspaceRoots = this.getWorkspaceRoots();
+            const resolvedLocalPath = localPath
+                || (0, SkillsStorageService_1.getStorageService)().getInstalledSkill(this.currentToolName, skillId)?.localPath;
+            if (!resolvedLocalPath) {
+                throw new Error('Skill local path not found.');
+            }
+            const managedSkill = {
+                skillId,
+                name: skillName || skillId,
+                author: 'Unknown',
+                description: 'Managed skill',
+                localPath: resolvedLocalPath,
+                scope: this.getScopeForPath(resolvedLocalPath, workspaceRoots),
+                kind: 'managed',
+                outdated: false,
+                canOpenDetails: true,
+                canUninstall: true
+            };
+            const source = this.resolveManagedSkillSource({
+                ...managedSkill,
+                name: skillName || managedSkill.name
+            }) || {
+                skillId,
+                skillName: skillName || skillId,
+                githubUrl,
+                sourceBranch: undefined,
+                sourcePath: undefined
+            };
+            if (!source.githubUrl) {
+                throw new Error('GitHub source URL not found for this skill.');
+            }
+            await this.updateManagedSkill(managedSkill, source, workspaceRoots);
+            await (0, SkillsStorageService_1.getStorageService)().clearOutdated(this.currentToolName, managedSkill.skillId);
+            this.postMessage({
+                type: 'updateResult',
+                skillId: managedSkill.skillId,
+                toolName: this.currentToolName,
+                toolDisplayName: this.currentToolDisplayName,
+                success: true,
+                message: 'Successfully updated skill',
+                error: null
+            });
+            await this.handleGetInstalledSkills();
+            (0, UI_1.logToOutput)(`[Webview] Update completed: ${managedSkill.skillId}`);
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[Webview] Update error: ${errorMsg}`);
+            this.postMessage({
+                type: 'updateResult',
+                skillId,
+                toolName: this.currentToolName,
+                toolDisplayName: this.currentToolDisplayName,
+                success: false,
+                message: null,
+                error: errorMsg
+            });
+        }
+    }
     /**
      * Handle skill uninstallation
      */
@@ -426,6 +493,7 @@ class SkillsPanel {
     collectInstalledGroups() {
         const storage = (0, SkillsStorageService_1.getStorageService)();
         const installedByExtension = storage.getInstalledByTool(this.currentToolName);
+        const outdatedSkillIds = new Set(storage.getOutdatedSkillIdsByTool(this.currentToolName));
         const workspaceRoots = this.getWorkspaceRoots();
         const groups = {
             installedGlobal: [],
@@ -446,6 +514,7 @@ class SkillsPanel {
                 localPath: installed.localPath,
                 scope,
                 kind: 'managed',
+                outdated: outdatedSkillIds.has(installed.skillId),
                 canOpenDetails: true,
                 canUninstall: true
             };
@@ -456,13 +525,13 @@ class SkillsPanel {
                 groups.installedGlobal.push(item);
             }
         }
-        const globalOther = this.scanOtherSkills(this.getGlobalSkillRoots(), 'global', managedPaths);
-        const workspaceOther = this.scanOtherSkills(this.getWorkspaceSkillRoots(), 'workspace', managedPaths);
+        const globalOther = this.scanOtherSkills(this.getGlobalSkillRoots(), 'global', managedPaths, outdatedSkillIds);
+        const workspaceOther = this.scanOtherSkills(this.getWorkspaceSkillRoots(), 'workspace', managedPaths, outdatedSkillIds);
         groups.installedGlobal.push(...globalOther);
         groups.installedWorkspace.push(...workspaceOther);
         return groups;
     }
-    scanOtherSkills(roots, scope, managedPaths) {
+    scanOtherSkills(roots, scope, managedPaths, outdatedSkillIds) {
         const items = [];
         const seen = new Set();
         for (const root of roots) {
@@ -539,6 +608,7 @@ class SkillsPanel {
                     localPath: skillPath,
                     scope,
                     kind: discoveredKind,
+                    outdated: discoveredSkillId ? outdatedSkillIds.has(discoveredSkillId) : false,
                     canOpenDetails: true,
                     canUninstall: true
                 });

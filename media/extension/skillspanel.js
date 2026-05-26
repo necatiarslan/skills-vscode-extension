@@ -73,9 +73,18 @@ function initialize() {
 function handleSearchInput(query) {
   searchQuery = query;
   clearTimeout(searchDebounceTimer);
+  const normalizedQuery = query.trim().toLowerCase();
 
   if (!query.trim()) {
     searchResults = [];
+    setLoading(false);
+    hideMessage();
+    renderSections();
+    return;
+  }
+
+  if (isReservedSearchQuery(normalizedQuery)) {
+    searchResults = getReservedSearchResults(normalizedQuery);
     setLoading(false);
     hideMessage();
     renderSections();
@@ -102,6 +111,11 @@ function handleExtensionMessage(message) {
         ...installedGroups.installedGlobal,
         ...installedGroups.installedWorkspace
       ];
+      const normalizedActiveQuery = searchQuery.trim().toLowerCase();
+      if (isReservedSearchQuery(normalizedActiveQuery)) {
+        // Rebuild reserved-query results from the freshly received installed groups.
+        searchResults = getReservedSearchResults(normalizedActiveQuery);
+      }
       if (RECOMMENDED_QUERY) {
         vscode.postMessage({ type: 'search', query: RECOMMENDED_QUERY });
       }
@@ -128,6 +142,19 @@ function handleExtensionMessage(message) {
       setLoading(false);
       if (!message.success) {
         showError(`Failed to open unmanaged skill details: ${message.error}`);
+      }
+      break;
+    case 'applySearchQuery':
+      searchQuery = String(message.query || '').trim();
+      searchInput.value = searchQuery;
+      handleSearchInput(searchQuery);
+      break;
+    case 'updateResult':
+      if (message.success) {
+        showSuccess(`${message.skillId} updated`);
+        vscode.postMessage({ type: 'getInstalledSkills' });
+      } else {
+        showError(`Update failed: ${message.error}`);
       }
       break;
     default:
@@ -251,6 +278,21 @@ function handleSectionClick(event) {
     return;
   }
 
+  if (action === 'update') {
+    event.stopPropagation();
+    const skillName = actionEl.getAttribute('data-skill-name') || skillId;
+    const githubUrl = actionEl.getAttribute('data-github-url') || '';
+    const localPath = actionEl.getAttribute('data-local-path') || '';
+    vscode.postMessage({
+      type: 'update',
+      skillId,
+      skillName,
+      githubUrl,
+      localPath
+    });
+    return;
+  }
+
   if (action === 'open') {
     openSkillDetails(skillId);
   }
@@ -334,13 +376,19 @@ function renderSkillList(skills, options) {
 }
 
 function renderSkillItem(skill, options) {
-  const isInstalledSection = options.section === 'installedGlobal' || options.section === 'installedWorkspace';
+  const isSearchInstalled = options.section === 'search' && (skill.kind === 'managed' || skill.kind === 'other');
+  const isInstalledSection = options.section === 'installedGlobal' || options.section === 'installedWorkspace' || isSearchInstalled;
   const isManagedInstalled = isInstalledSection && skill.kind === 'managed';
   const isOtherInstalled = isInstalledSection && skill.kind === 'other';
+  const isOutdatedInstalled = isInstalledSection && !!skill.outdated;
   const installedEntry = !isInstalledSection ? getInstalledEntry(skill.id) : null;
 
   let actionButtons = `<vscode-button appearance="primary" class="skill-action-btn" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl || '')}">Install</vscode-button>`;
-  if (isManagedInstalled) {
+  if (isOutdatedInstalled) {
+    actionButtons = `
+      <vscode-button appearance="secondary" class="skill-action-btn" data-action="update" data-skill-id="${escapeAttr(skill.skillId || skill.id)}" data-skill-name="${escapeAttr(skill.name || skill.skillId || skill.id || '')}" data-github-url="${escapeAttr(skill.githubUrl || '')}" data-local-path="${escapeAttr(skill.localPath || '')}">Update</vscode-button>
+    `;
+  } else if (isManagedInstalled) {
     actionButtons = `
       <vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(skill.skillId || skill.id)}" data-local-path="${escapeAttr(skill.localPath || '')}">Uninstall</vscode-button>
     `;
@@ -428,6 +476,28 @@ function normalizeInstalledGroups(groups) {
   };
 }
 
+function isReservedSearchQuery(normalizedQuery) {
+  return normalizedQuery === 'managed' || normalizedQuery === 'unmanaged' || normalizedQuery === 'outdated';
+}
+
+function getReservedSearchResults(normalizedQuery) {
+  const allInstalledRows = buildSectionRows([
+    ...installedGroups.installedGlobal,
+    ...installedGroups.installedWorkspace
+  ]);
+
+  if (normalizedQuery === 'outdated') {
+    return allInstalledRows
+      .filter((row) => !!row.outdated)
+      .sort((left, right) => left.name.localeCompare(right.name));
+  }
+
+  const targetKind = normalizedQuery === 'managed' ? 'managed' : 'other';
+  return allInstalledRows
+    .filter((row) => row.kind === targetKind)
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
 function buildSectionRows(sectionSkills) {
   return sectionSkills.map((installed) => {
     const knownSkill = installed.skillId ? knownSkillsById.get(installed.skillId) : null;
@@ -441,7 +511,8 @@ function buildSectionRows(sectionSkills) {
       githubUrl: knownSkill?.githubUrl || '',
       localPath: String(installed.localPath || ''),
       scope: installed.scope || 'global',
-      kind: installed.kind || 'managed'
+      kind: installed.kind || 'managed',
+      outdated: !!installed.outdated
     };
   });
 }

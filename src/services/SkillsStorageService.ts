@@ -8,6 +8,7 @@ import { InstalledSkill, InstallResult } from './types';
  */
 export class SkillsStorageService {
   private static readonly STORAGE_KEY_PREFIX = 'skills.installed';
+  private static readonly OUTDATED_KEY_PREFIX = 'skills.outdated';
 
   constructor(private globalState: vscode.Memento) {}
 
@@ -16,6 +17,10 @@ export class SkillsStorageService {
    */
   private getToolKey(tool: string): string {
     return `${SkillsStorageService.STORAGE_KEY_PREFIX}.${tool}`;
+  }
+
+  private getOutdatedToolKey(tool: string): string {
+    return `${SkillsStorageService.OUTDATED_KEY_PREFIX}.${tool}`;
   }
 
   /**
@@ -49,6 +54,13 @@ export class SkillsStorageService {
         sourcePath: typeof installResult === 'string' ? undefined : installResult.source.skillPath
       };
 
+      const outdatedToolKey = this.getOutdatedToolKey(tool);
+      const outdated = this.globalState.get<Record<string, boolean>>(outdatedToolKey, {});
+      if (outdated[skillId]) {
+        delete outdated[skillId];
+        await this.globalState.update(outdatedToolKey, outdated);
+      }
+
       await this.globalState.update(toolKey, installed);
       logToOutput(`[Storage] Added skill ${skillId} to ${tool}`);
     } catch (error) {
@@ -65,10 +77,14 @@ export class SkillsStorageService {
     try {
       const toolKey = this.getToolKey(tool);
       const installed = this.globalState.get<Record<string, InstalledSkill>>(toolKey, {});
+      const outdatedToolKey = this.getOutdatedToolKey(tool);
+      const outdated = this.globalState.get<Record<string, boolean>>(outdatedToolKey, {});
 
       delete installed[skillId];
+      delete outdated[skillId];
 
       await this.globalState.update(toolKey, installed);
+      await this.globalState.update(outdatedToolKey, outdated);
       logToOutput(`[Storage] Removed skill ${skillId} from ${tool}`);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -118,12 +134,46 @@ export class SkillsStorageService {
     return result;
   }
 
+  public getOutdatedSkillIdsByTool(tool: string): string[] {
+    const outdatedToolKey = this.getOutdatedToolKey(tool);
+    const outdated = this.globalState.get<Record<string, boolean>>(outdatedToolKey, {});
+    return Object.keys(outdated).filter((skillId) => !!outdated[skillId]);
+  }
+
+  public isOutdated(tool: string, skillId: string): boolean {
+    const outdatedToolKey = this.getOutdatedToolKey(tool);
+    const outdated = this.globalState.get<Record<string, boolean>>(outdatedToolKey, {});
+    return !!outdated[skillId];
+  }
+
+  public async markOutdated(tool: string, skillId: string): Promise<void> {
+    const outdatedToolKey = this.getOutdatedToolKey(tool);
+    const outdated = this.globalState.get<Record<string, boolean>>(outdatedToolKey, {});
+    outdated[skillId] = true;
+    await this.globalState.update(outdatedToolKey, outdated);
+    logToOutput(`[Storage] Marked outdated skill ${skillId} for ${tool}`);
+  }
+
+  public async clearOutdated(tool: string, skillId: string): Promise<void> {
+    const outdatedToolKey = this.getOutdatedToolKey(tool);
+    const outdated = this.globalState.get<Record<string, boolean>>(outdatedToolKey, {});
+    if (!outdated[skillId]) {
+      return;
+    }
+
+    delete outdated[skillId];
+    await this.globalState.update(outdatedToolKey, outdated);
+    logToOutput(`[Storage] Cleared outdated skill ${skillId} for ${tool}`);
+  }
+
   /**
    * Clear all installed skills for a tool
    */
   public async clearToolInstalls(tool: string): Promise<void> {
     const toolKey = this.getToolKey(tool);
+    const outdatedToolKey = this.getOutdatedToolKey(tool);
     await this.globalState.update(toolKey, {});
+    await this.globalState.update(outdatedToolKey, {});
     logToOutput(`[Storage] Cleared all installations for ${tool}`);
   }
 }

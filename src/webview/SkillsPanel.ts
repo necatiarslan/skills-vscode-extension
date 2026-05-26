@@ -82,9 +82,8 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       return;
     }
 
-    const workspaceRoots = this.getWorkspaceRoots();
     let checkedCount = 0;
-    let updatedCount = 0;
+    let outdatedCount = 0;
     let failedCount = 0;
     let skippedCount = 0;
 
@@ -124,21 +123,12 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         const remoteNormalized = this.normalizeMarkdown(repoSkillMarkdown);
 
         if (localNormalized === remoteNormalized) {
+          await storage.clearOutdated(this.currentToolName, managedSkill.skillId);
           continue;
         }
 
-        const userChoice = await vscode.window.showInformationMessage(
-          `${source.skillName} has an update available. Update now?`,
-          'Update',
-          'Skip'
-        );
-
-        if (userChoice !== 'Update') {
-          continue;
-        }
-
-        await this.updateManagedSkill(managedSkill, source, workspaceRoots);
-        updatedCount += 1;
+        await storage.markOutdated(this.currentToolName, managedSkill.skillId);
+        outdatedCount += 1;
       } catch (error) {
         failedCount += 1;
         const errorMsg = error instanceof Error ? error.message : String(error);
@@ -148,7 +138,14 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
 
     this.refreshInstalledSkills();
 
-    const summary = `Checked ${checkedCount} managed skills, updated ${updatedCount}.`
+    if (outdatedCount > 0) {
+      this.postMessage({
+        type: 'applySearchQuery',
+        query: 'outdated'
+      });
+    }
+
+    const summary = `Checked ${checkedCount} managed skills. Outdated ${outdatedCount}.`
       + (skippedCount > 0 ? ` Skipped ${skippedCount}.` : '')
       + (failedCount > 0 ? ` Failed ${failedCount}.` : '');
 
@@ -176,6 +173,9 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         break;
       case 'install':
         await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
+        break;
+      case 'update':
+        await this.handleUpdate(message.skillId, message.skillName, message.githubUrl, message.localPath);
         break;
       case 'uninstall':
         await this.handleUninstall(message.skillId, message.localPath);
@@ -362,6 +362,76 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
     }
   }
 
+  private async handleUpdate(skillId: string, skillName: string, githubUrl: string, localPath?: string) {
+    try {
+      logToOutput(`[Webview] Updating ${skillName || skillId} on ${this.currentToolName}`);
+
+      const workspaceRoots = this.getWorkspaceRoots();
+      const resolvedLocalPath = localPath
+        || getStorageService().getInstalledSkill(this.currentToolName, skillId)?.localPath;
+
+      if (!resolvedLocalPath) {
+        throw new Error('Skill local path not found.');
+      }
+
+      const managedSkill: MarketplaceInstalledSkill = {
+        skillId,
+        name: skillName || skillId,
+        author: 'Unknown',
+        description: 'Managed skill',
+        localPath: resolvedLocalPath,
+        scope: this.getScopeForPath(resolvedLocalPath, workspaceRoots),
+        kind: 'managed',
+        outdated: false,
+        canOpenDetails: true,
+        canUninstall: true
+      };
+
+      const source = this.resolveManagedSkillSource({
+        ...managedSkill,
+        name: skillName || managedSkill.name
+      }) || {
+        skillId,
+        skillName: skillName || skillId,
+        githubUrl,
+        sourceBranch: undefined,
+        sourcePath: undefined
+      };
+
+      if (!source.githubUrl) {
+        throw new Error('GitHub source URL not found for this skill.');
+      }
+
+      await this.updateManagedSkill(managedSkill, source, workspaceRoots);
+      await getStorageService().clearOutdated(this.currentToolName, managedSkill.skillId);
+
+      this.postMessage({
+        type: 'updateResult',
+        skillId: managedSkill.skillId,
+        toolName: this.currentToolName,
+        toolDisplayName: this.currentToolDisplayName,
+        success: true,
+        message: 'Successfully updated skill',
+        error: null
+      });
+
+      await this.handleGetInstalledSkills();
+      logToOutput(`[Webview] Update completed: ${managedSkill.skillId}`);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[Webview] Update error: ${errorMsg}`);
+      this.postMessage({
+        type: 'updateResult',
+        skillId,
+        toolName: this.currentToolName,
+        toolDisplayName: this.currentToolDisplayName,
+        success: false,
+        message: null,
+        error: errorMsg
+      });
+    }
+  }
+
   /**
    * Handle skill uninstallation
    */
@@ -480,6 +550,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
   private collectInstalledGroups(): MarketplaceInstalledGroups {
     const storage = getStorageService();
     const installedByExtension = storage.getInstalledByTool(this.currentToolName);
+    const outdatedSkillIds = new Set(storage.getOutdatedSkillIdsByTool(this.currentToolName));
     const workspaceRoots = this.getWorkspaceRoots();
 
     const groups: MarketplaceInstalledGroups = {
@@ -504,6 +575,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         localPath: installed.localPath,
         scope,
         kind: 'managed',
+        outdated: outdatedSkillIds.has(installed.skillId),
         canOpenDetails: true,
         canUninstall: true
       };
@@ -515,8 +587,8 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       }
     }
 
-    const globalOther = this.scanOtherSkills(this.getGlobalSkillRoots(), 'global', managedPaths);
-    const workspaceOther = this.scanOtherSkills(this.getWorkspaceSkillRoots(), 'workspace', managedPaths);
+    const globalOther = this.scanOtherSkills(this.getGlobalSkillRoots(), 'global', managedPaths, outdatedSkillIds);
+    const workspaceOther = this.scanOtherSkills(this.getWorkspaceSkillRoots(), 'workspace', managedPaths, outdatedSkillIds);
 
     groups.installedGlobal.push(...globalOther);
     groups.installedWorkspace.push(...workspaceOther);
@@ -527,7 +599,8 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
   private scanOtherSkills(
     roots: string[],
     scope: SkillInstallScope,
-    managedPaths: Set<string>
+    managedPaths: Set<string>,
+    outdatedSkillIds: Set<string>
   ): MarketplaceInstalledSkill[] {
     const items: MarketplaceInstalledSkill[] = [];
     const seen = new Set<string>();
@@ -614,6 +687,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
           localPath: skillPath,
           scope,
           kind: discoveredKind,
+          outdated: discoveredSkillId ? outdatedSkillIds.has(discoveredSkillId) : false,
           canOpenDetails: true,
           canUninstall: true
         });

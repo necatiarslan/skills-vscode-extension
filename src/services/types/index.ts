@@ -106,6 +106,7 @@ export interface MarketplaceInstalledSkill {
   localPath: string;
   scope: SkillInstallScope;
   kind: SkillInstallKind;
+  outdated?: boolean;
   canOpenDetails: boolean;
   canUninstall: boolean;
 }
