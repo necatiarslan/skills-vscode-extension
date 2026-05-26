@@ -82,6 +82,66 @@ class SkillsPanel {
         }
         this.handleGetInstalledSkills();
     }
+    async checkForUpdatesForManagedSkills() {
+        const storage = (0, SkillsStorageService_1.getStorageService)();
+        const groups = this.collectInstalledGroups();
+        const managedSkills = [...groups.installedGlobal, ...groups.installedWorkspace]
+            .filter((skill) => skill.kind === 'managed');
+        if (managedSkills.length === 0) {
+            await vscode.window.showInformationMessage('No managed skills found to check for updates.');
+            return;
+        }
+        const workspaceRoots = this.getWorkspaceRoots();
+        let checkedCount = 0;
+        let updatedCount = 0;
+        let failedCount = 0;
+        let skippedCount = 0;
+        for (const managedSkill of managedSkills) {
+            const localPath = managedSkill.localPath;
+            const source = this.resolveManagedSkillSource(managedSkill);
+            if (!source?.githubUrl || !localPath) {
+                skippedCount += 1;
+                (0, UI_1.logToOutput)(`[Webview] Skipping update check for ${managedSkill.name}: missing source metadata.`);
+                continue;
+            }
+            try {
+                const localSkillMarkdown = await this.readLocalSkillMarkdown(localPath);
+                if (!localSkillMarkdown) {
+                    skippedCount += 1;
+                    (0, UI_1.logToOutput)(`[Webview] Skipping update check for ${managedSkill.name}: local SKILL.md missing.`);
+                    continue;
+                }
+                const repoSkillMarkdown = await this.readRepositorySkillMarkdown(source.githubUrl, source.sourceBranch, source.sourcePath);
+                if (!repoSkillMarkdown) {
+                    skippedCount += 1;
+                    (0, UI_1.logToOutput)(`[Webview] Skipping update check for ${managedSkill.name}: repository SKILL.md missing.`);
+                    continue;
+                }
+                checkedCount += 1;
+                const localNormalized = this.normalizeMarkdown(localSkillMarkdown);
+                const remoteNormalized = this.normalizeMarkdown(repoSkillMarkdown);
+                if (localNormalized === remoteNormalized) {
+                    continue;
+                }
+                const userChoice = await vscode.window.showInformationMessage(`${source.skillName} has an update available. Update now?`, 'Update', 'Skip');
+                if (userChoice !== 'Update') {
+                    continue;
+                }
+                await this.updateManagedSkill(managedSkill, source, workspaceRoots);
+                updatedCount += 1;
+            }
+            catch (error) {
+                failedCount += 1;
+                const errorMsg = error instanceof Error ? error.message : String(error);
+                (0, UI_1.logToOutput)(`[ERROR] [Webview] Failed update check for ${managedSkill.name}: ${errorMsg}`);
+            }
+        }
+        this.refreshInstalledSkills();
+        const summary = `Checked ${checkedCount} managed skills, updated ${updatedCount}.`
+            + (skippedCount > 0 ? ` Skipped ${skippedCount}.` : '')
+            + (failedCount > 0 ? ` Failed ${failedCount}.` : '');
+        await vscode.window.showInformationMessage(summary);
+    }
     /**
      * Handle messages from the webview
      */
@@ -495,6 +555,93 @@ class SkillsPanel {
         }
         roots.add(SkillLocationConfig_1.SKILL_LOCATION_CONFIG.canonicalSkillRoot);
         return Array.from(roots);
+    }
+    resolveManagedSkillSource(skill) {
+        const storage = (0, SkillsStorageService_1.getStorageService)();
+        const installed = skill.skillId ? storage.getInstalledSkill(this.currentToolName, skill.skillId) : null;
+        const metadata = this.readSkillMetadata(skill.localPath);
+        const skillId = (installed?.skillId || metadata?.id || skill.skillId || path.basename(skill.localPath)).trim();
+        const skillName = (installed?.name || metadata?.name || skill.name || skillId).trim();
+        const githubUrl = (installed?.sourceUrl || metadata?.github_url || '').trim();
+        const sourceBranch = (installed?.sourceBranch || metadata?.branch || '').trim() || undefined;
+        const sourcePath = (installed?.sourcePath || metadata?.skill_path || '').trim() || undefined;
+        if (!githubUrl) {
+            return null;
+        }
+        return {
+            skillId,
+            skillName,
+            githubUrl,
+            sourceBranch,
+            sourcePath
+        };
+    }
+    readSkillMetadata(localPath) {
+        const metadataPath = path.join(localPath, 'skill.json');
+        if (!fs.existsSync(metadataPath)) {
+            return null;
+        }
+        try {
+            const raw = fs.readFileSync(metadataPath, 'utf8');
+            return JSON.parse(raw);
+        }
+        catch {
+            return null;
+        }
+    }
+    async readLocalSkillMarkdown(rootPath) {
+        const candidates = ['SKILL.md', 'skill.md'];
+        for (const candidate of candidates) {
+            const filePath = path.join(rootPath, candidate);
+            if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+                return fs.promises.readFile(filePath, 'utf8');
+            }
+        }
+        return undefined;
+    }
+    async readRepositorySkillMarkdown(githubUrl, sourceBranch, sourcePath) {
+        const repoContext = services_1.gitHubContentService.parseGitHubUrl(githubUrl);
+        const repoMetadata = await services_1.gitHubContentService.getRepoMetadata(repoContext);
+        const resolvedBranch = sourceBranch
+            || (repoContext.branch === 'HEAD' ? repoMetadata.defaultBranch : repoContext.branch);
+        const resolvedPath = sourcePath || repoContext.skillPath;
+        const context = {
+            ...repoContext,
+            branch: resolvedBranch,
+            skillPath: resolvedPath
+        };
+        const normalizedSkillPath = (resolvedPath || '').replace(/^\/+|\/+$/g, '');
+        const candidates = normalizedSkillPath
+            ? [`${normalizedSkillPath}/SKILL.md`, `${normalizedSkillPath}/skill.md`, normalizedSkillPath]
+            : ['SKILL.md', 'skill.md'];
+        for (const candidate of candidates) {
+            try {
+                const preview = await services_1.gitHubContentService.getFilePreview(context, candidate);
+                if (preview?.content) {
+                    return preview.content;
+                }
+            }
+            catch {
+                // Continue with next candidate.
+            }
+        }
+        return undefined;
+    }
+    normalizeMarkdown(content) {
+        return content.replace(/\r\n/g, '\n').trim();
+    }
+    async updateManagedSkill(skill, source, workspaceRoots) {
+        const storage = (0, SkillsStorageService_1.getStorageService)();
+        const scope = this.getScopeForPath(skill.localPath, workspaceRoots);
+        await services_2.toolInstallService.uninstallSkill(this.currentToolName, source.skillId, skill.localPath);
+        const installed = storage.getInstalledSkill(this.currentToolName, source.skillId);
+        if (installed?.skillId) {
+            await storage.removeInstalled(this.currentToolName, installed.skillId);
+        }
+        const installResult = scope === 'workspace'
+            ? await services_2.toolInstallService.installSkillToDirectory(this.currentToolName, source.skillId, source.skillName, source.githubUrl, path.dirname(skill.localPath))
+            : await services_2.toolInstallService.installSkill(this.currentToolName, source.skillId, source.skillName, source.githubUrl);
+        await storage.addInstalled(this.currentToolName, source.skillId, source.skillName, 'unknown', '1.0.0', installResult);
     }
     getWorkspaceRoots() {
         return (vscode.workspace.workspaceFolders || []).map((folder) => folder.uri.fsPath);

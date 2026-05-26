@@ -34,6 +34,11 @@
         "icon": "$(heart)"
       },
       {
+        "command": "Skills.CheckForUpdates",
+        "title": "Check For Updates",
+        "icon": "$(sync)"
+      },
+      {
         "command": "Skills.BugAndNewFeatureRequest",
         "title": "Bug and New Feature Request",
         "icon": "$(bug)"
@@ -48,6 +53,11 @@
         },
         {
           "command": "Skills.Donate",
+          "when": "view == SkillsView",
+          "group": "other_1"
+        },
+        {
+          "command": "Skills.CheckForUpdates",
           "when": "view == SkillsView",
           "group": "other_1"
         },

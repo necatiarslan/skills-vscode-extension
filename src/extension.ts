@@ -45,6 +45,13 @@ export function activate(context: vscode.ExtensionContext): void {
         ui.logToOutput('[Activation] Command registered: Skills.Donate');
 
         context.subscriptions.push(
+            vscode.commands.registerCommand('Skills.CheckForUpdates', async () => {
+                await SkillsPanel.Current?.checkForUpdatesForManagedSkills();
+            })
+        );
+        ui.logToOutput('[Activation] Command registered: Skills.CheckForUpdates');
+
+        context.subscriptions.push(
             vscode.commands.registerCommand('Skills.BugAndNewFeatureRequest', () => {
                 vscode.env.openExternal(vscode.Uri.parse('https://github.com/necatiarslan/skills-vscode-extension/issues'));
             })
