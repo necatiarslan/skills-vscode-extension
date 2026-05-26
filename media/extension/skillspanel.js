@@ -37,6 +37,12 @@ let installedGroups = {
 let searchResults = [];
 let recommendedResults = [];
 const knownSkillsById = new Map();
+const MANAGED_SKILL_MENU_ITEMS = [
+  { label: 'Update', value: 'update' },
+  { label: 'Check For Updates', value: 'check-for-updates' },
+  { label: 'Open', value: 'open-folder' },
+  { label: 'Repo', value: 'repo' }
+];
 
 const searchInput = document.getElementById('searchInput');
 const errorMessage = document.getElementById('errorMessage');
@@ -68,6 +74,84 @@ function initialize() {
   window.addEventListener('message', (event) => handleExtensionMessage(event.data));
 
   renderSections();
+}
+
+function initializeManagedSkillMenus() {
+  const menuContainers = contentSection.querySelectorAll('.managed-skill-menu');
+
+  for (const container of menuContainers) {
+    const toggleButton = container.querySelector('[data-action="toggle-actions-menu"]');
+    const menu = container.querySelector('vscode-context-menu');
+
+    if (!toggleButton || !menu || menu.dataset.initialized === 'true') {
+      continue;
+    }
+
+    menu.data = MANAGED_SKILL_MENU_ITEMS;
+    menu.dataset.initialized = 'true';
+
+    toggleButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      menu.show = !menu.show;
+    });
+
+    menu.addEventListener('vsc-context-menu-select', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const action = event.detail?.value;
+      if (!action) {
+        return;
+      }
+
+      dispatchManagedSkillAction(action, container.dataset);
+    });
+  }
+}
+
+function dispatchManagedSkillAction(action, dataset) {
+  const skillId = dataset.skillId || '';
+  const skillName = dataset.skillName || skillId;
+  const githubUrl = dataset.githubUrl || '';
+  const localPath = dataset.localPath || '';
+
+  if (!action || !skillId) {
+    return;
+  }
+
+  switch (action) {
+    case 'update':
+      vscode.postMessage({
+        type: 'update',
+        skillId,
+        skillName,
+        githubUrl,
+        localPath
+      });
+      break;
+    case 'check-for-updates':
+      vscode.postMessage({
+        type: 'checkForUpdates',
+        skillId,
+        skillName,
+        githubUrl,
+        localPath
+      });
+      break;
+    case 'open-folder':
+      vscode.postMessage({ type: 'openInstalledFolder', skillId, localPath });
+      break;
+    case 'repo':
+      if (!githubUrl) {
+        showError('Repository URL is not available for this skill.');
+        return;
+      }
+
+      vscode.postMessage({ type: 'openExternal', url: githubUrl });
+      break;
+    default:
+      break;
+  }
 }
 
 function handleSearchInput(query) {
@@ -132,6 +216,11 @@ function handleExtensionMessage(message) {
         showError(`Failed to open skill folder: ${message.error}`);
       }
       break;
+    case 'openExternalResult':
+      if (!message.success) {
+        showError(`Failed to open repository URL: ${message.error}`);
+      }
+      break;
     case 'openSkillDetailsResult':
       setLoading(false);
       if (!message.success) {
@@ -155,6 +244,18 @@ function handleExtensionMessage(message) {
         vscode.postMessage({ type: 'getInstalledSkills' });
       } else {
         showError(`Update failed: ${message.error}`);
+      }
+      break;
+    case 'checkForUpdatesResult':
+      if (message.success) {
+        if (message.isUpdateAvailable) {
+          showSuccess(message.message || 'Update available.');
+        } else {
+          showSuccess(message.message || 'No updates found.');
+        }
+        vscode.postMessage({ type: 'getInstalledSkills' });
+      } else {
+        showError(`Check for updates failed: ${message.error}`);
       }
       break;
     default:
@@ -211,8 +312,61 @@ function handleUninstallResult(message) {
   }
 }
 
+function getEventPath(event) {
+  if (typeof event.composedPath === 'function') {
+    return event.composedPath();
+  }
+
+  return [];
+}
+
+function findActionElement(event) {
+  const eventPath = getEventPath(event);
+
+  for (const node of eventPath) {
+    if (!(node instanceof Element)) {
+      continue;
+    }
+
+    if (node.hasAttribute('data-action')) {
+      return node;
+    }
+  }
+
+  return event.target instanceof Element ? event.target.closest('[data-action]') : null;
+}
+
+function isActionAreaClick(event) {
+  const eventPath = getEventPath(event);
+
+  for (const node of eventPath) {
+    if (!(node instanceof Element)) {
+      continue;
+    }
+
+    if (
+      node.classList.contains('skill-action-group')
+      || node.classList.contains('managed-skill-menu')
+      || node.classList.contains('skill-actions-menu')
+      || node.tagName === 'VSCODE-CONTEXT-MENU'
+      || node.tagName === 'VSCODE-CONTEXT-MENU-ITEM'
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function handleSectionClick(event) {
-  const actionEl = event.target.closest('[data-action]');
+  const actionEl = findActionElement(event);
+  const clickInActionArea = isActionAreaClick(event);
+
+  if (clickInActionArea && (!actionEl || actionEl.getAttribute('data-action') === 'open')) {
+    event.stopPropagation();
+    return;
+  }
+
   if (!actionEl) {
     const openRow = event.target.closest('[data-skill-id][data-action="open"]');
     if (openRow) {
@@ -225,6 +379,11 @@ function handleSectionClick(event) {
   const skillId = actionEl.getAttribute('data-skill-id') || '';
 
   if (!action) {
+    return;
+  }
+
+  if (action === 'toggle-actions-menu') {
+    event.stopPropagation();
     return;
   }
 
@@ -258,6 +417,33 @@ function handleSectionClick(event) {
     event.stopPropagation();
     const localPath = actionEl.getAttribute('data-local-path') || '';
     vscode.postMessage({ type: 'uninstall', skillId, localPath });
+    return;
+  }
+
+  if (action === 'check-for-updates') {
+    event.stopPropagation();
+    const skillName = actionEl.getAttribute('data-skill-name') || skillId;
+    const githubUrl = actionEl.getAttribute('data-github-url') || '';
+    const localPath = actionEl.getAttribute('data-local-path') || '';
+    vscode.postMessage({
+      type: 'checkForUpdates',
+      skillId,
+      skillName,
+      githubUrl,
+      localPath
+    });
+    return;
+  }
+
+  if (action === 'repo') {
+    event.stopPropagation();
+    const githubUrl = actionEl.getAttribute('data-github-url') || '';
+    if (!githubUrl) {
+      showError('Repository URL is not available for this skill.');
+      return;
+    }
+
+    vscode.postMessage({ type: 'openExternal', url: githubUrl });
     return;
   }
 
@@ -339,6 +525,7 @@ function renderSections() {
   installedGlobalTable.innerHTML = renderSkillList(installedGlobalRows, { section: 'installedGlobal' });
   installedWorkspaceTable.innerHTML = renderSkillList(installedWorkspaceRows, { section: 'installedWorkspace' });
   recommendedTable.innerHTML = renderSkillList(recommendedRows, { section: 'recommended' });
+  initializeManagedSkillMenus();
 
   const hasAnyData = inSearchMode
     ? searchResults.length > 0
@@ -384,13 +571,26 @@ function renderSkillItem(skill, options) {
   const installedEntry = !isInstalledSection ? getInstalledEntry(skill.id) : null;
 
   let actionButtons = `<vscode-button appearance="primary" class="skill-action-btn" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl || '')}">Install</vscode-button>`;
-  if (isOutdatedInstalled) {
+  if (isManagedInstalled || isOutdatedInstalled) {
+    const managedSkillId = escapeAttr(skill.skillId || skill.id);
+    const managedSkillName = escapeAttr(skill.name || skill.skillId || skill.id || '');
+    const managedGithubUrl = escapeAttr(skill.githubUrl || '');
+    const managedLocalPath = escapeAttr(skill.localPath || '');
+
     actionButtons = `
-      <vscode-button appearance="secondary" class="skill-action-btn" data-action="update" data-skill-id="${escapeAttr(skill.skillId || skill.id)}" data-skill-name="${escapeAttr(skill.name || skill.skillId || skill.id || '')}" data-github-url="${escapeAttr(skill.githubUrl || '')}" data-local-path="${escapeAttr(skill.localPath || '')}">Update</vscode-button>
-    `;
-  } else if (isManagedInstalled) {
-    actionButtons = `
-      <vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(skill.skillId || skill.id)}" data-local-path="${escapeAttr(skill.localPath || '')}">Uninstall</vscode-button>
+      <div
+        class="managed-skill-menu"
+        data-skill-id="${managedSkillId}"
+        data-skill-name="${managedSkillName}"
+        data-github-url="${managedGithubUrl}"
+        data-local-path="${managedLocalPath}"
+      >
+        <vscode-button-group class="skill-action-btn-group">
+          <vscode-button appearance="${isOutdatedInstalled ? 'primary' : 'secondary'}" data-action="uninstall" data-skill-id="${managedSkillId}" data-local-path="${managedLocalPath}">Uninstall</vscode-button>
+          <vscode-button icon="chevron-down" title="More actions..." data-action="toggle-actions-menu"></vscode-button>
+        </vscode-button-group>
+        <vscode-context-menu class="skill-actions-menu"></vscode-context-menu>
+      </div>
     `;
   } else if (isOtherInstalled) {
     actionButtons = `
@@ -508,7 +708,7 @@ function buildSectionRows(sectionSkills) {
       author: knownSkill?.author || installed.author || 'Unknown',
       description: knownSkill?.description || installed.description || 'Unmanaged skill',
       stars: knownSkill?.stars || 0,
-      githubUrl: knownSkill?.githubUrl || '',
+      githubUrl: knownSkill?.githubUrl || installed.githubUrl || '',
       localPath: String(installed.localPath || ''),
       scope: installed.scope || 'global',
       kind: installed.kind || 'managed',

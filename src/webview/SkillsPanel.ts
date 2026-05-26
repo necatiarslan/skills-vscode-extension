@@ -183,6 +183,12 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       case 'openInstalledFolder':
         await this.handleOpenInstalledFolder(message.skillId, message.localPath);
         break;
+      case 'openExternal':
+        await this.handleOpenExternal(message.url);
+        break;
+      case 'checkForUpdates':
+        await this.handleCheckForUpdates(message.skillId, message.skillName, message.githubUrl, message.localPath);
+        break;
       case 'getInstalledSkills':
         await this.handleGetInstalledSkills();
         break;
@@ -514,6 +520,123 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
     }
   }
 
+  private async handleOpenExternal(url: string) {
+    try {
+      if (!url) {
+        throw new Error('URL is required.');
+      }
+
+      await vscode.env.openExternal(vscode.Uri.parse(url));
+      this.postMessage({
+        type: 'openExternalResult',
+        success: true,
+        error: null
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[Webview] Open external error: ${errorMsg}`);
+      this.postMessage({
+        type: 'openExternalResult',
+        success: false,
+        error: errorMsg
+      });
+    }
+  }
+
+  private async handleCheckForUpdates(skillId: string, skillName: string, githubUrl: string, localPath?: string) {
+    try {
+      const storage = getStorageService();
+      const workspaceRoots = this.getWorkspaceRoots();
+      const resolvedLocalPath = localPath
+        || storage.getInstalledSkill(this.currentToolName, skillId)?.localPath;
+
+      if (!resolvedLocalPath) {
+        throw new Error('Skill local path not found.');
+      }
+
+      const managedSkill: MarketplaceInstalledSkill = {
+        skillId,
+        name: skillName || skillId,
+        author: 'Unknown',
+        description: 'Managed skill',
+        githubUrl,
+        localPath: resolvedLocalPath,
+        scope: this.getScopeForPath(resolvedLocalPath, workspaceRoots),
+        kind: 'managed',
+        outdated: false,
+        canOpenDetails: true,
+        canUninstall: true
+      };
+
+      const source = this.resolveManagedSkillSource(managedSkill) || {
+        skillId,
+        skillName: skillName || skillId,
+        githubUrl,
+        sourceBranch: undefined,
+        sourcePath: undefined
+      };
+
+      if (!source.githubUrl) {
+        throw new Error('GitHub source URL not found for this skill.');
+      }
+
+      const localSkillMarkdown = await this.readLocalSkillMarkdown(resolvedLocalPath);
+      if (!localSkillMarkdown) {
+        throw new Error('Local SKILL.md file was not found.');
+      }
+
+      const repoSkillMarkdown = await this.readRepositorySkillMarkdown(
+        source.githubUrl,
+        source.sourceBranch,
+        source.sourcePath
+      );
+
+      if (!repoSkillMarkdown) {
+        throw new Error('Repository SKILL.md file was not found.');
+      }
+
+      const localNormalized = this.normalizeMarkdown(localSkillMarkdown);
+      const remoteNormalized = this.normalizeMarkdown(repoSkillMarkdown);
+
+      if (localNormalized === remoteNormalized) {
+        await storage.clearOutdated(this.currentToolName, managedSkill.skillId);
+        this.refreshInstalledSkills();
+        this.postMessage({
+          type: 'checkForUpdatesResult',
+          skillId: managedSkill.skillId,
+          success: true,
+          isUpdateAvailable: false,
+          message: 'No updates found. Local SKILL.md matches the repository version.',
+          error: null
+        });
+        return;
+      }
+
+      await storage.markOutdated(this.currentToolName, managedSkill.skillId);
+      this.refreshInstalledSkills();
+
+      this.postMessage({
+        type: 'checkForUpdatesResult',
+        skillId: managedSkill.skillId,
+        success: true,
+        isUpdateAvailable: true,
+        message: 'Update available. Skill has been flagged as outdated.',
+        error: null
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[Webview] Check for updates error: ${errorMsg}`);
+      this.postMessage({
+        type: 'checkForUpdatesResult',
+        skillId,
+        success: false,
+        isUpdateAvailable: false,
+        message: null,
+        error: errorMsg
+      });
+    }
+  }
+
   /**
    * Get installed skills across all tools
    */
@@ -572,6 +695,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         name: installed.name || installed.skillId,
         author: installed.author || 'Unknown',
         description: 'Managed skill',
+        githubUrl: installed.sourceUrl || '',
         localPath: installed.localPath,
         scope,
         kind: 'managed',
@@ -662,11 +786,11 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         }
 
         const hasMetadata = fs.existsSync(path.join(skillPath, 'skill.json'));
-        let metadata: { id?: string; name?: string; author?: string } | null = null;
+        let metadata: { id?: string; name?: string; author?: string; github_url?: string } | null = null;
         if (hasMetadata) {
           try {
             const metadataRaw = fs.readFileSync(path.join(skillPath, 'skill.json'), 'utf8');
-            const parsed = JSON.parse(metadataRaw) as { id?: string; name?: string; author?: string };
+            const parsed = JSON.parse(metadataRaw) as { id?: string; name?: string; author?: string; github_url?: string };
             metadata = parsed;
           } catch {
             metadata = null;
@@ -684,6 +808,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
           name: discoveredName,
           author: discoveredAuthor,
           description: hasMetadata ? 'Managed skill (untracked)' : 'Unmanaged skill',
+          githubUrl: metadata?.github_url || '',
           localPath: skillPath,
           scope,
           kind: discoveredKind,

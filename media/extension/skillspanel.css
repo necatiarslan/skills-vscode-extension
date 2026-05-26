@@ -206,6 +206,58 @@ body {
   flex-shrink: 0;
 }
 
+.skill-action-btn-group {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 100%;
+  gap: 0 !important;
+}
+
+.button-with-menu {
+  display: inline-block;
+  position: relative;
+}
+
+.dropdown-menu {
+  left: 100%;
+  margin-left: -26px;
+  position: absolute;
+  width: auto;
+  z-index: 10;
+}
+
+.skill-action-btn-group vscode-button {
+  margin: 0 !important;
+}
+
+.skill-action-btn-group .skill-action-btn {
+  min-height: 20px !important;
+  height: 20px !important;
+  font-size: 10px !important;
+  padding: 0 5px !important;
+}
+
+.skill-action-btn--icon {
+  min-width: 20px !important;
+  width: 20px !important;
+  min-height: 20px !important;
+  height: 20px !important;
+  padding: 0 !important;
+}
+
+.managed-skill-menu {
+  position: relative;
+  display: inline-block;
+  align-items: stretch;
+}
+
+.skill-actions-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 5;
+}
+
 .skill-action {
   min-width: 88px;
 }

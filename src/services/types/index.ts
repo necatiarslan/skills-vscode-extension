@@ -103,6 +103,7 @@ export interface MarketplaceInstalledSkill {
   name: string;
   author: string;
   description?: string;
+  githubUrl?: string;
   localPath: string;
   scope: SkillInstallScope;
   kind: SkillInstallKind;
