@@ -40,6 +40,7 @@ const ui = __importStar(require("./common/UI"));
 const Session_1 = require("./common/Session");
 const SkillsStorageService_1 = require("./services/SkillsStorageService");
 const SkillsPanel_1 = require("./webview/SkillsPanel");
+const DAILY_UPDATE_CHECK_KEY = 'skills.lastDailyUpdateCheckDate';
 /**
  * Activates the AI Agent Skills extension.
  * This is the entry point for the extension.
@@ -56,6 +57,7 @@ function activate(context) {
         const skillsViewProvider = new SkillsPanel_1.SkillsPanel(context.extensionUri);
         context.subscriptions.push(vscode.window.registerWebviewViewProvider(SkillsPanel_1.SkillsPanel.viewType, skillsViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
         ui.logToOutput('[Activation] Skills webview provider registered');
+        void runDailyUpdateCheckIfNeeded(context);
         context.subscriptions.push(vscode.commands.registerCommand('Skills.Refresh', () => {
             SkillsPanel_1.SkillsPanel.Current?.refreshInstalledSkills();
         }));
@@ -77,6 +79,23 @@ function activate(context) {
     catch (error) {
         ui.logToOutput('Fatal error activating AI Agent Skills:', error);
         ui.showInfoMessage('AI Agent Skills failed to activate. Check debug console for details.');
+    }
+}
+async function runDailyUpdateCheckIfNeeded(context) {
+    try {
+        const today = new Date().toISOString().slice(0, 10);
+        const lastCheckDate = context.globalState.get(DAILY_UPDATE_CHECK_KEY, '');
+        if (lastCheckDate === today) {
+            ui.logToOutput(`[Activation] Daily update check already completed for ${today}`);
+            return;
+        }
+        ui.logToOutput('[Activation] Running daily managed skills update check');
+        await SkillsPanel_1.SkillsPanel.Current?.checkForUpdatesForManagedSkills({ silent: true });
+        await context.globalState.update(DAILY_UPDATE_CHECK_KEY, today);
+        ui.logToOutput(`[Activation] Daily update check completed for ${today}`);
+    }
+    catch (error) {
+        ui.logToOutput('[Activation] Daily update check failed:', error);
     }
 }
 function deactivate() {

@@ -71,14 +71,17 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
     this.handleGetInstalledSkills();
   }
 
-  public async checkForUpdatesForManagedSkills(): Promise<void> {
+  public async checkForUpdatesForManagedSkills(options?: { silent?: boolean }): Promise<void> {
+    const silent = !!options?.silent;
     const storage = getStorageService();
     const groups = this.collectInstalledGroups();
     const managedSkills = [...groups.installedGlobal, ...groups.installedWorkspace]
       .filter((skill) => skill.kind === 'managed');
 
     if (managedSkills.length === 0) {
-      await vscode.window.showInformationMessage('No managed skills found to check for updates.');
+      if (!silent) {
+        await vscode.window.showInformationMessage('No managed skills found to check for updates.');
+      }
       return;
     }
 
@@ -149,7 +152,9 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       + (skippedCount > 0 ? ` Skipped ${skippedCount}.` : '')
       + (failedCount > 0 ? ` Failed ${failedCount}.` : '');
 
-    await vscode.window.showInformationMessage(summary);
+    if (!silent) {
+      await vscode.window.showInformationMessage(summary);
+    }
   }
 
   /**
