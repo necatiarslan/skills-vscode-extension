@@ -125,8 +125,86 @@ class SkillDetailPanel {
             case 'update':
                 await this.handleUpdate(message.skillId, message.skillName, message.githubUrl);
                 break;
+            case 'checkForUpdates':
+                await this.handleCheckForUpdates(message.skillId, message.skillName, message.githubUrl);
+                break;
             default:
                 (0, UI_1.logToOutput)(`[SkillDetail] Unknown message type: ${message.type}`);
+        }
+    }
+    async handleCheckForUpdates(skillId, skillName, githubUrl) {
+        (0, UI_1.logToOutput)(`[SkillDetail] Checking for updates: ${skillId}`);
+        try {
+            const installed = (0, SkillsStorageService_1.getStorageService)().getInstalledSkill(this.currentToolName, skillId);
+            if (!installed?.localPath) {
+                throw new Error('Skill is not installed locally.');
+            }
+            if (!fs.existsSync(installed.localPath)) {
+                throw new Error('Local skill folder does not exist.');
+            }
+            const localSkillMarkdown = await this.readLocalSkillMarkdown(installed.localPath);
+            if (!localSkillMarkdown) {
+                throw new Error('Local SKILL.md file was not found.');
+            }
+            const sourceUrl = githubUrl || this.skill.githubUrl;
+            if (!sourceUrl) {
+                throw new Error('GitHub URL is not available for this skill.');
+            }
+            const repoContext = services_1.gitHubContentService.parseGitHubUrl(sourceUrl);
+            const repoMetadata = await services_1.gitHubContentService.getRepoMetadata(repoContext);
+            const resolvedContext = {
+                ...repoContext,
+                branch: repoContext.branch === 'HEAD' ? repoMetadata.defaultBranch : repoContext.branch
+            };
+            const repoSkillMarkdown = await this.readRepositorySkillMarkdown(resolvedContext);
+            if (!repoSkillMarkdown) {
+                throw new Error('Repository SKILL.md file was not found.');
+            }
+            const localNormalized = this.normalizeMarkdown(localSkillMarkdown);
+            const remoteNormalized = this.normalizeMarkdown(repoSkillMarkdown);
+            if (localNormalized === remoteNormalized) {
+                const upToDateMessage = 'No updates found. Local SKILL.md matches the repository version.';
+                await vscode.window.showInformationMessage(upToDateMessage);
+                this.postMessage({
+                    type: 'checkForUpdatesResult',
+                    skillId,
+                    success: true,
+                    isUpdateAvailable: false,
+                    updateTriggered: false,
+                    message: upToDateMessage,
+                    error: null
+                });
+                return;
+            }
+            const updateChoice = await vscode.window.showInformationMessage(`${skillName || skillId} has a newer SKILL.md in the repository. Do you want to update now?`, 'Update', 'Later');
+            const shouldUpdate = updateChoice === 'Update';
+            this.postMessage({
+                type: 'checkForUpdatesResult',
+                skillId,
+                success: true,
+                isUpdateAvailable: true,
+                updateTriggered: shouldUpdate,
+                message: shouldUpdate
+                    ? 'Update available. Updating now...'
+                    : 'Update available. You can update when ready.',
+                error: null
+            });
+            if (shouldUpdate) {
+                await this.handleUpdate(skillId, skillName || this.skill.name, sourceUrl);
+            }
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[ERROR] [SkillDetail] Check for updates failed for ${skillId}: ${errorMsg}`);
+            this.postMessage({
+                type: 'checkForUpdatesResult',
+                skillId,
+                success: false,
+                isUpdateAvailable: false,
+                updateTriggered: false,
+                message: null,
+                error: errorMsg
+            });
         }
     }
     async handleLoadRepoPath(context, path) {
@@ -475,6 +553,27 @@ class SkillDetailPanel {
             }
         }
         return undefined;
+    }
+    async readRepositorySkillMarkdown(context) {
+        const skillPath = (context.skillPath || '').replace(/^\/+|\/+$/g, '');
+        const candidates = skillPath
+            ? [`${skillPath}/SKILL.md`, `${skillPath}/skill.md`, skillPath]
+            : ['SKILL.md', 'skill.md'];
+        for (const candidate of candidates) {
+            try {
+                const preview = await services_1.gitHubContentService.getFilePreview(context, candidate);
+                if (preview?.content) {
+                    return preview.content;
+                }
+            }
+            catch {
+                // Continue searching other candidates.
+            }
+        }
+        return undefined;
+    }
+    normalizeMarkdown(content) {
+        return content.replace(/\r\n/g, '\n').trim();
     }
     async listLocalDirectory(rootPath, relativePath) {
         const safeRelativePath = this.normalizeRelativePath(relativePath);

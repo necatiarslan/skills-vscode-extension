@@ -107,6 +107,13 @@ function handleDetailContainerClick(event) {
         actionElement.getAttribute('data-github-url') || ''
       );
       break;
+    case 'check-for-updates':
+      requestCheckForUpdates(
+        actionElement.getAttribute('data-skill-id') || '',
+        actionElement.getAttribute('data-skill-name') || '',
+        actionElement.getAttribute('data-github-url') || ''
+      );
+      break;
     default:
       break;
   }
@@ -221,6 +228,19 @@ function handleExtensionMessage(message) {
         showError(`Update failed: ${message.error}`);
       }
       break;
+    case 'checkForUpdatesResult':
+      if (message.success) {
+        if (message.updateTriggered) {
+          setLoading(true);
+        } else {
+          setLoading(false);
+        }
+        showSuccess(message.message || (message.isUpdateAvailable ? 'Update available.' : 'No updates found.'));
+      } else {
+        setLoading(false);
+        showError(`Check for updates failed: ${message.error}`);
+      }
+      break;
     default:
       break;
   }
@@ -259,6 +279,7 @@ function render() {
           ${isInstalled
             ? `
               <vscode-button class="btn-primary" data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>
+              <vscode-button class="btn-secondary" data-action="check-for-updates" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Check For Updates</vscode-button>
               <vscode-button class="btn-secondary" data-action="update" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Update</vscode-button>
               ${sourceLinkMarkup}
             `
@@ -682,6 +703,12 @@ function requestUpdate(skillId, skillName, githubUrl) {
   setLoading(true);
   hideMessage();
   vscode.postMessage({ type: 'update', skillId, skillName, githubUrl });
+}
+
+function requestCheckForUpdates(skillId, skillName, githubUrl) {
+  setLoading(true);
+  hideMessage();
+  vscode.postMessage({ type: 'checkForUpdates', skillId, skillName, githubUrl });
 }
 
 function openExternal(url) {
