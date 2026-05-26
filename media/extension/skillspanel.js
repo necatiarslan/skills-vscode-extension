@@ -342,7 +342,7 @@ function renderSkillItem(skill, options) {
   let actionButtons = `<vscode-button appearance="primary" class="skill-action-btn" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl || '')}">Install</vscode-button>`;
   if (isManagedInstalled) {
     actionButtons = `
-      <vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(skill.skillId || skill.id)}">Uninstall</vscode-button>
+      <vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(skill.skillId || skill.id)}" data-local-path="${escapeAttr(skill.localPath || '')}">Uninstall</vscode-button>
     `;
   } else if (isOtherInstalled) {
     actionButtons = `

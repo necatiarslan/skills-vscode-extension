@@ -375,7 +375,9 @@ class SkillsPanel {
         for (const installed of installedByExtension) {
             const scope = this.getScopeForPath(installed.localPath, workspaceRoots);
             const normalizedLocalPath = this.normalizePath(installed.localPath);
+            const normalizedLocalPathNoFollow = this.normalizePathNoFollow(installed.localPath);
             managedPaths.add(normalizedLocalPath);
+            managedPaths.add(normalizedLocalPathNoFollow);
             const item = {
                 skillId: installed.skillId,
                 name: installed.name || installed.skillId,
@@ -429,27 +431,54 @@ class SkillsPanel {
                 continue;
             }
             for (const entry of entries) {
-                if (!entry.isDirectory()) {
+                const skillPath = path.join(root, entry.name);
+                let isSkillDirectory = entry.isDirectory();
+                // Include symlinked folders (common for managed skill installs).
+                if (!isSkillDirectory && entry.isSymbolicLink()) {
+                    try {
+                        isSkillDirectory = fs.statSync(skillPath).isDirectory();
+                    }
+                    catch {
+                        isSkillDirectory = false;
+                    }
+                }
+                if (!isSkillDirectory) {
                     continue;
                 }
-                const skillPath = path.join(root, entry.name);
                 const normalizedPath = this.normalizePath(skillPath);
-                if (managedPaths.has(normalizedPath) || seen.has(normalizedPath)) {
+                const normalizedPathNoFollow = this.normalizePathNoFollow(skillPath);
+                if (managedPaths.has(normalizedPath)
+                    || managedPaths.has(normalizedPathNoFollow)
+                    || seen.has(normalizedPath)
+                    || seen.has(normalizedPathNoFollow)) {
                     continue;
                 }
                 const hasMetadata = fs.existsSync(path.join(skillPath, 'skill.json'));
+                let metadata = null;
                 if (hasMetadata) {
-                    continue;
+                    try {
+                        const metadataRaw = fs.readFileSync(path.join(skillPath, 'skill.json'), 'utf8');
+                        const parsed = JSON.parse(metadataRaw);
+                        metadata = parsed;
+                    }
+                    catch {
+                        metadata = null;
+                    }
                 }
+                const discoveredSkillId = (metadata?.id || entry.name || '').trim();
+                const discoveredName = (metadata?.name || entry.name || discoveredSkillId).trim();
+                const discoveredAuthor = (metadata?.author || 'Unknown').trim();
+                const discoveredKind = hasMetadata ? 'managed' : 'other';
                 seen.add(normalizedPath);
+                seen.add(normalizedPathNoFollow);
                 items.push({
-                    skillId: '',
-                    name: entry.name,
-                    author: 'Unknown',
-                    description: 'Unmanaged skill',
+                    skillId: discoveredSkillId,
+                    name: discoveredName,
+                    author: discoveredAuthor,
+                    description: hasMetadata ? 'Managed skill (untracked)' : 'Unmanaged skill',
                     localPath: skillPath,
                     scope,
-                    kind: 'other',
+                    kind: discoveredKind,
                     canOpenDetails: true,
                     canUninstall: true
                 });
@@ -487,9 +516,10 @@ class SkillsPanel {
         return roots;
     }
     getScopeForPath(localPath, workspaceRoots) {
-        const normalized = this.normalizePath(localPath);
+        // Use lexical paths so workspace symlink installs remain classified as workspace.
+        const normalized = this.normalizePathNoFollow(localPath);
         for (const workspaceRoot of workspaceRoots) {
-            const normalizedRoot = this.normalizePath(workspaceRoot);
+            const normalizedRoot = this.normalizePathNoFollow(workspaceRoot);
             if (normalized === normalizedRoot || normalized.startsWith(`${normalizedRoot}${path.sep}`)) {
                 return 'workspace';
             }
@@ -503,6 +533,9 @@ class SkillsPanel {
         catch {
             return path.resolve(targetPath);
         }
+    }
+    normalizePathNoFollow(targetPath) {
+        return path.resolve(targetPath);
     }
     /**
      * Resolve the current host where extension is running.
