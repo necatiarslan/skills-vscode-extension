@@ -52,12 +52,12 @@
           "group": "navigation"
         },
         {
-          "command": "Skills.Donate",
+          "command": "Skills.CheckForUpdates",
           "when": "view == SkillsView",
           "group": "other_1"
         },
         {
-          "command": "Skills.CheckForUpdates",
+          "command": "Skills.Donate",
           "when": "view == SkillsView",
           "group": "other_1"
         },

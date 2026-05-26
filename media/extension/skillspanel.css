@@ -251,6 +251,12 @@ body {
   align-items: stretch;
 }
 
+.unmanaged-skill-menu {
+  position: relative;
+  display: inline-block;
+  align-items: stretch;
+}
+
 .skill-actions-menu {
   position: absolute;
   top: calc(100% + 4px);

@@ -43,6 +43,9 @@ const MANAGED_SKILL_MENU_ITEMS = [
   { label: 'Open', value: 'open-folder' },
   { label: 'Repo', value: 'repo' }
 ];
+const UNMANAGED_SKILL_MENU_ITEMS = [
+  { label: 'Open', value: 'open-unmanaged-menu' }
+];
 
 const searchInput = document.getElementById('searchInput');
 const errorMessage = document.getElementById('errorMessage');
@@ -109,6 +112,39 @@ function initializeManagedSkillMenus() {
   }
 }
 
+function initializeUnmanagedSkillMenus() {
+  const menuContainers = contentSection.querySelectorAll('.unmanaged-skill-menu');
+
+  for (const container of menuContainers) {
+    const toggleButton = container.querySelector('[data-action="toggle-actions-menu"]');
+    const menu = container.querySelector('vscode-context-menu');
+
+    if (!toggleButton || !menu || menu.dataset.initialized === 'true') {
+      continue;
+    }
+
+    menu.data = UNMANAGED_SKILL_MENU_ITEMS;
+    menu.dataset.initialized = 'true';
+
+    toggleButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      menu.show = !menu.show;
+    });
+
+    menu.addEventListener('vsc-context-menu-select', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const action = event.detail?.value;
+      if (!action) {
+        return;
+      }
+
+      dispatchUnmanagedSkillAction(action, container.dataset);
+    });
+  }
+}
+
 function dispatchManagedSkillAction(action, dataset) {
   const skillId = dataset.skillId || '';
   const skillName = dataset.skillName || skillId;
@@ -152,6 +188,33 @@ function dispatchManagedSkillAction(action, dataset) {
     default:
       break;
   }
+}
+
+function dispatchUnmanagedSkillAction(action, dataset) {
+  const skillId = dataset.skillId || '';
+
+  if (!action || !skillId) {
+    return;
+  }
+
+  if (action !== 'open-unmanaged-menu') {
+    return;
+  }
+
+  vscode.postMessage({
+    type: 'openUnmanagedSkillDetails',
+    skill: {
+      skillId,
+      name: dataset.skillName || skillId,
+      author: dataset.skillAuthor || 'Unknown',
+      description: dataset.skillDescription || 'Unmanaged skill',
+      localPath: dataset.localPath || '',
+      scope: dataset.scope || 'global',
+      kind: dataset.kind || 'other',
+      canOpenDetails: true,
+      canUninstall: true
+    }
+  });
 }
 
 function handleSearchInput(query) {
@@ -526,6 +589,7 @@ function renderSections() {
   installedWorkspaceTable.innerHTML = renderSkillList(installedWorkspaceRows, { section: 'installedWorkspace' });
   recommendedTable.innerHTML = renderSkillList(recommendedRows, { section: 'recommended' });
   initializeManagedSkillMenus();
+  initializeUnmanagedSkillMenus();
 
   const hasAnyData = inSearchMode
     ? searchResults.length > 0
@@ -593,8 +657,31 @@ function renderSkillItem(skill, options) {
       </div>
     `;
   } else if (isOtherInstalled) {
+    const unmanagedSkillId = escapeAttr(skill.skillId || '');
+    const unmanagedSkillName = escapeAttr(skill.name || skill.skillId || 'Unknown skill');
+    const unmanagedSkillAuthor = escapeAttr(skill.author || 'Unknown');
+    const unmanagedSkillDescription = escapeAttr(skill.description || 'Unmanaged skill');
+    const unmanagedLocalPath = escapeAttr(skill.localPath || '');
+    const unmanagedScope = escapeAttr(skill.scope || 'global');
+    const unmanagedKind = escapeAttr(skill.kind || 'other');
+
     actionButtons = `
-      <vscode-button appearance="secondary" class="skill-action-btn" data-action="uninstall" data-skill-id="${escapeAttr(skill.skillId || '')}" data-local-path="${escapeAttr(skill.localPath || '')}">Uninstall</vscode-button>
+      <div
+        class="unmanaged-skill-menu"
+        data-skill-id="${unmanagedSkillId}"
+        data-skill-name="${unmanagedSkillName}"
+        data-skill-author="${unmanagedSkillAuthor}"
+        data-skill-description="${unmanagedSkillDescription}"
+        data-local-path="${unmanagedLocalPath}"
+        data-scope="${unmanagedScope}"
+        data-kind="${unmanagedKind}"
+      >
+        <vscode-button-group class="skill-action-btn-group">
+          <vscode-button appearance="secondary" data-action="uninstall" data-skill-id="${unmanagedSkillId}" data-local-path="${unmanagedLocalPath}">Uninstall</vscode-button>
+          <vscode-button icon="chevron-down" title="More actions..." data-action="toggle-actions-menu"></vscode-button>
+        </vscode-button-group>
+        <vscode-context-menu class="skill-actions-menu"></vscode-context-menu>
+      </div>
     `;
   } else if (installedEntry) {
     actionButtons = `
