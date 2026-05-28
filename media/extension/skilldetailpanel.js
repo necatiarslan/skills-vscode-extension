@@ -275,23 +275,24 @@ function render() {
           <div class="extension-meta-inline"></div>
           ${tagList.length > 0 ? `<div class="extension-tags">${tagList.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
         </div>
-        <div class="extension-actions">
-          ${isInstalled
-            ? `
-              <vscode-button class="btn-primary" data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>
-              <vscode-button class="btn-secondary" data-action="check-for-updates" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Check For Updates</vscode-button>
-              <vscode-button class="btn-secondary" data-action="update" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Update</vscode-button>
-              ${sourceLinkMarkup}
-            `
-            : `
-              <vscode-button class="btn-primary" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Global</vscode-button>
-              <div class="workspace-install-row">
-                <vscode-button class="btn-secondary" data-action="install-workspace" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Workspace</vscode-button>
-              </div>
-              ${sourceLinkMarkup}
-            `}
-        </div>
       </header>
+
+      <div class="extension-actions">
+        ${isInstalled
+          ? `
+            <vscode-button class="btn-primary" data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>
+            <vscode-button class="btn-secondary" data-action="check-for-updates" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Check For Updates</vscode-button>
+            <vscode-button class="btn-secondary" data-action="update" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Update</vscode-button>
+            ${sourceLinkMarkup}
+          `
+          : `
+            <vscode-button class="btn-primary" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Global</vscode-button>
+            <div class="workspace-install-row">
+              <vscode-button class="btn-secondary" data-action="install-workspace" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Workspace</vscode-button>
+            </div>
+            ${sourceLinkMarkup}
+          `}
+      </div>
 
       <vscode-divider role="separator"></vscode-divider>
 

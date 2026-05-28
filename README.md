@@ -40,6 +40,14 @@ The AI Agent Skills view includes four main sections:
   - Includes both managed and unmanaged skills
 - **Recommended**: Featured skills from the marketplace
 
+![Sidebar layout](media/readme/side-panel.png)
+
+## 🔎 Marketplace Search
+
+Search the marketplace directly from the sidebar to find skills by name, description, or author.
+
+![Marketplace search](media/readme/skill-search.png)
+
 ## 🧩 Skill Detail Panel
 
 Clicking a skill opens a full detail panel:
@@ -80,12 +88,16 @@ Skills can be installed in two modes.
 - Include marketplace metadata (author, version, stars)
 - Uninstallable from the extension UI
 
+![Managed skill](media/readme/managed-skill.png)
+
 ### Unmanaged Skills
 
 - Discovered from alternative/non-standard locations
 - Not tracked as marketplace-managed installs
 - Shown with muted styling for quick visual distinction
 - Useful for local, team-shared, or experimental skills
+
+![Unmanaged skill](media/readme/unmanaged-skill.png)
 
 ## 💖 Sponsor & Feedback
 

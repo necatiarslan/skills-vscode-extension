@@ -153,11 +153,11 @@ function render() {
           <p class="extension-description">Unmanaged Skill</p>
           <div class="extension-meta-inline"></div>
         </div>
-        <div class="extension-actions">
-          <vscode-button class="btn-primary" data-action="uninstall" ${folderExists && installedLocalPath ? '' : 'disabled'}>Uninstall</vscode-button>
-
-        </div>
       </header>
+
+      <div class="extension-actions">
+        <vscode-button class="btn-primary" data-action="uninstall" ${folderExists && installedLocalPath ? '' : 'disabled'}>Uninstall</vscode-button>
+      </div>
 
       <vscode-divider role="separator"></vscode-divider>
 
