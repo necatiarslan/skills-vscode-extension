@@ -124,6 +124,9 @@ export class SkillDetailPanel {
       case 'openInstalledFolder':
         await this.handleOpenInstalledFolder(message.skillId, message.localPath);
         break;
+      case 'openSkillLocation':
+        await this.handleOpenSkillLocation(message.skillId);
+        break;
       case 'install':
         await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
         break;
@@ -488,6 +491,24 @@ export class SkillDetailPanel {
     }
   }
 
+  private async handleOpenSkillLocation(skillId: string): Promise<void> {
+    try {
+      const installed = getStorageService().getInstalledSkill(this.currentToolName, skillId);
+      if (!installed?.localPath) {
+        throw new Error('Installed skill folder was not found.');
+      }
+
+      const locationPath = path.dirname(installed.localPath);
+      await vscode.env.openExternal(vscode.Uri.file(locationPath));
+      logToOutput(`[SkillDetail] Opened skill location for ${skillId}: ${locationPath}`);
+      this.postMessage({ type: 'openFolderResult', skillId, success: true, error: null });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [SkillDetail] Failed opening skill location for ${skillId}: ${errorMsg}`);
+      this.postMessage({ type: 'openFolderResult', skillId, success: false, error: errorMsg });
+    }
+  }
+
   private async createSkillDetailPayload(skill: Skill): Promise<SkillDetailPayload & { installDate?: string }> {
     const detailSkill = await skillsApiService.fetchDetail(skill.id) ?? skill;
     const repoContext = gitHubContentService.parseGitHubUrl(detailSkill.githubUrl);
@@ -808,6 +829,7 @@ export class SkillDetailPanel {
       detail: detailPayload,
       isInstalled,
       installedLocalPath: installedSkill?.localPath || '',
+      installedLocalRootPath: installedSkill?.localPath ? path.dirname(installedSkill.localPath) : '',
       currentToolDisplayName: this.currentToolDisplayName,
       installDate: detailPayload.installDate || null
     }).replace(/</g, '\u003c');

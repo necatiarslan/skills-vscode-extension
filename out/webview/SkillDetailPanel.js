@@ -113,6 +113,9 @@ class SkillDetailPanel {
             case 'openInstalledFolder':
                 await this.handleOpenInstalledFolder(message.skillId, message.localPath);
                 break;
+            case 'openSkillLocation':
+                await this.handleOpenSkillLocation(message.skillId);
+                break;
             case 'install':
                 await this.handleInstall(message.skillId, message.skillName, message.githubUrl);
                 break;
@@ -439,6 +442,23 @@ class SkillDetailPanel {
             this.postMessage({ type: 'openFolderResult', skillId, success: false, error: errorMsg });
         }
     }
+    async handleOpenSkillLocation(skillId) {
+        try {
+            const installed = (0, SkillsStorageService_1.getStorageService)().getInstalledSkill(this.currentToolName, skillId);
+            if (!installed?.localPath) {
+                throw new Error('Installed skill folder was not found.');
+            }
+            const locationPath = path.dirname(installed.localPath);
+            await vscode.env.openExternal(vscode.Uri.file(locationPath));
+            (0, UI_1.logToOutput)(`[SkillDetail] Opened skill location for ${skillId}: ${locationPath}`);
+            this.postMessage({ type: 'openFolderResult', skillId, success: true, error: null });
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[ERROR] [SkillDetail] Failed opening skill location for ${skillId}: ${errorMsg}`);
+            this.postMessage({ type: 'openFolderResult', skillId, success: false, error: errorMsg });
+        }
+    }
     async createSkillDetailPayload(skill) {
         const detailSkill = await services_1.skillsApiService.fetchDetail(skill.id) ?? skill;
         const repoContext = services_1.gitHubContentService.parseGitHubUrl(detailSkill.githubUrl);
@@ -720,6 +740,7 @@ class SkillDetailPanel {
             detail: detailPayload,
             isInstalled,
             installedLocalPath: installedSkill?.localPath || '',
+            installedLocalRootPath: installedSkill?.localPath ? path.dirname(installedSkill.localPath) : '',
             currentToolDisplayName: this.currentToolDisplayName,
             installDate: detailPayload.installDate || null
         }).replace(/</g, '\u003c');

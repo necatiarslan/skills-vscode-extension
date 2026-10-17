@@ -121,6 +121,12 @@ export class SkillDetailUnManagedPanel {
       case 'openInstalledFolder':
         await this.handleOpenInstalledFolder();
         break;
+      case 'openSkillLocation':
+        await this.handleOpenSkillLocation();
+        break;
+      case 'openExternal':
+        await this.handleOpenExternal(message.url);
+        break;
       case 'uninstall':
         await this.handleUninstall();
         break;
@@ -171,6 +177,35 @@ export class SkillDetailUnManagedPanel {
       const errorMsg = error instanceof Error ? error.message : String(error);
       logToOutput(`[ERROR] [UnmanagedSkillDetail] Failed opening installed folder for ${skillId}: ${errorMsg}`);
       this.postMessage({ type: 'openFolderResult', success: false, error: errorMsg });
+    }
+  }
+
+  private async handleOpenSkillLocation(): Promise<void> {
+    const skillId = this.skill.skillId || this.skill.name;
+    try {
+      const locationPath = path.dirname(this.getLocalRootPath());
+      await vscode.env.openExternal(vscode.Uri.file(locationPath));
+      logToOutput(`[UnmanagedSkillDetail] Opened skill location for ${skillId}: ${locationPath}`);
+      this.postMessage({ type: 'openFolderResult', success: true, error: null });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [UnmanagedSkillDetail] Failed opening skill location for ${skillId}: ${errorMsg}`);
+      this.postMessage({ type: 'openFolderResult', success: false, error: errorMsg });
+    }
+  }
+
+  private async handleOpenExternal(url: string): Promise<void> {
+    try {
+      if (!url) {
+        throw new Error('Source URL is not available.');
+      }
+
+      await vscode.env.openExternal(vscode.Uri.parse(url));
+      this.postMessage({ type: 'externalOpenResult', success: true, error: null });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[ERROR] [UnmanagedSkillDetail] Failed opening source URL: ${errorMsg}`);
+      this.postMessage({ type: 'externalOpenResult', success: false, error: errorMsg });
     }
   }
 
@@ -430,6 +465,7 @@ export class SkillDetailUnManagedPanel {
     const initialState = JSON.stringify({
       detail: detailPayload,
       installedLocalPath: detailPayload.skill.localPath,
+      installedLocalRootPath: path.dirname(detailPayload.skill.localPath),
       folderExists: detailPayload.folderExists,
       currentToolDisplayName: this.currentToolDisplayName,
       installDate: detailPayload.installDate || null

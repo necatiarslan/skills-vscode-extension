@@ -134,6 +134,7 @@ body {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .workspace-install-row {
@@ -153,6 +154,11 @@ body {
 
 .source-link a:hover {
   color: var(--vscode-textLink-activeForeground);
+}
+
+.local-path-link {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 

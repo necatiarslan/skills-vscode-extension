@@ -100,6 +100,12 @@ function handleDetailContainerClick(event) {
     case 'open-installed-folder':
       openInstalledFolder(actionElement.getAttribute('data-skill-id') || '', value);
       break;
+    case 'open-skill-location':
+      vscode.postMessage({
+        type: 'openSkillLocation',
+        skillId: actionElement.getAttribute('data-skill-id') || ''
+      });
+      break;
     case 'update':
       requestUpdate(
         actionElement.getAttribute('data-skill-id') || '',
@@ -261,6 +267,10 @@ function render() {
   const sourceLinkMarkup = skill.githubUrl
     ? `<span class="source-link">Source : <a href="#" data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">${escapeHtml(repositoryRoot)}</a></span>`
     : '';
+  const installedLocalRootPath = initialState.installedLocalRootPath || '';
+  const localPathLinkMarkup = isInstalled && installedLocalRootPath
+    ? `<span class="source-link local-path-link">Location : <a href="#" data-action="open-skill-location" data-skill-id="${escapeAttr(skill.id)}">${escapeHtml(installedLocalRootPath)}</a></span>`
+    : '';
   const tabOrder = getTabOrder();
   const selectedTabIndex = getSelectedTabIndex(tabOrder);
 
@@ -284,6 +294,7 @@ function render() {
             <vscode-button class="btn-secondary" data-action="check-for-updates" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Check For Updates</vscode-button>
             <vscode-button class="btn-secondary" data-action="update" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Update</vscode-button>
             ${sourceLinkMarkup}
+            ${localPathLinkMarkup}
           `
           : `
             <vscode-button class="btn-primary" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Global</vscode-button>

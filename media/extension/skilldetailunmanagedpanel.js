@@ -67,6 +67,12 @@ function handleDetailContainerClick(event) {
     case 'open-installed-folder':
       openInstalledFolder();
       break;
+    case 'open-skill-location':
+      vscode.postMessage({ type: 'openSkillLocation' });
+      break;
+    case 'open-external':
+      openExternal(value);
+      break;
     case 'uninstall':
       requestUninstall();
       break;
@@ -127,6 +133,11 @@ function handleExtensionMessage(message) {
         showError(`Failed to open skill folder: ${message.error}`);
       }
       break;
+    case 'externalOpenResult':
+      if (!message.success) {
+        showError(`Failed to open source URL: ${message.error}`);
+      }
+      break;
     default:
       break;
   }
@@ -140,6 +151,13 @@ function render() {
 
   const skill = detail.skill;
   const skillEmoji = detail.skillEmoji || '✨';
+  const sourceLinkMarkup = skill.githubUrl
+    ? `<span class="source-link">Source : <a href="#" data-action="open-external" data-value="${escapeAttr(skill.githubUrl)}">${escapeHtml(skill.githubUrl)}</a></span>`
+    : '';
+  const installedLocalRootPath = initialState.installedLocalRootPath || '';
+  const localPathLinkMarkup = folderExists && installedLocalRootPath
+    ? `<span class="source-link local-path-link">Location : <a href="#" data-action="open-skill-location">${escapeHtml(installedLocalRootPath)}</a></span>`
+    : '';
   const tabOrder = getTabOrder();
   const selectedTabIndex = getSelectedTabIndex(tabOrder);
 
@@ -157,6 +175,8 @@ function render() {
 
       <div class="extension-actions">
         <vscode-button class="btn-primary" data-action="uninstall" ${folderExists && installedLocalPath ? '' : 'disabled'}>Uninstall</vscode-button>
+        ${sourceLinkMarkup}
+        ${localPathLinkMarkup}
       </div>
 
       <vscode-divider role="separator"></vscode-divider>
@@ -409,6 +429,12 @@ function openLocalFile(localPath) {
 
 function openInstalledFolder() {
   vscode.postMessage({ type: 'openInstalledFolder' });
+}
+
+function openExternal(url) {
+  if (url) {
+    vscode.postMessage({ type: 'openExternal', url });
+  }
 }
 
 function requestUninstall() {

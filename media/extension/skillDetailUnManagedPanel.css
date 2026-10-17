@@ -135,6 +135,25 @@ body {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.source-link {
+  color: var(--muted-fg);
+  white-space: nowrap;
+}
+
+.source-link a {
+  color: var(--vscode-textLink-foreground);
+}
+
+.source-link a:hover {
+  color: var(--vscode-textLink-activeForeground);
+}
+
+.local-path-link {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .detail-tabs-shell {
