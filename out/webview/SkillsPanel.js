@@ -82,6 +82,40 @@ class SkillsPanel {
         }
         this.handleGetInstalledSkills();
     }
+    async refreshSkillsIndex() {
+        try {
+            const storage = (0, SkillsStorageService_1.getStorageService)();
+            const existingSkills = storage.getInstalledByTool(this.currentToolName);
+            const workspaceRoots = this.getWorkspaceRoots();
+            const preservedWorkspaceSkills = existingSkills.filter((skill) => this.getScopeForPath(skill.localPath, workspaceRoots) === 'workspace');
+            const existingById = new Map(existingSkills.map((skill) => [skill.skillId, skill]));
+            const discoveredSkills = services_2.toolInstallService
+                .discoverGlobalSkills(this.currentToolName)
+                .map((skill) => {
+                const existing = existingById.get(skill.skillId);
+                return {
+                    ...existing,
+                    ...skill,
+                    author: existing?.author || skill.author,
+                    version: existing?.version || skill.version,
+                    installedAt: existing?.installedAt || skill.installedAt,
+                    canonicalPath: skill.canonicalPath || existing?.canonicalPath,
+                    installMethod: skill.installMethod || existing?.installMethod,
+                    sourceUrl: skill.sourceUrl || existing?.sourceUrl,
+                    sourceBranch: skill.sourceBranch || existing?.sourceBranch,
+                    sourcePath: skill.sourcePath || existing?.sourcePath
+                };
+            });
+            await storage.refreshInstalledSkills(this.currentToolName, discoveredSkills, preservedWorkspaceSkills);
+            this.refreshInstalledSkills();
+            await vscode.window.showInformationMessage(`Skills index refreshed. Found ${discoveredSkills.length} managed global skill${discoveredSkills.length === 1 ? '' : 's'}; outdated flags cleared.`);
+        }
+        catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            (0, UI_1.logToOutput)(`[ERROR] [SkillsPanel] Failed to refresh skills index: ${errorMsg}`);
+            await vscode.window.showErrorMessage(`Failed to refresh skills index: ${errorMsg}`);
+        }
+    }
     async checkForUpdatesForManagedSkills(options) {
         const silent = !!options?.silent;
         const storage = (0, SkillsStorageService_1.getStorageService)();

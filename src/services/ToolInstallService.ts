@@ -5,7 +5,7 @@ import * as https from 'https';
 import { logToOutput } from '../common/UI';
 import { SKILL_LOCATION_CONFIG } from '../common/SkillLocationConfig';
 import { gitHubContentService } from './GitHubContentService';
-import { InstallMethod, InstallResult, ToolConfig } from './types';
+import { InstalledSkill, InstallMethod, InstallResult, ToolConfig } from './types';
 
 /**
  * ToolInstallService - Handles tool detection and skill installation/uninstallation
@@ -74,6 +74,90 @@ export class ToolInstallService {
    */
   public getTool(toolName: string): ToolConfig | null {
     return this.tools.get(toolName) || null;
+  }
+
+  /**
+   * Discover managed skills in the global locations used by a tool.
+   */
+  public discoverGlobalSkills(toolName: string): InstalledSkill[] {
+    const tool = this.tools.get(toolName);
+    if (!tool) {
+      throw new Error(`Unknown tool: ${toolName}`);
+    }
+
+    const discovered = new Map<string, InstalledSkill>();
+    const roots = new Set([tool.globalDir, ToolInstallService.CANONICAL_ROOT]);
+
+    for (const root of roots) {
+      if (!fs.existsSync(root)) {
+        continue;
+      }
+
+      if (!fs.statSync(root).isDirectory()) {
+        throw new Error(`Skill path is not a directory: ${root}`);
+      }
+
+      for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+        const localPath = path.join(root, entry.name);
+        let isDirectory = entry.isDirectory();
+
+        if (!isDirectory && entry.isSymbolicLink()) {
+          try {
+            isDirectory = fs.statSync(localPath).isDirectory();
+          } catch (error) {
+            logToOutput(`[Skills Index] Skipping broken skill link ${localPath}: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        }
+
+        if (!isDirectory) {
+          continue;
+        }
+
+        const metadataPath = path.join(localPath, 'skill.json');
+        if (!fs.existsSync(metadataPath)) {
+          continue;
+        }
+
+        let metadata: unknown;
+        try {
+          metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8')) as unknown;
+        } catch (error) {
+          throw new Error(`Failed reading skill metadata at ${metadataPath}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+
+        if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+          throw new Error(`Invalid skill metadata at ${metadataPath}`);
+        }
+
+        const record = metadata as Record<string, unknown>;
+        const skillId = typeof record.id === 'string' ? record.id.trim() : '';
+        if (!skillId) {
+          throw new Error(`Skill metadata is missing an id: ${metadataPath}`);
+        }
+
+        if (discovered.has(skillId)) {
+          continue;
+        }
+
+        const installedAtValue = typeof record.installed_at === 'string'
+          ? Date.parse(record.installed_at)
+          : Number.NaN;
+
+        discovered.set(skillId, {
+          skillId,
+          name: typeof record.name === 'string' && record.name.trim() ? record.name.trim() : entry.name,
+          author: 'unknown',
+          version: '1.0.0',
+          installedAt: Number.isNaN(installedAtValue) ? Date.now() : installedAtValue,
+          localPath,
+          sourceUrl: typeof record.github_url === 'string' ? record.github_url : undefined,
+          sourceBranch: typeof record.branch === 'string' ? record.branch : undefined,
+          sourcePath: typeof record.skill_path === 'string' ? record.skill_path : undefined
+        });
+      }
+    }
+
+    return Array.from(discovered.values());
   }
 
   /**

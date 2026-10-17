@@ -49,6 +49,13 @@ export function activate(context: vscode.ExtensionContext): void {
         ui.logToOutput('[Activation] Command registered: Skills.Donate');
 
         context.subscriptions.push(
+            vscode.commands.registerCommand('Skills.RefreshIndex', async () => {
+                await SkillsPanel.Current?.refreshSkillsIndex();
+            })
+        );
+        ui.logToOutput('[Activation] Command registered: Skills.RefreshIndex');
+
+        context.subscriptions.push(
             vscode.commands.registerCommand('Skills.CheckForUpdates', async () => {
                 await SkillsPanel.Current?.checkForUpdatesForManagedSkills();
             })

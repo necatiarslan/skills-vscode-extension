@@ -34,6 +34,11 @@
         "icon": "$(heart)"
       },
       {
+        "command": "Skills.RefreshIndex",
+        "title": "Refresh Skills Index",
+        "icon": "$(sync)"
+      },
+      {
         "command": "Skills.CheckForUpdates",
         "title": "Check For Updates",
         "icon": "$(sync)"
@@ -58,6 +63,11 @@
         },
         {
           "command": "Skills.Donate",
+          "when": "view == SkillsView",
+          "group": "other_1"
+        },
+        {
+          "command": "Skills.RefreshIndex",
           "when": "view == SkillsView",
           "group": "other_1"
         },

@@ -167,6 +167,23 @@ export class SkillsStorageService {
   }
 
   /**
+   * Replace the indexed global skills while retaining workspace installations.
+   */
+  public async refreshInstalledSkills(
+    tool: string,
+    discoveredSkills: InstalledSkill[],
+    preservedSkills: InstalledSkill[]
+  ): Promise<void> {
+    const installed = Object.fromEntries(
+      [...preservedSkills, ...discoveredSkills].map((skill) => [skill.skillId, skill])
+    );
+
+    await this.globalState.update(this.getToolKey(tool), installed);
+    await this.globalState.update(this.getOutdatedToolKey(tool), {});
+    logToOutput(`[Storage] Refreshed skills index for ${tool}: ${discoveredSkills.length} global skills; outdated flags cleared`);
+  }
+
+  /**
    * Clear all installed skills for a tool
    */
   public async clearToolInstalls(tool: string): Promise<void> {

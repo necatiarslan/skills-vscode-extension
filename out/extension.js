@@ -66,6 +66,10 @@ function activate(context) {
             vscode.env.openExternal(vscode.Uri.parse('https://github.com/sponsors/necatiarslan'));
         }));
         ui.logToOutput('[Activation] Command registered: Skills.Donate');
+        context.subscriptions.push(vscode.commands.registerCommand('Skills.RefreshIndex', async () => {
+            await SkillsPanel_1.SkillsPanel.Current?.refreshSkillsIndex();
+        }));
+        ui.logToOutput('[Activation] Command registered: Skills.RefreshIndex');
         context.subscriptions.push(vscode.commands.registerCommand('Skills.CheckForUpdates', async () => {
             await SkillsPanel_1.SkillsPanel.Current?.checkForUpdatesForManagedSkills();
         }));

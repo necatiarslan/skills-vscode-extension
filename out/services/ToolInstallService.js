@@ -102,6 +102,77 @@ class ToolInstallService {
         return this.tools.get(toolName) || null;
     }
     /**
+     * Discover managed skills in the global locations used by a tool.
+     */
+    discoverGlobalSkills(toolName) {
+        const tool = this.tools.get(toolName);
+        if (!tool) {
+            throw new Error(`Unknown tool: ${toolName}`);
+        }
+        const discovered = new Map();
+        const roots = new Set([tool.globalDir, ToolInstallService.CANONICAL_ROOT]);
+        for (const root of roots) {
+            if (!fs.existsSync(root)) {
+                continue;
+            }
+            if (!fs.statSync(root).isDirectory()) {
+                throw new Error(`Skill path is not a directory: ${root}`);
+            }
+            for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+                const localPath = path.join(root, entry.name);
+                let isDirectory = entry.isDirectory();
+                if (!isDirectory && entry.isSymbolicLink()) {
+                    try {
+                        isDirectory = fs.statSync(localPath).isDirectory();
+                    }
+                    catch (error) {
+                        (0, UI_1.logToOutput)(`[Skills Index] Skipping broken skill link ${localPath}: ${error instanceof Error ? error.message : String(error)}`);
+                    }
+                }
+                if (!isDirectory) {
+                    continue;
+                }
+                const metadataPath = path.join(localPath, 'skill.json');
+                if (!fs.existsSync(metadataPath)) {
+                    continue;
+                }
+                let metadata;
+                try {
+                    metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+                }
+                catch (error) {
+                    throw new Error(`Failed reading skill metadata at ${metadataPath}: ${error instanceof Error ? error.message : String(error)}`);
+                }
+                if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+                    throw new Error(`Invalid skill metadata at ${metadataPath}`);
+                }
+                const record = metadata;
+                const skillId = typeof record.id === 'string' ? record.id.trim() : '';
+                if (!skillId) {
+                    throw new Error(`Skill metadata is missing an id: ${metadataPath}`);
+                }
+                if (discovered.has(skillId)) {
+                    continue;
+                }
+                const installedAtValue = typeof record.installed_at === 'string'
+                    ? Date.parse(record.installed_at)
+                    : Number.NaN;
+                discovered.set(skillId, {
+                    skillId,
+                    name: typeof record.name === 'string' && record.name.trim() ? record.name.trim() : entry.name,
+                    author: 'unknown',
+                    version: '1.0.0',
+                    installedAt: Number.isNaN(installedAtValue) ? Date.now() : installedAtValue,
+                    localPath,
+                    sourceUrl: typeof record.github_url === 'string' ? record.github_url : undefined,
+                    sourceBranch: typeof record.branch === 'string' ? record.branch : undefined,
+                    sourcePath: typeof record.skill_path === 'string' ? record.skill_path : undefined
+                });
+            }
+        }
+        return Array.from(discovered.values());
+    }
+    /**
      * Resolve the current host where the extension is running.
      */
     resolveCurrentTool(appName) {

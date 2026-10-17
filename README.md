@@ -22,6 +22,7 @@ Supports Visual Studio Code and VS Code forks, including Antigravity, Windsurf, 
   - Install per tool and scope (global or workspace)
   - Uninstall managed skills from the UI
   - Track installed skills in VS Code global storage
+  - Refresh the global skills index from the view toolbar
 
 - **Managed + Unmanaged Visibility**
   - Managed skills include marketplace metadata
