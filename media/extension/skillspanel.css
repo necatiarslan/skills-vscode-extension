@@ -68,6 +68,12 @@ body {
   padding: 8px 10px;
 }
 
+.success-message {
+  color: var(--vscode-testing-iconPassed, #4caf50);
+  border: 1px solid color-mix(in srgb, var(--vscode-testing-iconPassed, #4caf50) 40%, transparent);
+  background: color-mix(in srgb, var(--vscode-testing-iconPassed, #4caf50) 10%, transparent);
+}
+
 .empty-state {
   padding: 10px;
   color: var(--muted-fg);

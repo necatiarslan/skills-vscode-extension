@@ -845,15 +845,19 @@ function setLoading(isLoading) {
 
 function showError(message) {
   errorMessage.textContent = message;
+  errorMessage.classList.remove('success-message');
+  errorMessage.classList.add('error-message');
   errorMessage.classList.remove('hidden');
 }
 
 function showSuccess(message) {
   errorMessage.textContent = message;
+  errorMessage.classList.remove('error-message');
+  errorMessage.classList.add('success-message');
   errorMessage.classList.remove('hidden');
   setTimeout(() => {
     errorMessage.classList.add('hidden');
-  }, 2200);
+  }, 5000);
 }
 
 function hideMessage() {
