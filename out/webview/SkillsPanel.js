@@ -96,7 +96,7 @@ class SkillsPanel {
                 return {
                     ...existing,
                     ...skill,
-                    author: existing?.author || skill.author,
+                    author: existing?.author && existing.author.toLowerCase() !== 'unknown' ? existing.author : skill.author,
                     version: existing?.version || skill.version,
                     installedAt: existing?.installedAt || skill.installedAt,
                     canonicalPath: skill.canonicalPath || existing?.canonicalPath,
@@ -677,7 +677,7 @@ class SkillsPanel {
             const item = {
                 skillId: installed.skillId,
                 name: metadata?.name?.trim() || installed.name || installed.skillId,
-                author: metadata?.author?.trim() || installed.author || 'Unknown',
+                author: metadata?.author?.trim() || metadata?.owner?.trim() || installed.author || 'Unknown',
                 description: 'Managed skill',
                 githubUrl: installed.sourceUrl || metadata?.github_url || '',
                 localPath: installed.localPath,
@@ -765,7 +765,7 @@ class SkillsPanel {
                 }
                 const discoveredSkillId = (metadata?.id || entry.name || '').trim();
                 const discoveredName = (metadata?.name || entry.name || discoveredSkillId).trim();
-                const discoveredAuthor = (metadata?.author || 'Unknown').trim();
+                const discoveredAuthor = (metadata?.author || metadata?.owner || 'Unknown').trim();
                 const discoveredKind = hasMetadata ? 'managed' : 'other';
                 seen.add(normalizedPath);
                 seen.add(normalizedPathNoFollow);

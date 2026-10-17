@@ -88,7 +88,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
           return {
             ...existing,
             ...skill,
-            author: existing?.author || skill.author,
+            author: existing?.author && existing.author.toLowerCase() !== 'unknown' ? existing.author : skill.author,
             version: existing?.version || skill.version,
             installedAt: existing?.installedAt || skill.installedAt,
             canonicalPath: skill.canonicalPath || existing?.canonicalPath,
@@ -761,7 +761,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       const item: MarketplaceInstalledSkill = {
         skillId: installed.skillId,
         name: metadata?.name?.trim() || installed.name || installed.skillId,
-        author: metadata?.author?.trim() || installed.author || 'Unknown',
+        author: metadata?.author?.trim() || metadata?.owner?.trim() || installed.author || 'Unknown',
         description: 'Managed skill',
         githubUrl: installed.sourceUrl || metadata?.github_url || '',
         localPath: installed.localPath,
@@ -854,11 +854,11 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         }
 
         const hasMetadata = fs.existsSync(path.join(skillPath, 'skill.json'));
-        let metadata: { id?: string; name?: string; author?: string; github_url?: string } | null = null;
+        let metadata: { id?: string; name?: string; author?: string; owner?: string; github_url?: string } | null = null;
         if (hasMetadata) {
           try {
             const metadataRaw = fs.readFileSync(path.join(skillPath, 'skill.json'), 'utf8');
-            const parsed = JSON.parse(metadataRaw) as { id?: string; name?: string; author?: string; github_url?: string };
+            const parsed = JSON.parse(metadataRaw) as { id?: string; name?: string; author?: string; owner?: string; github_url?: string };
             metadata = parsed;
           } catch {
             metadata = null;
@@ -867,7 +867,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
 
         const discoveredSkillId = (metadata?.id || entry.name || '').trim();
         const discoveredName = (metadata?.name || entry.name || discoveredSkillId).trim();
-        const discoveredAuthor = (metadata?.author || 'Unknown').trim();
+        const discoveredAuthor = (metadata?.author || metadata?.owner || 'Unknown').trim();
         const discoveredKind: 'managed' | 'other' = hasMetadata ? 'managed' : 'other';
         seen.add(normalizedPath);
         seen.add(normalizedPathNoFollow);
@@ -939,6 +939,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
     id?: string;
     name?: string;
     author?: string;
+    owner?: string;
     github_url?: string;
     branch?: string;
     skill_path?: string;
@@ -954,6 +955,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
         id?: string;
         name?: string;
         author?: string;
+        owner?: string;
         github_url?: string;
         branch?: string;
         skill_path?: string;

@@ -146,7 +146,11 @@ export class ToolInstallService {
         discovered.set(skillId, {
           skillId,
           name: typeof record.name === 'string' && record.name.trim() ? record.name.trim() : entry.name,
-          author: typeof record.author === 'string' && record.author.trim() ? record.author.trim() : 'unknown',
+          author: typeof record.author === 'string' && record.author.trim()
+            ? record.author.trim()
+            : typeof record.owner === 'string' && record.owner.trim()
+              ? record.owner.trim()
+              : 'unknown',
           version: '1.0.0',
           installedAt: Number.isNaN(installedAtValue) ? Date.now() : installedAtValue,
           localPath,

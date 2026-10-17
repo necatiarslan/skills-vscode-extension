@@ -510,7 +510,15 @@ export class SkillDetailPanel {
   }
 
   private async createSkillDetailPayload(skill: Skill): Promise<SkillDetailPayload & { installDate?: string }> {
-    const detailSkill = await skillsApiService.fetchDetail(skill.id) ?? skill;
+    const fetchedSkill = await skillsApiService.fetchDetail(skill.id) ?? skill;
+    const installedSkill = getStorageService().getInstalledSkill(this.currentToolName, skill.id);
+    const localAuthor = installedSkill?.localPath
+      ? this.readLocalSkillAuthor(installedSkill.localPath)
+      : undefined;
+    const detailSkill: Skill = {
+      ...fetchedSkill,
+      author: localAuthor || fetchedSkill.author || skill.author
+    };
     const repoContext = gitHubContentService.parseGitHubUrl(detailSkill.githubUrl);
     const repoMetadata = await gitHubContentService.getRepoMetadata(repoContext);
     const resolvedContext: GitHubRepoContext = {
@@ -542,7 +550,6 @@ export class SkillDetailPanel {
 
     const rootDirectory = initialDirectory;
     const skillEmoji = getSkillEmoji(detailSkill.id);
-    const installedSkill = getStorageService().getInstalledSkill(this.currentToolName, detailSkill.id);
 
     let localRootDirectory: LocalDirectoryResult | undefined;
     let installDate: string | undefined;
@@ -597,6 +604,27 @@ export class SkillDetailPanel {
       skillMarkdown,
       installDate
     };
+  }
+
+  private readLocalSkillAuthor(localPath: string): string | undefined {
+    const metadataPath = path.join(localPath, 'skill.json');
+    if (!fs.existsSync(metadataPath)) {
+      return undefined;
+    }
+
+    try {
+      const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8')) as {
+        author?: unknown;
+        owner?: unknown;
+      };
+      const author = typeof metadata.author === 'string' ? metadata.author.trim() : '';
+      const owner = typeof metadata.owner === 'string' ? metadata.owner.trim() : '';
+      return author || owner || undefined;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logToOutput(`[SkillDetail] Failed reading local skill author from ${metadataPath}: ${errorMsg}`);
+      return undefined;
+    }
   }
 
   private getInstalledSkillRoot(skillId: string): string {
