@@ -2,7 +2,7 @@
   "name": "ai-agent-skills",
   "displayName": "AI Agent Skills",
   "description": "Discover and Install AI Agent Skills to enhance your AI agents' capabilities. Browse the Skills Marketplace, inspect skill details, and manage your installed skills directly from the sidebar.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publisher": "NecatiARSLAN",
   "repository": {
     "type": "git",
@@ -114,9 +114,9 @@
   "devDependencies": {
     "@types/node": "^25.9.1",
     "@types/vscode": "^1.106.0",
-    "@typescript-eslint/eslint-plugin": "^8.60.0",
-    "@typescript-eslint/parser": "^8.60.0",
-    "eslint": "^10.4.0",
+    "@typescript-eslint/eslint-plugin": "^8.71.2",
+    "@typescript-eslint/parser": "^8.71.2",
+    "eslint": "^10.13.0",
     "typescript": "^6.0.3"
   },
   "dependencies": {
