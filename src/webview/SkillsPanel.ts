@@ -296,7 +296,20 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
           .find((installed) => installed.skillId === skillId);
 
         if (localSkill) {
-          await this.handleOpenUnmanagedSkillDetails(localSkill);
+          if (localSkill.kind === 'managed') {
+            await this.handleOpenSkillDetails({
+              id: localSkill.skillId,
+              name: localSkill.name,
+              author: localSkill.author,
+              description: localSkill.description || 'Managed skill',
+              githubUrl: localSkill.githubUrl || '',
+              skillUrl: '',
+              stars: 0,
+              updatedAt: ''
+            });
+          } else {
+            await this.handleOpenUnmanagedSkillDetails(localSkill);
+          }
           return;
         }
 
@@ -743,13 +756,14 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       const normalizedLocalPathNoFollow = this.normalizePathNoFollow(installed.localPath);
       managedPaths.add(normalizedLocalPath);
       managedPaths.add(normalizedLocalPathNoFollow);
+      const metadata = this.readSkillMetadata(installed.localPath);
 
       const item: MarketplaceInstalledSkill = {
         skillId: installed.skillId,
-        name: installed.name || installed.skillId,
-        author: installed.author || 'Unknown',
+        name: metadata?.name?.trim() || installed.name || installed.skillId,
+        author: metadata?.author?.trim() || installed.author || 'Unknown',
         description: 'Managed skill',
-        githubUrl: installed.sourceUrl || '',
+        githubUrl: installed.sourceUrl || metadata?.github_url || '',
         localPath: installed.localPath,
         scope,
         kind: 'managed',
@@ -924,6 +938,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
   private readSkillMetadata(localPath: string): {
     id?: string;
     name?: string;
+    author?: string;
     github_url?: string;
     branch?: string;
     skill_path?: string;
@@ -938,6 +953,7 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       return JSON.parse(raw) as {
         id?: string;
         name?: string;
+        author?: string;
         github_url?: string;
         branch?: string;
         skill_path?: string;

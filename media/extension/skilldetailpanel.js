@@ -293,15 +293,19 @@ function render() {
             <vscode-button class="btn-primary" data-action="uninstall" data-skill-id="${escapeAttr(skill.id)}">Uninstall</vscode-button>
             <vscode-button class="btn-secondary" data-action="check-for-updates" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Check For Updates</vscode-button>
             <vscode-button class="btn-secondary" data-action="update" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}" ${installedLocalPath ? '' : 'disabled'}>Update</vscode-button>
-            ${sourceLinkMarkup}
-            ${localPathLinkMarkup}
+            <div style="flex: 0 0 100%;">
+              ${sourceLinkMarkup}
+              ${localPathLinkMarkup}
+            </div>
           `
           : `
             <vscode-button class="btn-primary" data-action="install" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Global</vscode-button>
             <div class="workspace-install-row">
               <vscode-button class="btn-secondary" data-action="install-workspace" data-skill-id="${escapeAttr(skill.id)}" data-skill-name="${escapeAttr(skill.name)}" data-github-url="${escapeAttr(skill.githubUrl)}">Install Workspace</vscode-button>
             </div>
-            ${sourceLinkMarkup}
+            <div style="flex: 0 0 100%;">
+              ${sourceLinkMarkup}
+            </div>
           `}
       </div>
 

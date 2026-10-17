@@ -175,8 +175,10 @@ function render() {
 
       <div class="extension-actions">
         <vscode-button class="btn-primary" data-action="uninstall" ${folderExists && installedLocalPath ? '' : 'disabled'}>Uninstall</vscode-button>
-        ${sourceLinkMarkup}
-        ${localPathLinkMarkup}
+        <div style="flex: 0 0 100%;">
+          ${sourceLinkMarkup}
+          ${localPathLinkMarkup}
+        </div>
       </div>
 
       <vscode-divider role="separator"></vscode-divider>

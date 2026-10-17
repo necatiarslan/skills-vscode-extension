@@ -160,7 +160,7 @@ class ToolInstallService {
                 discovered.set(skillId, {
                     skillId,
                     name: typeof record.name === 'string' && record.name.trim() ? record.name.trim() : entry.name,
-                    author: 'unknown',
+                    author: typeof record.author === 'string' && record.author.trim() ? record.author.trim() : 'unknown',
                     version: '1.0.0',
                     installedAt: Number.isNaN(installedAtValue) ? Date.now() : installedAtValue,
                     localPath,
