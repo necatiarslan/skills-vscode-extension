@@ -291,7 +291,16 @@ export class SkillsPanel implements vscode.WebviewViewProvider {
       const skill = await skillsApiService.fetchDetail(skillId);
 
       if (!skill) {
-        throw new Error('Skill detail was not found.');
+        const installedGroups = this.collectInstalledGroups();
+        const localSkill = [...installedGroups.installedGlobal, ...installedGroups.installedWorkspace]
+          .find((installed) => installed.skillId === skillId);
+
+        if (localSkill) {
+          await this.handleOpenUnmanagedSkillDetails(localSkill);
+          return;
+        }
+
+        throw new Error('Skill detail was not found in the marketplace or local installations.');
       }
 
       await this.handleOpenSkillDetails(skill);

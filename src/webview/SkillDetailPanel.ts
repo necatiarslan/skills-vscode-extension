@@ -648,19 +648,32 @@ export class SkillDetailPanel {
       const entryRelativePath = safeRelativePath
         ? `${safeRelativePath}/${entry.name}`
         : entry.name;
+      const entryPath = path.join(absolutePath, entry.name);
+      let isDirectory = entry.isDirectory();
+      let size: number | undefined;
 
-      if (entry.isDirectory()) {
+      if (entry.isSymbolicLink()) {
+        try {
+          const targetStat = await fs.promises.stat(entryPath);
+          isDirectory = targetStat.isDirectory();
+          if (targetStat.isFile()) {
+            size = targetStat.size;
+          }
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          logToOutput(`[SkillDetail] Failed reading symbolic link ${entryPath}: ${errorMsg}`);
+        }
+      } else if (entry.isFile()) {
+        const stat = await fs.promises.stat(entryPath);
+        size = stat.size;
+      }
+
+      if (isDirectory) {
         return {
           name: entry.name,
           path: entryRelativePath,
           type: 'dir'
         };
-      }
-
-      let size: number | undefined;
-      if (entry.isFile()) {
-        const stat = await fs.promises.stat(path.join(absolutePath, entry.name));
-        size = stat.size;
       }
 
       return {
