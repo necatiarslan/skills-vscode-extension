@@ -112,17 +112,17 @@
     "lint": "eslint \"src/**/*.ts\""
   },
   "devDependencies": {
-    "@types/node": "^25.9.1",
+    "@types/node": "^26.6.5",
     "@types/vscode": "^1.106.0",
     "@typescript-eslint/eslint-plugin": "^8.71.2",
     "@typescript-eslint/parser": "^8.71.2",
     "eslint": "^10.13.0",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "@vscode-elements/elements": "^2.5.1",
     "@vscode/codicons": "^0.0.45",
-    "markdown-it": "^14.2.0",
+    "markdown-it": "^15.0.3",
     "reflect-metadata": "^0.2.2"
   }
 }
